@@ -118,7 +118,23 @@ class _HomePageState extends State<HomePage> {
             ),
 
             ),
-          body: Container(),
+          body: TabBarView(
+            children: tabs.map((String tabName) {
+              return Container(
+                color: Colors.black,
+                child: Center(
+                  child: Text(
+                    tabName,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: MyColors["AppbarTextColor"],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ),
       ),
     );
