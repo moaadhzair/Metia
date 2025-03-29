@@ -63,9 +63,7 @@ class _HomePageState extends State<HomePage> {
                   size: 30,
                   color: MyColors["UnselectedColor"],
                 ),
-                onPressed: () {
-                  // Handle search action
-                },
+                onPressed: () {},
               ),
               SizedBox(width: 10),
               IconButton(
@@ -74,9 +72,7 @@ class _HomePageState extends State<HomePage> {
                   size: 30,
                   color: MyColors["UnselectedColor"],
                 ),
-                onPressed: () {
-                  // Handle search action
-                },
+                onPressed: () {},
               ),
               SizedBox(width: 0),
             ],
@@ -100,10 +96,8 @@ class _HomePageState extends State<HomePage> {
               indicatorColor: MyColors["AppbarTextColor"],
               isScrollable: true,
               tabAlignment: TabAlignment.start,
-              labelColor:
-                  MyColors["AppbarTextColor"], // Color for the selected tab text
-              unselectedLabelColor:
-                  MyColors["UnselectedColor"], // Color for unselected tab text
+              labelColor: MyColors["AppbarTextColor"],
+              unselectedLabelColor: MyColors["UnselectedColor"],
               tabs:
                   tabs.map((String tabName) {
                     return Tab(
@@ -123,26 +117,23 @@ class _HomePageState extends State<HomePage> {
                 tabs.map((String tabName) {
                   return Container(
                     child: GridView.builder(
-                      padding: const EdgeInsets.all(0),
-                      physics: const BouncingScrollPhysics(),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: getResponsiveCrossAxisVal(
                           MediaQuery.of(context).size.width,
-                          itemWidth: 108,
+                          itemWidth: 460/4,
                         ),
-                        mainAxisExtent: 250,
-                        crossAxisSpacing: 0,
+                        mainAxisExtent: 650/4,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
                       ),
-                      itemCount: 20,
+                      itemCount: 10,
                       itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Container(
-                            child: Image(
-                              image: Image.network("https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx176496-xCNtU4llsUpu.png").image,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
+                        return Image(
+                          fit: BoxFit.fitHeight,
+                          image:
+                              Image.network(
+                                "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx176496-xCNtU4llsUpu.png",
+                              ).image,
                         );
                       },
                     ),
@@ -153,7 +144,8 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-  getResponsiveCrossAxisVal(double width, {required int itemWidth}) {
+
+  getResponsiveCrossAxisVal(double width, {required double itemWidth}) {
     return (width / itemWidth).floor().clamp(1, 10);
   }
 }

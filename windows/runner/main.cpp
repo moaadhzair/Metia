@@ -30,6 +30,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   if (!window.Create(L"metia", origin, size)) {
     return EXIT_FAILURE;
   }
+
+  // Disable resizing by modifying the window style
+  HWND hwnd = window.GetHandle(); // Get the window handle
+  LONG style = GetWindowLong(hwnd, GWL_STYLE);
+  style &= ~WS_SIZEBOX; // Remove the resizing border
+  style &= ~WS_MAXIMIZEBOX; // Disable the maximize button
+  SetWindowLong(hwnd, GWL_STYLE, style);
+
   window.SetQuitOnClose(true);
 
   ::MSG msg;
