@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -84,7 +85,7 @@ class _HomePageState extends State<HomePage> {
               children: [
                 SizedBox(width: 20),
                 Text(
-                  "Anime List",
+                  "Metia",
                   style: TextStyle(
                     color: MyColors["AppbarTextColor"],
                     fontSize: 20,
@@ -116,27 +117,43 @@ class _HomePageState extends State<HomePage> {
                     );
                   }).toList(),
             ),
-
-            ),
+          ),
           body: TabBarView(
-            children: tabs.map((String tabName) {
-              return Container(
-                color: Colors.black,
-                child: Center(
-                  child: Text(
-                    tabName,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: MyColors["AppbarTextColor"],
+            children:
+                tabs.map((String tabName) {
+                  return Container(
+                    child: GridView.builder(
+                      padding: const EdgeInsets.all(0),
+                      physics: const BouncingScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: getResponsiveCrossAxisVal(
+                          MediaQuery.of(context).size.width,
+                          itemWidth: 108,
+                        ),
+                        mainAxisExtent: 250,
+                        crossAxisSpacing: 0,
+                      ),
+                      itemCount: 20,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Container(
+                            child: Image(
+                              image: Image.network("https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx176496-xCNtU4llsUpu.png").image,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  ),
-                ),
-              );
-            }).toList(),
+                  );
+                }).toList(),
           ),
         ),
       ),
     );
+  }
+  getResponsiveCrossAxisVal(double width, {required int itemWidth}) {
+    return (width / itemWidth).floor().clamp(1, 10);
   }
 }

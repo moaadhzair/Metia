@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_svg: ^2.0.17
+  fluttertoast: ^8.2.12
 
 cupertino_icons: ^1.0.8
 
