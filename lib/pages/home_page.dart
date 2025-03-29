@@ -66,6 +66,7 @@ class _HomePageState extends State<HomePage> {
             backgroundColor: MyColors["AppbarColor"],
             title: Center(child: Text("Anime List", style: TextStyle(color: MyColors["AppbarTextColor"], fontSize: 20,fontWeight: FontWeight.bold,))),
             bottom: TabBar(
+              dividerColor: Color.fromARGB(255, 69, 69, 70),
               indicatorColor: MyColors["AppbarTextColor"],
               isScrollable: true,
               tabAlignment: TabAlignment.start,
