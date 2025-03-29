@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_svg: ^2.0.17
 
 cupertino_icons: ^1.0.8
 
@@ -22,6 +23,9 @@ flutter_lints: ^5.0.0
 flutter:
 
         uses-material-design: true
+        assets:
+          - assets/icons/
+
 
         
     
