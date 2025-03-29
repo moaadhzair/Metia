@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class HomePage extends StatefulWidget {
@@ -34,7 +35,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(primarySwatch: Colors.deepPurple),
       themeMode: ThemeMode.dark,
       debugShowCheckedModeBanner: false,
       home: DefaultTabController(
@@ -94,6 +94,7 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             bottom: TabBar(
+              overlayColor: MaterialStateProperty.all(Colors.transparent),
               dividerColor: Color.fromARGB(255, 69, 69, 70),
               indicatorColor: MyColors["AppbarTextColor"],
               isScrollable: true,
@@ -115,7 +116,8 @@ class _HomePageState extends State<HomePage> {
                     );
                   }).toList(),
             ),
-          ),
+
+            ),
           body: Container(),
         ),
       ),
