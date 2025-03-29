@@ -1,0 +1,83 @@
+name: metia-build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Android & iOS
+    runs-on: macos-latest  # Runs both builds on macOS
+    steps:
+      - uses: actions/checkout@v3
+
+      # Setup Flutter
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          architecture: x64
+
+      - run: flutter pub get
+
+      # --- Android Build ---
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+
+      - run: flutter build apk --release --split-per-abi
+
+      - name: Upload Android APK as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-apk
+          path: build/app/outputs/apk/release/
+
+      # --- iOS Build ---
+      - run: pod repo update
+        working-directory: ios
+
+      - run: flutter build ios --release --no-codesign
+
+      - run: mkdir Payload
+        working-directory: build/ios/iphoneos
+
+      - run: mv Runner.app/ Payload
+        working-directory: build/ios/iphoneos
+
+      - name: Zip iOS Output
+        run: zip -qq -r -9 metia.ipa Payload
+        working-directory: build/ios/iphoneos
+
+      - name: Upload iOS IPA as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-ipa
+          path: build/ios/iphoneos/metia.ipa
+
+  release:
+    name: Create GitHub Release
+    runs-on: macos-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download Android APK
+        uses: actions/download-artifact@v3
+        with:
+          name: android-apk
+          path: artifacts/android/
+
+      - name: Download iOS IPA
+        uses: actions/download-artifact@v3
+        with:
+          name: ios-ipa
+          path: artifacts/ios/
+
+      - name: Upload to GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "artifacts/android/*, artifacts/ios/*"
+          tag: v1.0.1
+          token: ${{ secrets.GITHUB_TOKEN }}
+          overwrite: true
+          body: "🚀 New Release: Android & iOS builds"
