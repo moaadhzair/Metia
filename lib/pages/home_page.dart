@@ -9,7 +9,15 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
+
 class _HomePageState extends State<HomePage> {
+
+  Map<String, Color> MyColors = {
+    "AppbarTextColor":  Color(0xFF98CAFE),
+    "AppbarColor":  Color(0xFF15121B),
+    "UnselectedColor":  Color(0xFF9A989B),
+  };
+
   List<String> tabs = [
     "WATCHING",
     "COMPLETED TV",
@@ -34,15 +42,35 @@ class _HomePageState extends State<HomePage> {
         child: Scaffold(
           backgroundColor: Colors.black,
           appBar: AppBar(
-            
-            backgroundColor: const Color(0xFF15121B),
-            title: Center(child: const Text("Anilist List", style: TextStyle(color: Color(0xFF98CAFE), fontSize: 20,fontWeight: FontWeight.bold,))),
+            actionsPadding: EdgeInsets.only(top: 0),
+            actions: [
+              IconButton(
+                icon:  Icon(Icons.settings,size: 30,color: MyColors["UnselectedColor"],),
+                onPressed: () {
+                  // Handle search action
+                },
+              ),
+              SizedBox(
+                width: 10,
+              ),
+              IconButton(
+                icon:  Icon(Icons.refresh,size: 30,color: MyColors["UnselectedColor"],),
+                onPressed: () {
+                  // Handle search action
+                },
+              ),
+              SizedBox(
+                width: 0,
+              ),
+            ],
+            backgroundColor: MyColors["AppbarColor"],
+            title: Center(child: Text("Anime List", style: TextStyle(color: MyColors["AppbarTextColor"], fontSize: 20,fontWeight: FontWeight.bold,))),
             bottom: TabBar(
-              
+              indicatorColor: MyColors["AppbarTextColor"],
               isScrollable: true,
               tabAlignment: TabAlignment.start,
-              labelColor: Color(0xFF98CAFE), // Color for the selected tab text
-              unselectedLabelColor: Color(0xFF9A989B), // Color for unselected tab text
+              labelColor: MyColors["AppbarTextColor"], // Color for the selected tab text
+              unselectedLabelColor: MyColors["UnselectedColor"], // Color for unselected tab text
               tabs:
                   tabs.map((String tabName) {
                     return Tab(
