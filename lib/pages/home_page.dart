@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -8,58 +10,55 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  List<String> tabs = [
+    "WATCHING",
+    "COMPLETED TV",
+    "COMPLETED MOVIE",
+    "COMPLETED OVA",
+    "COMPLETED SPECIAL",
+    "PAUSED",
+    "DROPPED",
+    "PLANNING",
+    "REWATCHING",
+    "ALL",
+  ];
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(primarySwatch: Colors.deepPurple),
+      themeMode: ThemeMode.dark,
       debugShowCheckedModeBanner: false,
-      home: DefaultTabController( // Add DefaultTabController here
-        length: 3, // Number of tabs
+      home: DefaultTabController(
+        length: 10,
         child: Scaffold(
           backgroundColor: Colors.black,
-          drawer: Drawer(
-            child: Container(
-              color: Colors.black87,
-            ),
-          ),
           appBar: AppBar(
-            title: Text("home page"),
-            actions: [
-              Icon(Icons.search),
-              SizedBox(width: 20),
-              Icon(Icons.notifications),
-              SizedBox(width: 20),
-            ],
-            backgroundColor: Colors.deepPurple,
+            
+            backgroundColor: const Color(0xFF15121B),
+            title: Center(child: const Text("Anilist List", style: TextStyle(color: Color(0xFF98CAFE), fontSize: 20,fontWeight: FontWeight.bold,))),
             bottom: TabBar(
-              physics: const BouncingScrollPhysics(),
-              //tabAlignment: TabAlignment.start,
+              
               isScrollable: true,
-              tabs: [
-                Tab(child: Text("Tab 148484848", style: TextStyle(color: Colors.white),)),
-                Tab(child: Text("Tab 2", style: TextStyle(color: Colors.white),)),
-                Tab(child: Text("Tab 44848", style: TextStyle(color: Colors.white),)),
-                Tab(child: Text("Tab 488", style: TextStyle(color: Colors.white),)),
-                Tab(child: Text("Tab 587484489489484564", style: TextStyle(color: Colors.white),)),
-                Tab(child: Text("Tab 6", style: TextStyle(color: Colors.white),)),
-                Tab(child: Text("Tab 7", style: TextStyle(color: Colors.white),)),
-                Tab(child: Text("Tab 8", style: TextStyle(color: Colors.white),)),
-                Tab(child: Text("Tab 9", style: TextStyle(color: Colors.white),)),
-                Tab(child: Text("Tab 10", style: TextStyle(color: Colors.white),)),
-              ],
+              tabAlignment: TabAlignment.start,
+              labelColor: Color(0xFF98CAFE), // Color for the selected tab text
+              unselectedLabelColor: Color(0xFF9A989B), // Color for unselected tab text
+              tabs:
+                  tabs.map((String tabName) {
+                    return Tab(
+                      
+                      child: Text(
+                        tabName,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  }).toList(),
             ),
           ),
-          body: Container(
-            child: Center(
-              child: Text(
-                "Hello World",
-                style: TextStyle(
-                  fontSize: 30,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
+          body: Container(),
         ),
       ),
     );
