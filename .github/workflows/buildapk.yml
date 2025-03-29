@@ -1,4 +1,4 @@
-name: metia
+name: metia-apk
 
 on:
   workflow_dispatch:

@@ -1,5 +1,5 @@
 
-name: metia
+name: metia-ios
 
 on:
   workflow_dispatch:
