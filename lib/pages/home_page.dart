@@ -128,12 +128,26 @@ class _HomePageState extends State<HomePage> {
                       ),
                       itemCount: 10,
                       itemBuilder: (context, index) {
-                        return Image(
-                          fit: BoxFit.fitHeight,
-                          image:
-                              Image.network(
-                                "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx176496-xCNtU4llsUpu.png",
-                              ).image,
+                        return GestureDetector(
+                          onTap: () {
+                            Fluttertoast.showToast(
+                              msg: "Clicked on $tabName at index $index",
+                              toastLength: Toast.LENGTH_SHORT,
+                              gravity: ToastGravity.BOTTOM,
+                              timeInSecForIosWeb: 1,
+                              backgroundColor: Colors.black,
+                              textColor: Colors.white,
+                              fontSize: 16.0,
+                            );
+                          },
+                          child: Image(
+                            
+                            fit: BoxFit.fitHeight,
+                            image:
+                                Image.network(
+                                  "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx176496-xCNtU4llsUpu.png",
+                                ).image,
+                          ),
                         );
                       },
                     ),
