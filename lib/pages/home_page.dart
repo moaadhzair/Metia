@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:metia/constants/Colors.dart';
+import 'package:metia/pages/settings_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,11 +16,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Map<String, Color> MyColors = {
-    "AppbarTextColor": Color(0xFF98CAFE),
-    "AppbarColor": Color(0xFF15121B),
-    "UnselectedColor": Color(0xFF9A989B),
-  };
 
   List<String> tabs = [
     "WATCHING",
@@ -35,10 +32,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      themeMode: ThemeMode.dark,
-      debugShowCheckedModeBanner: false,
-      home: DefaultTabController(
+    return DefaultTabController(
         length: 10,
         child: Scaffold(
           backgroundColor: Colors.black,
@@ -50,7 +44,7 @@ class _HomePageState extends State<HomePage> {
                   'assets/icons/anilist.svg',
                   height: 30,
                   colorFilter: ColorFilter.mode(
-                    MyColors["AppbarTextColor"]!,
+                    MyColors.appbarTextColor!,
                     BlendMode.srcIn,
                   ),
                 ),
@@ -61,29 +55,34 @@ class _HomePageState extends State<HomePage> {
                 icon: Icon(
                   Icons.settings,
                   size: 30,
-                  color: MyColors["UnselectedColor"],
+                  color: MyColors.unselectedColor,
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SettingsPage()),
+                  );
+                },
               ),
               SizedBox(width: 10),
               IconButton(
                 icon: Icon(
                   Icons.refresh,
                   size: 30,
-                  color: MyColors["UnselectedColor"],
+                  color: MyColors.unselectedColor,
                 ),
                 onPressed: () {},
               ),
               SizedBox(width: 0),
             ],
-            backgroundColor: MyColors["AppbarColor"],
+            backgroundColor: MyColors.appbarColor,
             title: Row(
               children: [
                 SizedBox(width: 20),
                 Text(
                   "Metia",
                   style: TextStyle(
-                    color: MyColors["AppbarTextColor"],
+                    color: MyColors.appbarTextColor,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -93,11 +92,11 @@ class _HomePageState extends State<HomePage> {
             bottom: TabBar(
               overlayColor: MaterialStateProperty.all(Colors.transparent),
               dividerColor: Color.fromARGB(255, 69, 69, 70),
-              indicatorColor: MyColors["AppbarTextColor"],
+              indicatorColor: MyColors.appbarTextColor,
               isScrollable: true,
               tabAlignment: TabAlignment.start,
-              labelColor: MyColors["AppbarTextColor"],
-              unselectedLabelColor: MyColors["UnselectedColor"],
+              labelColor: MyColors.appbarTextColor,
+              unselectedLabelColor: MyColors.unselectedColor,
               tabs:
                   tabs.map((String tabName) {
                     return Tab(
@@ -144,8 +143,7 @@ class _HomePageState extends State<HomePage> {
                 }).toList(),
           ),
         ),
-      ),
-    );
+      );
   }
 
   getResponsiveCrossAxisVal(double width, {required double itemWidth}) {
