@@ -120,28 +120,17 @@ class _HomePageState extends State<HomePage> {
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: getResponsiveCrossAxisVal(
                           MediaQuery.of(context).size.width,
-                          itemWidth: 460/4,
+                          itemWidth: 460 / 4,
                         ),
-                        mainAxisExtent: 650/4,
+                        mainAxisExtent: 650 / 4,
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,
                       ),
                       itemCount: 10,
                       itemBuilder: (context, index) {
                         return GestureDetector(
-                          onTap: () {
-                            Fluttertoast.showToast(
-                              msg: "Clicked on $tabName at index $index",
-                              toastLength: Toast.LENGTH_SHORT,
-                              gravity: ToastGravity.BOTTOM,
-                              timeInSecForIosWeb: 1,
-                              backgroundColor: Colors.black,
-                              textColor: Colors.white,
-                              fontSize: 16.0,
-                            );
-                          },
+                          onTap: () {},
                           child: Image(
-                            
                             fit: BoxFit.fitHeight,
                             image:
                                 Image.network(
