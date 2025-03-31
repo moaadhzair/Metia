@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
     return DefaultTabController(
       length: 10,
       child: Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: MyColors.backgroundColor,
         appBar: AppBar(
           backgroundColor: MyColors.appbarColor,
           leading: Row(
@@ -143,9 +143,10 @@ class _HomePageState extends State<HomePage> {
                             MediaQuery.of(context).size.width,
                             itemWidth: 460 / 4,
                           ),
-                          mainAxisExtent: 650 / 4,
+                          mainAxisExtent: 250,
                           crossAxisSpacing: 10,
                           mainAxisSpacing: 10,
+                          childAspectRatio: 0.7,
                         ),
                         itemCount: animelist.length,
                         itemBuilder: (context, index) {

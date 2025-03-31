@@ -23,7 +23,15 @@ class Tools {
   }
 
   static getResponsiveCrossAxisVal(double width, {required double itemWidth}) {
-    return (width / itemWidth).floor().clamp(1, 10);
+    return (width / itemWidth).floor().clamp(1, 17);
   }
+
+  static String insertAt(String original, String toInsert, int index) {
+  if (index < 0 || index > original.length) {
+    throw ArgumentError("Index out of range");
+  }
+  return original.substring(0, index) + toInsert + original.substring(index);
+}
+
 
 }
