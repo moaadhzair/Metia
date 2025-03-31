@@ -131,6 +131,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Metia/SyncingStuff/app.json
+          git add SyncingStuff/app.json
           git commit -m "Updated app.json with new IPA size and version date"
           git push
