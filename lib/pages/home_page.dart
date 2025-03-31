@@ -7,6 +7,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:metia/constants/Colors.dart';
 import 'package:metia/pages/settings_page.dart';
+import 'package:metia/data/setting.dart';
+import 'package:metia/tools.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -72,7 +74,9 @@ class _HomePageState extends State<HomePage> {
                 color: MyColors.unselectedColor,
               ),
               onPressed: () {
-                Toast(context, "Refreshing...");
+                setState(() {
+                  Tools.Toast(context, "Refreshing...");
+                });
               },
             ),
             SizedBox(width: 0),
@@ -118,7 +122,7 @@ class _HomePageState extends State<HomePage> {
                 return Container(
                   child: GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: getResponsiveCrossAxisVal(
+                      crossAxisCount: Tools.getResponsiveCrossAxisVal(
                         MediaQuery.of(context).size.width,
                         itemWidth: 460 / 4,
                       ),
@@ -130,14 +134,22 @@ class _HomePageState extends State<HomePage> {
                     itemBuilder: (context, index) {
                       return GestureDetector(
                         onTap: () {
-                          Toast(context, "Clicked on $tabName at index $index");
+                          Tools.Toast(context, "Clicked on $tabName at index $index");
                         },
-                        child: Image(
-                          fit: BoxFit.fitHeight,
-                          image:
-                              Image.network(
-                                "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx176496-xCNtU4llsUpu.png",
-                              ).image,
+                        child: FutureBuilder<String?>(
+                          future: Setting.getPosterUrl(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return Center(child: CircularProgressIndicator());
+                            } else if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+                              return Center(child: Icon(Icons.error, color: Colors.red));
+                            } else {
+                              return Image.network(
+                                snapshot.data!,
+                                fit: BoxFit.fitHeight,
+                              );
+                            }
+                          },
                         ),
                       );
                     },
@@ -149,27 +161,5 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void Toast(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Center(
-          child: Text(message, 
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: MyColors.appbarTextColor,
-                fontSize: 16,
-              )),
-        ),
-        duration: const Duration(seconds: 1),
-        backgroundColor: MyColors.appbarColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
-      ),
-    );
-  }
 
-  getResponsiveCrossAxisVal(double width, {required double itemWidth}) {
-    return (width / itemWidth).floor().clamp(1, 10);
   }
-}
