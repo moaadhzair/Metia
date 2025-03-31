@@ -117,7 +117,7 @@ jobs:
         run: |
           node -e '
           const fs = require("fs");
-          const path = "Metia/SyncingStuff/app.json";
+          const path = "SyncingStuff/app.json";
           let data = JSON.parse(fs.readFileSync(path, "utf8"));
 
           const newDate = new Date().toISOString(); // Get current date
