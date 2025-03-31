@@ -6,6 +6,10 @@ class SettingsPage extends StatelessWidget {
   final TextEditingController _posterUrlController = TextEditingController(
     text: Setting.posterUrl,
   );
+  final TextEditingController _defaultSearchController = TextEditingController(
+    text: "",
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,6 +86,49 @@ class SettingsPage extends StatelessWidget {
                   ),
                 ],
               ),
+              SizedBox(height: 10,),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 9,
+                    child: TextFormField(
+                      controller: _defaultSearchController,
+                      //controller: TextEditingController(text: Setting.posterUrl),
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelStyle: TextStyle(color: MyColors.unselectedColor),
+                        hintStyle: TextStyle(color: MyColors.appbarTextColor),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: MyColors.unselectedColor,
+                          ),
+                        ),
+                        //hintText: "Enter text here",
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: MyColors.appbarTextColor,
+                            width: 3,
+                          ),
+                        ),
+                        border: OutlineInputBorder(),
+                        labelText: "Enter the name of anime you wnat the mock data of",
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: IconButton(
+                      onPressed: () {
+                        final defaultSearch = _defaultSearchController.text;
+                        //final posterUrl = (TextEditingController(text: Setting.posterUrl)).text;
+                        Setting.savedefaultSearch(context, defaultSearch);
+                      },
+                      icon: Icon(Icons.save, color: MyColors.appbarTextColor),
+                    ),
+                  ),
+                ],
+              ),
+            
             ],
           ),
         ),

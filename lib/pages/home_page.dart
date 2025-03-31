@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:metia/api/anilist_search.dart';
 import 'package:metia/constants/Colors.dart';
 import 'package:metia/pages/settings_page.dart';
 import 'package:metia/data/setting.dart';
 import 'package:metia/tools.dart';
+import 'package:metia/widgets/anime_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -102,64 +104,67 @@ class _HomePageState extends State<HomePage> {
             tabAlignment: TabAlignment.start,
             labelColor: MyColors.appbarTextColor,
             unselectedLabelColor: MyColors.unselectedColor,
-            tabs:
-                tabs.map((String tabName) {
-                  return Tab(
-                    child: Text(
-                      tabName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  );
-                }).toList(),
+            tabs: tabs.map((String tabName) {
+              return Tab(
+                child: Text(
+                  tabName,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ),
-        body: TabBarView(
-          children:
-              tabs.map((String tabName) {
-                return Container(
-                  child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: Tools.getResponsiveCrossAxisVal(
-                        MediaQuery.of(context).size.width,
-                        itemWidth: 460 / 4,
-                      ),
-                      mainAxisExtent: 650 / 4,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                    ),
-                    itemCount: 10,
-                    itemBuilder: (context, index) {
-                      return GestureDetector(
-                        onTap: () {
-                          Tools.Toast(context, "Clicked on $tabName at index $index");
-                        },
-                        child: FutureBuilder<String?>(
-                          future: Setting.getPosterUrl(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return Center(child: CircularProgressIndicator());
-                            } else if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-                              return Center(child: Icon(Icons.error, color: Colors.red));
-                            } else {
-                              return Image.network(
-                                snapshot.data!,
-                                fit: BoxFit.fitHeight,
-                              );
-                            }
-                          },
+        body: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: FutureBuilder<List<dynamic>>(
+            future: AnilistApi.fetchAnimeList(context), // Fetch data asynchronously
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                // Show a loading indicator while waiting for data
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                // Handle errors
+                return Center(child: Text("Error: ${snapshot.error}"));
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                // Handle empty data
+                return Center(child: Text("No data available"));
+              } else {
+                // Data is available, build the GridView
+                final animelist = snapshot.data!;
+                return TabBarView(
+                  children: tabs.map((String tabName) {
+                    return Container(
+                      child: GridView.builder(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: Tools.getResponsiveCrossAxisVal(
+                            MediaQuery.of(context).size.width,
+                            itemWidth: 460 / 4,
+                          ),
+                          mainAxisExtent: 650 / 4,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
                         ),
-                      );
-                    },
-                  ),
+                        itemCount: animelist.length,
+                        itemBuilder: (context, index) {
+                          return AnimeCard(
+                            index: index,
+                            tabName: tabName,
+                            data: animelist.elementAt(index),
+                          );
+                        },
+                      ),
+                    );
+                  }).toList(),
                 );
-              }).toList(),
+              }
+            },
+          ),
         ),
       ),
     );
   }
+}
 
-
-  }
