@@ -57,7 +57,7 @@ class AnimeCard extends StatelessWidget {
           Stack(
             children: [
               Align(
-                alignment: Alignment.centerRight,
+                alignment: Alignment.bottomRight,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -86,7 +86,7 @@ class AnimeCard extends StatelessWidget {
                 ),
               ),
               Align(
-                alignment: Alignment.centerLeft,
+                alignment: Alignment.bottomLeft,
                 child: RichText(
                   text: TextSpan(
                     children: [
