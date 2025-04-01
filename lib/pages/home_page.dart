@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:metia/api/anilist_search.dart';
 import 'package:metia/constants/Colors.dart';
+import 'package:metia/data/Library.dart';
 import 'package:metia/pages/settings_page.dart';
 import 'package:metia/data/setting.dart';
 import 'package:metia/tools.dart';
@@ -21,22 +22,17 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<String> tabs = [
+    "COMPLETED",
     "WATCHING",
-    "COMPLETED TV",
-    "COMPLETED MOVIE",
-    "COMPLETED OVA",
-    "COMPLETED SPECIAL",
     "PAUSED",
     "DROPPED",
     "PLANNING",
-    "REWATCHING",
-    "ALL",
   ];
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 10,
+      length: 5,
       child: Scaffold(
         backgroundColor: MyColors.backgroundColor,
         appBar: AppBar(
@@ -104,68 +100,75 @@ class _HomePageState extends State<HomePage> {
             tabAlignment: TabAlignment.start,
             labelColor: MyColors.appbarTextColor,
             unselectedLabelColor: MyColors.unselectedColor,
-            tabs: tabs.map((String tabName) {
-              return Tab(
-                child: Text(
-                  tabName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              );
-            }).toList(),
+            tabs:
+                tabs.map((String tabName) {
+                  return Tab(
+                    child: Text(
+                      tabName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  );
+                }).toList(),
           ),
         ),
         body: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: FutureBuilder<List<dynamic>>(
-            future: AnilistApi.fetchAnimeList(context), // Fetch data asynchronously
+          child: FutureBuilder<List<animeState>>(
+            future: AnilistApi.fetchAnimeListofID(
+              7212376,
+            ), // Fetch data asynchronously
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                // Show a loading indicator while waiting for data
                 return Center(child: CircularProgressIndicator());
               } else if (snapshot.hasError) {
-                // Handle errors
                 return Center(child: Text("Error: ${snapshot.error}"));
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                // Handle empty data
                 return Center(child: Text("No data available"));
               } else {
-                // Data is available, build the GridView
-                final animelist = snapshot.data!;
+                final animeLibrary = snapshot.data!;
+
                 return TabBarView(
-                  children: tabs.map((String tabName) {
-                    return Container(
-                      child: GridView.builder(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: Tools.getResponsiveCrossAxisVal(
-                            MediaQuery.of(context).size.width,
-                            itemWidth: 460 / 4,
+                  children:
+                      animeLibrary.map((animeState state) {
+                        return Container(
+                          child: GridView.builder(
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount:
+                                      Tools.getResponsiveCrossAxisVal(
+                                        MediaQuery.of(context).size.width,
+                                        itemWidth: 460 / 4,
+                                      ),
+                                  mainAxisExtent: 250,
+                                  crossAxisSpacing: 10,
+                                  mainAxisSpacing: 10,
+                                  childAspectRatio: 0.7,
+                                ),
+                            itemCount: state.data.length,
+                            itemBuilder: (context, index) {
+                               return AnimeCard(
+                                  index: index,
+                                  tabName:
+                                      state
+                                          .state
+                                          .name, // Convert enum to string
+                                  data: state.data[index],
+                                );
+                              // Avoid returning null
+                            },
                           ),
-                          mainAxisExtent: 250,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: 0.7,
-                        ),
-                        itemCount: animelist.length,
-                        itemBuilder: (context, index) {
-                          return AnimeCard(
-                            index: index,
-                            tabName: tabName,
-                            data: animelist.elementAt(index),
-                          );
-                        },
-                      ),
-                    );
-                  }).toList(),
+                        );
+                      }).toList(),
                 );
               }
             },
           ),
         ),
       ),
+      //),
     );
   }
 }
-

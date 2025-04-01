@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:metia/constants/Colors.dart';
 import 'package:metia/data/setting.dart';
+import 'package:metia/pages/login_page.dart';
 
 class SettingsPage extends StatelessWidget {
   final TextEditingController _posterUrlController = TextEditingController(
@@ -44,7 +45,6 @@ class SettingsPage extends StatelessWidget {
           padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
-              //SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
@@ -128,7 +128,16 @@ class SettingsPage extends StatelessWidget {
                   ),
                 ],
               ),
-            
+              SizedBox(height: 10,),
+              Align(
+                alignment: Alignment.topCenter,
+                child: ElevatedButton(onPressed: (){
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginPage()),
+                    );
+                }, child: Text("Login"))
+              )
             ],
           ),
         ),
