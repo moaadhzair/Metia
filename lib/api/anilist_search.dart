@@ -22,7 +22,7 @@ class AnilistApi {
     final body = jsonEncode({
       'query': '''
     query (\$type: MediaType!, \$userId: Int!) {
-      MediaListCollection(type: \$type, userId: \$userId, sort: UPDATED_TIME) {
+      MediaListCollection(type: \$type, userId: \$userId, sort: UPDATED_TIME_DESC) {
         lists {
           name
           entries {
