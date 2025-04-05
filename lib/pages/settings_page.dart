@@ -18,7 +18,7 @@ class SettingsPage extends StatelessWidget {
         iconTheme: IconThemeData(color: MyColors.appbarTextColor),
         leading: Row(
           children: [
-            SizedBox(width: 10),
+            //SizedBox(width: 10),
             IconButton(
               icon: Icon(Icons.arrow_back, color: MyColors.appbarTextColor),
               onPressed: () {
