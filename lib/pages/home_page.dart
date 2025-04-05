@@ -1,15 +1,9 @@
-import 'dart:io';
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:metia/api/anilist_search.dart';
 import 'package:metia/constants/Colors.dart';
 import 'package:metia/data/Library.dart';
 import 'package:metia/pages/settings_page.dart';
-import 'package:metia/data/setting.dart';
 import 'package:metia/tools.dart';
 import 'package:metia/widgets/anime_card.dart';
 
@@ -44,7 +38,7 @@ class _HomePageState extends State<HomePage> {
                 'assets/icons/anilist.svg',
                 height: 30,
                 colorFilter: ColorFilter.mode(
-                  MyColors.appbarTextColor!,
+                  MyColors.appbarTextColor,
                   BlendMode.srcIn,
                 ),
               ),
@@ -93,7 +87,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           bottom: TabBar(
-            overlayColor: MaterialStateProperty.all(Colors.transparent),
+            overlayColor: WidgetStateProperty.all(Colors.transparent),
             dividerColor: Color.fromARGB(255, 69, 69, 70),
             indicatorColor: MyColors.appbarTextColor,
             isScrollable: true,
