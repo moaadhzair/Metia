@@ -16,28 +16,64 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<String> tabs = [
-    "COMPLETED",
     "WATCHING",
+    "COMPLETED",
     "PAUSED",
     "DROPPED",
     "PLANNING",
   ];
 
+  List<int> itemCounts = [0, 0, 0, 0, 0];
+
+  List<animeState>? _animeLibrary;
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAnimeLibrary();
+  }
+
+  void _fetchAnimeLibrary() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final data = await AnilistApi.fetchAnimeListofID(7212376);
+      setState(() {
+        _animeLibrary = data;
+        for (int i = 0; i < _animeLibrary!.length; i++) {
+          itemCounts[i] = _animeLibrary![i].data.length;
+          tabs[i] = "${tabs[i].split('(')[0]}(${itemCounts[i]})";
+        }
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 5,
+      length: tabs.length,
       child: Scaffold(
         backgroundColor: MyColors.backgroundColor,
         appBar: AppBar(
           backgroundColor: MyColors.appbarColor,
           leading: Row(
             children: [
-              SizedBox(width: 20),
+              const SizedBox(width: 20),
               SvgPicture.asset(
                 'assets/icons/anilist.svg',
                 height: 30,
-                colorFilter: ColorFilter.mode(
+                colorFilter: const ColorFilter.mode(
                   MyColors.appbarTextColor,
                   BlendMode.srcIn,
                 ),
@@ -46,7 +82,7 @@ class _HomePageState extends State<HomePage> {
           ),
           actions: [
             IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.settings,
                 size: 30,
                 color: MyColors.unselectedColor,
@@ -58,22 +94,21 @@ class _HomePageState extends State<HomePage> {
                 );
               },
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.refresh,
                 size: 30,
                 color: MyColors.unselectedColor,
               ),
               onPressed: () {
-                setState(() {
-                  Tools.Toast(context, "Refreshing...");
-                });
+                Tools.Toast(context, "Refreshing...");
+                _fetchAnimeLibrary(); // Refetch on refresh
               },
             ),
-            SizedBox(width: 0),
+            const SizedBox(width: 0),
           ],
-          title: Row(
+          title: const Row(
             children: [
               SizedBox(width: 20),
               Text(
@@ -88,7 +123,7 @@ class _HomePageState extends State<HomePage> {
           ),
           bottom: TabBar(
             overlayColor: WidgetStateProperty.all(Colors.transparent),
-            dividerColor: Color.fromARGB(255, 69, 69, 70),
+            dividerColor: const Color.fromARGB(255, 69, 69, 70),
             indicatorColor: MyColors.appbarTextColor,
             isScrollable: true,
             tabAlignment: TabAlignment.start,
@@ -109,26 +144,22 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         body: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: FutureBuilder<List<animeState>>(
-            future: AnilistApi.fetchAnimeListofID(
-              7212376,
-            ), // Fetch data asynchronously
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text("Error: ${snapshot.error}"));
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(child: Text("No data available"));
-              } else {
-                final animeLibrary = snapshot.data!;
-
-                return TabBarView(
-                  children:
-                      animeLibrary.map((animeState state) {
-                        return Container(
-                          child: GridView.builder(
+          padding: const EdgeInsets.only(top: 8),
+          child:
+              _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error != null
+                  ? Center(
+                    child: Text(
+                      "Error: $_error",
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  )
+                  : TabBarView(
+                    children:
+                        _animeLibrary!.map((animeState state) {
+                          return GridView.builder(
+                            cacheExtent: 500,
                             gridDelegate:
                                 SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount:
@@ -136,33 +167,24 @@ class _HomePageState extends State<HomePage> {
                                         MediaQuery.of(context).size.width,
                                         itemWidth: 460 / 4,
                                       ),
-                                  mainAxisExtent: 250,
+                                  mainAxisExtent: 260,
                                   crossAxisSpacing: 10,
                                   mainAxisSpacing: 10,
                                   childAspectRatio: 0.7,
                                 ),
                             itemCount: state.data.length,
                             itemBuilder: (context, index) {
-                               return AnimeCard(
-                                  index: index,
-                                  tabName:
-                                      state
-                                          .state
-                                          .name, // Convert enum to string
-                                  data: state.data[index],
-                                );
-                              // Avoid returning null
+                              return AnimeCard(
+                                index: index,
+                                tabName: state.state.name,
+                                data: state.data[index],
+                              );
                             },
-                          ),
-                        );
-                      }).toList(),
-                );
-              }
-            },
-          ),
+                          );
+                        }).toList(),
+                  ),
         ),
       ),
-      //),
     );
   }
 }

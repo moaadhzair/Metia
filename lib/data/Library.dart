@@ -9,7 +9,8 @@ class animeLibrary {
 
   void addAnime(animeState anime) {
     lib.add(anime);
+    lib.sort((a, b) => States.values.indexOf(a.state).compareTo(States.values.indexOf(b.state)));
   }
 }
 
-enum States { COMPLETED, WATCHING, PAUSED, DROPPED, PLANNING }
+enum States { WATCHING, COMPLETED, PAUSED, DROPPED, PLANNING }

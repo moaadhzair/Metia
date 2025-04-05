@@ -1,6 +1,5 @@
 import 'dart:convert';
 //import 'dart:js_interop';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:metia/data/Library.dart';
@@ -77,11 +76,10 @@ class AnilistApi {
     //print("hereeee");
     var animeLib = animeLibrary();
     //print(jsonEncode(result["data"]["MediaListCollection"]["lists"]));
-
     for (var element in result["data"]["MediaListCollection"]["lists"]) {
       print(element["name"]);
       var State;
-      switch(element["entries"].toString()){
+      switch(element["name"].toString()){
         case "Completed":
           State = States.COMPLETED;
         case "Watching":
