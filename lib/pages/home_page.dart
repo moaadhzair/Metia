@@ -4,8 +4,14 @@ import 'package:metia/api/anilist_search.dart';
 import 'package:metia/constants/Colors.dart';
 import 'package:metia/data/Library.dart';
 import 'package:metia/pages/settings_page.dart';
+import 'package:metia/pages/user_page.dart';
 import 'package:metia/tools.dart';
 import 'package:metia/widgets/anime_card.dart';
+import 'package:app_links/app_links.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,6 +21,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final AppLinks _appLinks = AppLinks();
+
   List<String> tabs = [
     "WATCHING",
     "COMPLETED",
@@ -32,7 +40,64 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _initDeepLinking();
     _fetchAnimeLibrary();
+  }
+
+  Future<String> fetchAniListAccessToken(String authorizationCode) async {
+    final Uri tokenEndpoint = Uri.https('anilist.co', '/api/v2/oauth/token');
+    final Map<String, String> payload = {
+      'grant_type': 'authorization_code',
+      'client_id': '25588',
+      'client_secret': 'QCzgwOKG6kJRzRL91evKRXXGfDCHlmgXfi44A0Ok',
+      'redirect_uri': 'metia://',
+      'code': authorizationCode,
+    };
+
+    try {
+      final http.Response response = await http.post(
+        tokenEndpoint,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        return responseData['access_token'] as String;
+      } else {
+        throw Exception('Failed to retrieve access token: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Request failed: $e');
+    }
+  }
+
+  Future<void> _initDeepLinking() async {
+    final initialLink = await _appLinks.getInitialLink();
+    if (initialLink != null) {
+      print("Initial Link: ${initialLink.toString()}");
+    }
+
+    _appLinks.uriLinkStream.listen((Uri? uri) {
+      if (uri != null) {
+        String code = uri.toString().substring(
+          uri.toString().indexOf('code=') + 5,
+        );
+        fetchAniListAccessToken(code)
+            .then((accessToken) {
+              SharedPreferences.getInstance().then((prefs) {
+                prefs.setString('auth_key', accessToken);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const UserPage()),
+                );
+              });
+            })
+            .catchError((error) {
+              print("Error fetching access token: $error");
+            });
+      }
+    });
   }
 
   void _fetchAnimeLibrary() async {
@@ -42,7 +107,9 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      final data = await AnilistApi.fetchAnimeListofID(7212376);
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id') ?? 0;
+      final data = await AnilistApi.fetchAnimeListofID(userId);
       setState(() {
         _animeLibrary = data;
         for (int i = 0; i < _animeLibrary!.length; i++) {
@@ -83,6 +150,30 @@ class _HomePageState extends State<HomePage> {
           actions: [
             IconButton(
               icon: const Icon(
+                Icons.login,
+                size: 30,
+                color: MyColors.unselectedColor,
+              ),
+              onPressed: () {
+                SharedPreferences.getInstance().then((prefs) {
+                  final authCode = prefs.getString('auth_key');
+                  if (authCode != null && authCode.isNotEmpty) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const UserPage()),
+                    );
+                  } else {
+                    final url = Uri.parse(
+                      "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
+                    );
+                    _launchURL(url);
+                  }
+                });
+              },
+            ),
+            const SizedBox(width: 10),
+            IconButton(
+              icon: const Icon(
                 Icons.settings,
                 size: 30,
                 color: MyColors.unselectedColor,
@@ -103,7 +194,7 @@ class _HomePageState extends State<HomePage> {
               ),
               onPressed: () {
                 Tools.Toast(context, "Refreshing...");
-                _fetchAnimeLibrary(); // Refetch on refresh
+                _fetchAnimeLibrary();
               },
             ),
             const SizedBox(width: 0),
@@ -129,62 +220,66 @@ class _HomePageState extends State<HomePage> {
             tabAlignment: TabAlignment.start,
             labelColor: MyColors.appbarTextColor,
             unselectedLabelColor: MyColors.unselectedColor,
-            tabs:
-                tabs.map((String tabName) {
-                  return Tab(
-                    child: Text(
-                      tabName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  );
-                }).toList(),
+            tabs: tabs.map((String tabName) {
+              return Tab(
+                child: Text(
+                  tabName,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ),
         body: Padding(
           padding: const EdgeInsets.only(top: 8),
-          child:
-              _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error != null
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
                   ? Center(
-                    child: Text(
-                      "Error: $_error",
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  )
+                      child: Text(
+                        "Error: $_error",
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    )
                   : TabBarView(
-                    children:
-                        _animeLibrary!.map((animeState state) {
-                          return GridView.builder(
-                            cacheExtent: 500,
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount:
-                                      Tools.getResponsiveCrossAxisVal(
-                                        MediaQuery.of(context).size.width,
-                                        itemWidth: 460 / 4,
-                                      ),
-                                  mainAxisExtent: 260,
-                                  crossAxisSpacing: 10,
-                                  mainAxisSpacing: 10,
-                                  childAspectRatio: 0.7,
-                                ),
-                            itemCount: state.data.length,
-                            itemBuilder: (context, index) {
-                              return AnimeCard(
-                                index: index,
-                                tabName: state.state.name,
-                                data: state.data[index],
-                              );
-                            },
-                          );
-                        }).toList(),
-                  ),
+                      children: _animeLibrary!.map((animeState state) {
+                        return GridView.builder(
+                          cacheExtent: 500,
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: Tools.getResponsiveCrossAxisVal(
+                              MediaQuery.of(context).size.width,
+                              itemWidth: 460 / 4,
+                            ),
+                            mainAxisExtent: 260,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: 0.7,
+                          ),
+                          itemCount: state.data.length,
+                          itemBuilder: (context, index) {
+                            return AnimeCard(
+                              index: index,
+                              tabName: state.state.name,
+                              data: state.data[index],
+                            );
+                          },
+                        );
+                      }).toList(),
+                    ),
         ),
       ),
     );
+  }
+
+  Future<void> _launchURL(Uri url) async {
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 }
