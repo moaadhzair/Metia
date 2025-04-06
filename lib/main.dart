@@ -28,7 +28,10 @@ Future<void> registerCustomScheme(String scheme) async {
 }
 
 void main() {
-  registerCustomScheme('metia');
+  if (Platform.isWindows) {
+    registerCustomScheme('metia');
+  }
+  
   runApp(const Main());
 }
 
