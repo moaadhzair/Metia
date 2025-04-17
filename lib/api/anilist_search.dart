@@ -8,9 +8,6 @@ import 'package:metia/tools.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AnilistApi {
-  //static const String auth_key =
-      //"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjQ3ZWQ2NzVjZWI2NDRjNTY0YTM2ZTE1NjgyNDZiYzRhNTkwMmQwMDk3MDBmZWI2ZjNkZjcyMGQ3MzU0ZjMzODFkNTkzZTE0OTZkYTA2MjJiIn0.eyJhdWQiOiIyNTU4OCIsImp0aSI6IjQ3ZWQ2NzVjZWI2NDRjNTY0YTM2ZTE1NjgyNDZiYzRhNTkwMmQwMDk3MDBmZWI2ZjNkZjcyMGQ3MzU0ZjMzODFkNTkzZTE0OTZkYTA2MjJiIiwiaWF0IjoxNzQzNDU4ODQyLCJuYmYiOjE3NDM0NTg4NDIsImV4cCI6MTc3NDk5NDg0Miwic3ViIjoiNzIxMjM3NiIsInNjb3BlcyI6W119.UyHJs0xhdBsu05_tqR3459oKFHFIRGME3kIe11Y5h-v6CUWDzIswyQAcJH6Voh3cDU_v3Rs2IXhNHvwf6_SDK4mJbp0ujqHl-F44EzQc6aCYSob-i8agbzMHmavM2buiBZFHGYmMpxIH4LT1fJH3qanVw098mM9OGTttZndL3OjiSxlEe5mSP7lzCajuPMC0kOsHHoTGrpRt2Z-FWu6S9hRcap1zi60IdqkomWNy82hU9woI1lSqK_J4AKFsCGBRUs85H1xyLD8z90nO77N0ybmLkIfgdBTh2aR9DU6N9B-X2OFkHQftNuzc_Kswi_W3SyyrQZEUnUXd2CURG3n5NeMSYC-y1hks4v3XLF_1u1rwa5mfYAqWy7AZ7onQJRcAzswFYw_by49ogN4GZmkB4Mo5TKshj7lElaqlDW1fXEXE9YLmDn7U20HrgX7pEnNnddQhObWiNSCEgoXvrvJNJheHmHxKCvLd5rN5z_hE8c-9WRcp61MwvgQYr0MEDx7F12SHO4krXCyWmgeKc-1DjTxwuclbCx4XbZ7te7hk2TUZzDt8RR9vI6dBrzXL20bvn-vTMX1cwL4OYrUxm5QHPeN5lFupZQzPXl8SFKvsp0aY06nV92vyuu_wsR7-jIZskoe2yuF0OI8nenUCsmlmnZpsL-UeMUD_7jRWRjX6Y3Y";
-
   static Future<Map<String, dynamic>> fetchUserAnimeList(int userId) async {
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
@@ -22,7 +19,8 @@ class AnilistApi {
     const String url = 'https://graphql.anilist.co';
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer $authKey',
+      /*'Authorization': 'Bearer $authKey',*/
+      // i found out i didn't need the authentication key to fetch the anime list lol
       'Accept': 'application/json',
     };
 
@@ -63,18 +61,15 @@ class AnilistApi {
         headers: headers,
         body: body,
       );
-      
-      print("a request to the graphql has been made!!!!");
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        throw Exception(
-          'Failed to fetch user anime list: ${response.statusCode} - ${response.body}, user id is $userId',
-        );
+        throw Exception('Failed to fetch anime list: ${response.statusCode}');
       }
     } catch (error) {
-      throw Exception('Error fetching user anime list: $error');
+      // Rethrow the original exception without wrapping it
+      rethrow;
     }
   }
 
@@ -88,7 +83,7 @@ class AnilistApi {
     for (var element in result["data"]["MediaListCollection"]["lists"]) {
       //print(element["name"]);
       var State;
-      switch(element["name"].toString()){
+      switch (element["name"].toString()) {
         case "Completed":
           State = States.COMPLETED;
         case "Watching":
@@ -101,12 +96,11 @@ class AnilistApi {
           State = States.PLANNING;
         default:
           State = States.WATCHING;
-
       }
       final Anime = animeState(State, element["entries"]);
       animeLib.addAnime(Anime);
     }
-    
+
     //print(animeLib.lib);
     return animeLib.lib;
   }

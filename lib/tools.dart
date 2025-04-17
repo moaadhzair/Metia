@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:metia/constants/Colors.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Tools {
   static void Toast(BuildContext context, String message) {
@@ -27,11 +28,9 @@ class Tools {
   }
 
   static String insertAt(String original, String toInsert, int index) {
-  if (index < 0 || index > original.length) {
-    throw ArgumentError("Index out of range");
+    if (index < 0 || index > original.length) {
+      throw ArgumentError("Index out of range");
+    }
+    return original.substring(0, index) + toInsert + original.substring(index);
   }
-  return original.substring(0, index) + toInsert + original.substring(index);
-}
-
-
 }

@@ -60,7 +60,7 @@ class _HomePageState extends State<HomePage> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(payload),
       );
-      
+
       print("a request to the graphql has been made!!!!");
 
       if (response.statusCode == 200) {
@@ -222,60 +222,76 @@ class _HomePageState extends State<HomePage> {
             tabAlignment: TabAlignment.start,
             labelColor: MyColors.appbarTextColor,
             unselectedLabelColor: MyColors.unselectedColor,
-            tabs: tabs.map((String tabName) {
-              return Tab(
-                child: Text(
-                  tabName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              );
-            }).toList(),
+            tabs:
+                tabs.map((String tabName) {
+                  return Tab(
+                    child: Text(
+                      tabName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  );
+                }).toList(),
           ),
         ),
         body: Padding(
           padding: const EdgeInsets.only(top: 8),
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _error == "Exception: Please sign in to fetch your anime list."
+          child:
+              _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error ==
+                      "Exception: Please sign in to fetch your anime list."
                   ? const Center(
-                      child: Text(
-                        "Sign In",
-                        style: TextStyle(color: MyColors.appbarTextColor,
+                    child: Text(
+                      "Sign In",
+                      style: TextStyle(
+                        color: MyColors.appbarTextColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 25,
-                        ),
                       ),
-                    )
-                  : TabBarView(
-                      children: _animeLibrary!.map((animeState state) {
-                        return GridView.builder(
-                          cacheExtent: 500,
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: Tools.getResponsiveCrossAxisVal(
-                              MediaQuery.of(context).size.width,
-                              itemWidth: 460 / 4,
-                            ),
-                            mainAxisExtent: 260,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                            childAspectRatio: 0.7,
-                          ),
-                          itemCount: state.data.length,
-                          itemBuilder: (context, index) {
-                            return AnimeCard(
-                              index: index,
-                              tabName: state.state.name,
-                              data: state.data[index],
-                            );
-                          },
-                        );
-                      }).toList(),
                     ),
-              
+                  )
+                  : _error == "Failed to fetch anime list: 429"
+                  ? const Center(
+                    child: Text(
+                      "chill buddy you made waaaay to many request",
+                      style: TextStyle(
+                        color: MyColors.appbarTextColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 25,
+                      ),
+                    ),
+                  )
+                  : TabBarView(
+                    children:
+                        _animeLibrary!.map((animeState state) {
+                          return GridView.builder(
+                            cacheExtent: 500,
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount:
+                                      Tools.getResponsiveCrossAxisVal(
+                                        MediaQuery.of(context).size.width,
+                                        itemWidth: 460 / 4,
+                                      ),
+                                  mainAxisExtent: 260,
+                                  crossAxisSpacing: 10,
+                                  mainAxisSpacing: 10,
+                                  childAspectRatio: 0.7,
+                                ),
+                            itemCount: state.data.length,
+                            itemBuilder: (context, index) {
+                              return AnimeCard(
+                                index: index,
+                                tabName: state.state.name,
+                                data: state.data[index],
+                              );
+                            },
+                          );
+                        }).toList(),
+                  ),
         ),
       ),
     );
