@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:metia/constants/Colors.dart';
-import 'package:metia/tools.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -26,7 +24,6 @@ class _UserPageState extends State<UserPage> {
   Future<Map<String, dynamic>> _fetchUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
-
     if (authKey == null || authKey.isEmpty) {
       throw Exception('User is not authenticated.');
     }
@@ -54,11 +51,16 @@ class _UserPageState extends State<UserPage> {
       },
       body: jsonEncode(body),
     );
+    
+    //print(authKey);
+
+
+    print("a request to the graphql has been made!!!!");
+
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
       final viewer = data['data']['Viewer'];
-
       prefs.setInt('user_id', viewer['id']);
       return viewer;
     } else {

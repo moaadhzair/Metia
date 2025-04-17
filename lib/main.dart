@@ -1,48 +1,23 @@
+// main.dart
 import 'dart:io';
-import 'package:win32_registry/win32_registry.dart';
-
 
 import 'package:flutter/material.dart';
 import 'package:metia/pages/home_page.dart';
 
-
-Future<void> registerCustomScheme(String scheme) async {
-  String appPath = Platform.resolvedExecutable;
-
-  String protocolRegKey = 'Software\\Classes\\$scheme';
-  RegistryValue protocolRegValue = const RegistryValue(
-    'URL Protocol',
-    RegistryValueType.string,
-    '',
-  );
-  String protocolCmdRegKey = 'shell\\open\\command';
-  RegistryValue protocolCmdRegValue = RegistryValue(
-    '',
-    RegistryValueType.string,
-    '"$appPath" "%1"',
-  );
-
-  final regKey = Registry.currentUser.createKey(protocolRegKey);
-  regKey.createValue(protocolRegValue);
-  regKey.createKey(protocolCmdRegKey).createValue(protocolCmdRegValue);
-}
+// Import conditionally based on platform
+import 'package:metia/conflict/register_custom_scheme_stub.dart'
+    if (dart.library.io) 'package:metia/conflict/register_custom_scheme_windows.dart';
 
 void main() {
-  if (Platform.isWindows) {
-    registerCustomScheme('metia');
-  }
-  
+  if(Platform.isWindows)
+    {
+      registerCustomScheme('metia');
+    }
   runApp(const Main());
 }
 
-class Main extends StatefulWidget {
-  const Main({Key? key}) : super(key: key);
-
-  @override
-  State<Main> createState() => _MainState();
-}
-
-class _MainState extends State<Main> {
+class Main extends StatelessWidget {
+  const Main({super.key});
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(

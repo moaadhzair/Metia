@@ -60,6 +60,8 @@ class _HomePageState extends State<HomePage> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(payload),
       );
+      
+      print("a request to the graphql has been made!!!!");
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
@@ -75,7 +77,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _initDeepLinking() async {
     final initialLink = await _appLinks.getInitialLink();
     if (initialLink != null) {
-      print("Initial Link: ${initialLink.toString()}");
+      //print("Initial Link: ${initialLink.toString()}");
     }
 
     _appLinks.uriLinkStream.listen((Uri? uri) {
@@ -237,11 +239,14 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.only(top: 8),
           child: _loading
               ? const Center(child: CircularProgressIndicator())
-              : _error != null
-                  ? Center(
+              : _error == "Exception: Please sign in to fetch your anime list."
+                  ? const Center(
                       child: Text(
-                        "Error: $_error",
-                        style: const TextStyle(color: Colors.red),
+                        "Sign In",
+                        style: TextStyle(color: MyColors.appbarTextColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 25,
+                        ),
                       ),
                     )
                   : TabBarView(
@@ -270,6 +275,7 @@ class _HomePageState extends State<HomePage> {
                         );
                       }).toList(),
                     ),
+              
         ),
       ),
     );

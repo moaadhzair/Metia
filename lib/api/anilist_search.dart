@@ -63,6 +63,8 @@ class AnilistApi {
         headers: headers,
         body: body,
       );
+      
+      print("a request to the graphql has been made!!!!");
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -84,7 +86,7 @@ class AnilistApi {
     var animeLib = animeLibrary();
     //print(jsonEncode(result["data"]["MediaListCollection"]["lists"]));
     for (var element in result["data"]["MediaListCollection"]["lists"]) {
-      print(element["name"]);
+      //print(element["name"]);
       var State;
       switch(element["name"].toString()){
         case "Completed":
@@ -105,7 +107,7 @@ class AnilistApi {
       animeLib.addAnime(Anime);
     }
     
-    print(animeLib.lib);
+    //print(animeLib.lib);
     return animeLib.lib;
   }
 
@@ -157,6 +159,7 @@ class AnilistApi {
       headers: headers,
       body: body,
     );
+    print("a request to the graphql has been made!!!!");
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
