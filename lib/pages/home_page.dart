@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:metia/api/anilist_search.dart';
 import 'package:metia/constants/Colors.dart';
 import 'package:metia/data/Library.dart';
@@ -141,7 +142,7 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(width: 20),
               SvgPicture.asset(
                 'assets/icons/anilist.svg',
-                height: 30,
+                height: 35,
                 colorFilter: const ColorFilter.mode(
                   MyColors.appbarTextColor,
                   BlendMode.srcIn,
@@ -150,56 +151,82 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           actions: [
-            IconButton(
-              icon: const Icon(
-                Icons.login,
-                size: 30,
-                color: MyColors.unselectedColor,
-              ),
-              onPressed: () {
-                SharedPreferences.getInstance().then((prefs) {
-                  final authCode = prefs.getString('auth_key');
-                  if (authCode != null && authCode.isNotEmpty) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const UserPage()),
-                    );
-                  } else {
-                    final url = Uri.parse(
-                      "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
-                    );
-                    _launchURL(url);
-                  }
-                });
-              },
+            PopupMenuButton(
+              constraints: const BoxConstraints(maxWidth: 130),
+              itemBuilder: (context) => <PopupMenuEntry<String>>[
+                const PopupMenuItem<String>(
+                  height: 35, // Adjust the height to reduce spacing
+                  child: Row(
+                    children: const [
+                      Icon(
+                        Icons.refresh,
+                        size: 30,
+                        color: MyColors.unselectedColor,
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        "Refresh",
+                        style: TextStyle(
+                          color: MyColors.unselectedColor,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  value: "Refresh", // Add a value for the menu item
+                ),
+                PopupMenuDivider(
+                  height: 10, // Adjust the height
+                ),
+                const PopupMenuItem<String>(
+                  height: 35,
+                  child: Row(
+                    children: const [
+                      Icon(
+                        Icons.settings,
+                        size: 30,
+                        color: MyColors.unselectedColor,
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        "Settings",
+                        style: TextStyle(
+                          color: MyColors.unselectedColor,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  value: "Settings",
+                ),
+                const PopupMenuDivider(height: 10),
+                const PopupMenuItem<String>(
+                  height: 35,
+                  child: Row(
+                    children: const [
+                      Icon(
+                        Icons.login,
+                        size: 30,
+                        color: MyColors.unselectedColor,
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        "Login",
+                        style: TextStyle(
+                          color: MyColors.unselectedColor,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  value: "Login",
+                ),
+              ],
+              color: MyColors.backgroundColor,
             ),
-            const SizedBox(width: 10),
-            IconButton(
-              icon: const Icon(
-                Icons.settings,
-                size: 30,
-                color: MyColors.unselectedColor,
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SettingsPage()),
-                );
-              },
-            ),
-            const SizedBox(width: 10),
-            IconButton(
-              icon: const Icon(
-                Icons.refresh,
-                size: 30,
-                color: MyColors.unselectedColor,
-              ),
-              onPressed: () {
-                Tools.Toast(context, "Refreshing...");
-                _fetchAnimeLibrary();
-              },
-            ),
-            const SizedBox(width: 0),
           ],
           title: const Row(
             children: [
