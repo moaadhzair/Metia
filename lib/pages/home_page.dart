@@ -12,6 +12,7 @@ import 'package:app_links/app_links.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
+import 'dart:ui';
 import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
@@ -37,6 +38,8 @@ class _HomePageState extends State<HomePage> {
   List<animeState>? _animeLibrary;
   bool _loading = true;
   String? _error;
+  bool _isPopupMenuOpen = false; // Track whether the popup menu is open
+  double _blurOpacity = 0.0; // Track the opacity of the blur effect
 
   @override
   void initState() {
@@ -133,193 +136,248 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: tabs.length,
-      child: Scaffold(
-        backgroundColor: MyColors.backgroundColor,
-        appBar: AppBar(
-          backgroundColor: MyColors.appbarColor,
-          leading: Row(
-            children: [
-              const SizedBox(width: 20),
-              SvgPicture.asset(
-                'assets/icons/anilist.svg',
-                height: 35,
-                colorFilter: const ColorFilter.mode(
-                  MyColors.appbarTextColor,
-                  BlendMode.srcIn,
-                ),
+      child: Stack(
+        children: [
+          Scaffold(
+            backgroundColor: MyColors.backgroundColor,
+            appBar: AppBar(
+              backgroundColor: MyColors.appbarColor,
+              leading: Row(
+                children: [
+                  const SizedBox(width: 20),
+                  SvgPicture.asset(
+                    'assets/icons/anilist.svg',
+                    height: 35,
+                    colorFilter: const ColorFilter.mode(
+                      MyColors.appbarTextColor,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-          actions: [
-            PopupMenuButton(
-              constraints: const BoxConstraints(maxWidth: 130),
-              itemBuilder: (context) => <PopupMenuEntry<String>>[
-                const PopupMenuItem<String>(
-                  height: 35, // Adjust the height to reduce spacing
-                  child: Row(
-                    children: const [
-                      Icon(
-                        Icons.refresh,
-                        size: 30,
-                        color: MyColors.unselectedColor,
-                      ),
-                      SizedBox(width: 10),
-                      Text(
-                        "Refresh",
-                        style: TextStyle(
-                          color: MyColors.unselectedColor,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
+              actions: [
+                PopupMenuButton<String>(
+                  onOpened: () {
+                    setState(() {
+                      _isPopupMenuOpen = true;
+                      _blurOpacity = 1.0; // Gradually show the blur
+                    });
+                  },
+                  onCanceled: () {
+                    setState(() {
+                      _isPopupMenuOpen = false;
+                      _blurOpacity = 0.0; // Gradually hide the blur
+                    });
+                  },
+                  constraints: const BoxConstraints(maxWidth: 140),
+                  itemBuilder:
+                      (context) => <PopupMenuEntry<String>>[
+                        PopupMenuItem<String>(
+                          onTap: () {
+                            Tools.Toast(context, "Refreshing...");
+                            _fetchAnimeLibrary();
+                          },
+                          height: 35,
+                          child: const Row(
+                            children: [
+                              Icon(
+                                Icons.refresh,
+                                size: 30,
+                                color: MyColors.unselectedColor,
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                "Refresh",
+                                style: TextStyle(
+                                  color: MyColors.unselectedColor,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  value: "Refresh", // Add a value for the menu item
-                ),
-                PopupMenuDivider(
-                  height: 10, // Adjust the height
-                ),
-                const PopupMenuItem<String>(
-                  height: 35,
-                  child: Row(
-                    children: const [
-                      Icon(
-                        Icons.settings,
-                        size: 30,
-                        color: MyColors.unselectedColor,
-                      ),
-                      SizedBox(width: 10),
-                      Text(
-                        "Settings",
-                        style: TextStyle(
-                          color: MyColors.unselectedColor,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
+                        const PopupMenuDivider(height: 10),
+                        PopupMenuItem<String>(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SettingsPage(),
+                              ),
+                            );
+                          },
+                          height: 35,
+                          child: const Row(
+                            children: [
+                              Icon(
+                                Icons.settings,
+                                size: 30,
+                                color: MyColors.unselectedColor,
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                "Settings",
+                                style: TextStyle(
+                                  color: MyColors.unselectedColor,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  value: "Settings",
-                ),
-                const PopupMenuDivider(height: 10),
-                const PopupMenuItem<String>(
-                  height: 35,
-                  child: Row(
-                    children: const [
-                      Icon(
-                        Icons.login,
-                        size: 30,
-                        color: MyColors.unselectedColor,
-                      ),
-                      SizedBox(width: 10),
-                      Text(
-                        "Login",
-                        style: TextStyle(
-                          color: MyColors.unselectedColor,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
+                        const PopupMenuDivider(height: 10),
+                        PopupMenuItem<String>(
+                          onTap: () {
+                            SharedPreferences.getInstance().then((prefs) {
+                              final authCode = prefs.getString('auth_key');
+                              if (authCode != null && authCode.isNotEmpty) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const UserPage(),
+                                  ),
+                                );
+                              } else {
+                                final url = Uri.parse(
+                                  "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
+                                );
+                                _launchURL(url);
+                              }
+                            });
+                          },
+                          height: 35,
+                          child: const Row(
+                            children: [
+                              Icon(
+                                Icons.login,
+                                size: 30,
+                                color: MyColors.unselectedColor,
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                "Login",
+                                style: TextStyle(
+                                  color: MyColors.unselectedColor,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  value: "Login",
+                      ],
+                  color: MyColors.backgroundColor,
                 ),
               ],
-              color: MyColors.backgroundColor,
-            ),
-          ],
-          title: const Row(
-            children: [
-              SizedBox(width: 20),
-              Text(
-                "Metia",
-                style: TextStyle(
-                  color: MyColors.appbarTextColor,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          bottom: TabBar(
-            overlayColor: WidgetStateProperty.all(Colors.transparent),
-            dividerColor: const Color.fromARGB(255, 69, 69, 70),
-            indicatorColor: MyColors.appbarTextColor,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            labelColor: MyColors.appbarTextColor,
-            unselectedLabelColor: MyColors.unselectedColor,
-            tabs:
-                tabs.map((String tabName) {
-                  return Tab(
-                    child: Text(
-                      tabName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+              title: const Row(
+                children: [
+                  SizedBox(width: 20),
+                  Text(
+                    "Metia",
+                    style: TextStyle(
+                      color: MyColors.appbarTextColor,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
-                  );
-                }).toList(),
-          ),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child:
-              _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error ==
-                      "Exception: Please sign in to fetch your anime list."
-                  ? const Center(
-                    child: Text(
-                      "Sign In",
-                      style: TextStyle(
-                        color: MyColors.appbarTextColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 25,
-                      ),
-                    ),
-                  )
-                  : _error == "Failed to fetch anime list: 429"
-                  ? const Center(
-                    child: Text(
-                      "chill buddy you made waaaay to many request",
-                      style: TextStyle(
-                        color: MyColors.appbarTextColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 25,
-                      ),
-                    ),
-                  )
-                  : TabBarView(
-                    children:
-                        _animeLibrary!.map((animeState state) {
-                          return GridView.builder(
-                            cacheExtent: 500,
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount:
-                                      Tools.getResponsiveCrossAxisVal(
-                                        MediaQuery.of(context).size.width,
-                                        itemWidth: 460 / 4,
-                                      ),
-                                  mainAxisExtent: 260,
-                                  crossAxisSpacing: 10,
-                                  mainAxisSpacing: 10,
-                                  childAspectRatio: 0.7,
-                                ),
-                            itemCount: state.data.length,
-                            itemBuilder: (context, index) {
-                              return AnimeCard(
-                                index: index,
-                                tabName: state.state.name,
-                                data: state.data[index],
-                              );
-                            },
-                          );
-                        }).toList(),
                   ),
-        ),
+                ],
+              ),
+              bottom: TabBar(
+                overlayColor: WidgetStateProperty.all(Colors.transparent),
+                dividerColor: const Color.fromARGB(255, 69, 69, 70),
+                indicatorColor: MyColors.appbarTextColor,
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                labelColor: MyColors.appbarTextColor,
+                unselectedLabelColor: MyColors.unselectedColor,
+                tabs:
+                    tabs.map((String tabName) {
+                      return Tab(
+                        child: Text(
+                          tabName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+              ),
+            ),
+            body: Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child:
+                  _loading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _error ==
+                          "Exception: Please sign in to fetch your anime list."
+                      ? const Center(
+                        child: Text(
+                          "Sign In",
+                          style: TextStyle(
+                            color: MyColors.appbarTextColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 25,
+                          ),
+                        ),
+                      )
+                      : _error == "Failed to fetch anime list: 429"
+                      ? const Center(
+                        child: Text(
+                          "chill buddy you made waaaay to many request",
+                          style: TextStyle(
+                            color: MyColors.appbarTextColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 25,
+                          ),
+                        ),
+                      )
+                      : TabBarView(
+                        children:
+                            _animeLibrary!.map((animeState state) {
+                              return GridView.builder(
+                                cacheExtent: 500,
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount:
+                                          Tools.getResponsiveCrossAxisVal(
+                                            MediaQuery.of(context).size.width,
+                                            itemWidth: 460 / 4,
+                                          ),
+                                      mainAxisExtent: 260,
+                                      crossAxisSpacing: 10,
+                                      mainAxisSpacing: 10,
+                                      childAspectRatio: 0.7,
+                                    ),
+                                itemCount: state.data.length,
+                                itemBuilder: (context, index) {
+                                  return AnimeCard(
+                                    index: index,
+                                    tabName: state.state.name,
+                                    data: state.data[index],
+                                  );
+                                },
+                              );
+                            }).toList(),
+                      ),
+            ),
+          ),
+          // Add the blur effect with gradual opacity
+          AnimatedOpacity(
+            opacity: _blurOpacity,
+            duration: const Duration(milliseconds: 150), // Animation duration
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+              child: Container(
+                color: Colors.black.withOpacity(
+                  0.2,
+                ), // Semi-transparent overlay
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
