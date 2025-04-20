@@ -364,7 +364,7 @@ class _HomePageState extends State<HomePage> {
             ignoring: !_isPopupMenuOpen, // Allow touch events when blur is inactive
             child: AnimatedOpacity(
               opacity: _blurOpacity,
-              duration: const Duration(milliseconds: 150), // Animation duration
+              duration: const Duration(milliseconds: 50), // Animation duration
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
                 child: Container(
