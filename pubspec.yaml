@@ -20,8 +20,8 @@ dependencies:
   app_links: ^6.4.0
   win32_registry: ^1.0.3
   url_launcher: ^6.1.7
-
-cupertino_icons: ^1.0.8
+  cupertino_icons: ^1.0.8
+  pasteboard: ^0.4.0
 
 dev_dependencies:
   flutter_test:
@@ -31,7 +31,6 @@ flutter_lints: ^5.0.0
 
 
 flutter:
-
         uses-material-design: true
         assets:
           - assets/icons/

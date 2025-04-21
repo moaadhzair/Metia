@@ -1,8 +1,12 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/services.dart';
 import 'package:metia/constants/Colors.dart';
 import 'package:metia/tools.dart';
+import 'dart:io';
+import 'package:pasteboard/pasteboard.dart';
 
 class AnimeCard extends StatelessWidget {
   final String tabName;
@@ -33,14 +37,55 @@ class AnimeCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 clipBehavior: Clip.hardEdge,
                 child: CupertinoContextMenu(
-                  actions: const [
+                  actions: [
                     CupertinoContextMenuAction(
-                      child: Padding(
+                      onPressed: () async {
+                        try {
+                          // Download the image as bytes
+                          final imageUrl =
+                              data["media"]["coverImage"]["extraLarge"];
+                          final httpClient = HttpClient();
+                          final request = await httpClient.getUrl(
+                            Uri.parse(imageUrl),
+                          );
+                          final response = await request.close();
+                          final bytes =
+                              await consolidateHttpClientResponseBytes(
+                                response,
+                              );
+
+                          // Copy the image bytes to the clipboard using Pasteboard
+                          await Pasteboard.writeImage(
+                            Uint8List.fromList(bytes),
+                          );
+
+                          // Close the CupertinoContextMenu
+                          // ignore: use_build_context_synchronously
+                          Navigator.pop(context);
+
+                          // Show a success message
+                          // ignore: use_build_context_synchronously
+                          Tools.Toast(context, "Image copied to clipboard!");
+                        } catch (e) {
+                          // Handle errors
+                          // ignore: use_build_context_synchronously
+                          Tools.Toast(context, "Failed to copy image: $e");
+                        }
+                      },
+                      child: const Padding(
                         padding: EdgeInsets.only(bottom: 4),
                         child: Row(
                           children: [
-                            Expanded(child: Text("Copy", style: TextStyle(fontSize: 20),)),
-                            Icon(CupertinoIcons.doc_on_doc),
+                            Expanded(
+                              child: Text(
+                                "Copy Image",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                            Icon(CupertinoIcons.doc_on_clipboard_fill),
                           ],
                         ),
                       ),
