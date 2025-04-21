@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:metia/constants/Colors.dart';
@@ -31,14 +32,30 @@ class AnimeCard extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 clipBehavior: Clip.hardEdge,
-                child: CachedNetworkImage(
-                  imageUrl: data["media"]["coverImage"]["extraLarge"],
-                  fit: BoxFit.fitHeight,
-                  placeholder:
-                      (context, url) => Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                child: CupertinoContextMenu(
+                  actions: const [
+                    CupertinoContextMenuAction(
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 4),
+                        child: Row(
+                          children: [
+                            Expanded(child: Text("Copy", style: TextStyle(fontSize: 20),)),
+                            Icon(CupertinoIcons.doc_on_doc),
+                          ],
+                        ),
                       ),
-                  errorWidget: (context, url, error) => Icon(Icons.error),
+                    ),
+                  ],
+                  child: CachedNetworkImage(
+                    imageUrl: data["media"]["coverImage"]["extraLarge"],
+                    fit: BoxFit.fitHeight,
+                    placeholder:
+                        (context, url) => const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                    errorWidget:
+                        (context, url, error) => const Icon(Icons.error),
+                  ),
                 ),
               ),
             ),
