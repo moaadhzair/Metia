@@ -156,118 +156,124 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               actions: [
-                PopupMenuButton<String>(
-                  onOpened: () {
-                    setState(() {
-                      _isPopupMenuOpen = true;
-                      _blurOpacity = 1.0; // Show the blur effect
-                    });
-                  },
-                  onCanceled: () {
-                    setState(() {
-                      _isPopupMenuOpen = false;
-                      _blurOpacity = 0.0; // Hide the blur effect
-                    });
-                  },
-                  constraints: const BoxConstraints(maxWidth: 140),
-                  itemBuilder: (context) => <PopupMenuEntry<String>>[
-                    PopupMenuItem<String>(
-                      onTap: () {
-                        Tools.Toast(context, "Refreshing...");
-                        _fetchAnimeLibrary();
-                      },
-                      height: 35,
-                      child: const Row(
-                        children: [
-                          Icon(
-                            Icons.refresh,
-                            size: 30,
-                            color: MyColors.unselectedColor,
-                          ),
-                          SizedBox(width: 10),
-                          Text(
-                            "Refresh",
-                            style: TextStyle(
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, right: 4),
+                  child: PopupMenuButton<String>(
+                    tooltip: "",
+                    //requestFocus: false,
+                    icon: const Icon(Icons.more_vert, color: MyColors.appbarTextColor,size: 29,),
+                    onOpened: () {
+                      setState(() {
+                        _isPopupMenuOpen = true;
+                        _blurOpacity = 1.0; // Show the blur effect
+                      });
+                    },
+                    onCanceled: () {
+                      setState(() {
+                        _isPopupMenuOpen = false;
+                        _blurOpacity = 0.0; // Hide the blur effect
+                      });
+                    },
+                    constraints: const BoxConstraints(maxWidth: 140),
+                    itemBuilder: (context) => <PopupMenuEntry<String>>[
+                      PopupMenuItem<String>(
+                        onTap: () {
+                          Tools.Toast(context, "Refreshing...");
+                          _fetchAnimeLibrary();
+                        },
+                        height: 35,
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.refresh,
+                              size: 30,
                               color: MyColors.unselectedColor,
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuDivider(height: 10),
-                    PopupMenuItem<String>(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SettingsPage(),
-                          ),
-                        );
-                      },
-                      height: 35,
-                      child: const Row(
-                        children: [
-                          Icon(
-                            Icons.settings,
-                            size: 30,
-                            color: MyColors.unselectedColor,
-                          ),
-                          SizedBox(width: 10),
-                          Text(
-                            "Settings",
-                            style: TextStyle(
-                              color: MyColors.unselectedColor,
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuDivider(height: 10),
-                    PopupMenuItem<String>(
-                      onTap: () {
-                        SharedPreferences.getInstance().then((prefs) {
-                          final authCode = prefs.getString('auth_key');
-                          if (authCode != null && authCode.isNotEmpty) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const UserPage(),
+                            SizedBox(width: 10),
+                            Text(
+                              "Refresh",
+                              style: TextStyle(
+                                color: MyColors.unselectedColor,
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
                               ),
-                            );
-                          } else {
-                            final url = Uri.parse(
-                              "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
-                            );
-                            _launchURL(url);
-                          }
-                        });
-                      },
-                      height: 35,
-                      child: const Row(
-                        children: [
-                          Icon(
-                            Icons.login,
-                            size: 30,
-                            color: MyColors.unselectedColor,
-                          ),
-                          SizedBox(width: 10),
-                          Text(
-                            "Login",
-                            style: TextStyle(
-                              color: MyColors.unselectedColor,
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                  color: MyColors.backgroundColor,
+                      const PopupMenuDivider(height: 10),
+                      PopupMenuItem<String>(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SettingsPage(),
+                            ),
+                          );
+                        },
+                        height: 35,
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.settings,
+                              size: 30,
+                              color: MyColors.unselectedColor,
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              "Settings",
+                              style: TextStyle(
+                                color: MyColors.unselectedColor,
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuDivider(height: 10),
+                      PopupMenuItem<String>(
+                        onTap: () {
+                          SharedPreferences.getInstance().then((prefs) {
+                            final authCode = prefs.getString('auth_key');
+                            if (authCode != null && authCode.isNotEmpty) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const UserPage(),
+                                ),
+                              );
+                            } else {
+                              final url = Uri.parse(
+                                "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
+                              );
+                              _launchURL(url);
+                            }
+                          });
+                        },
+                        height: 35,
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.login,
+                              size: 30,
+                              color: MyColors.unselectedColor,
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              "Login",
+                              style: TextStyle(
+                                color: MyColors.unselectedColor,
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    color: MyColors.backgroundColor,
+                  ),
                 ),
               ],
               title: const Row(
@@ -363,8 +369,11 @@ class _HomePageState extends State<HomePage> {
           IgnorePointer(
             ignoring: !_isPopupMenuOpen, // Allow touch events when blur is inactive
             child: AnimatedOpacity(
+              curve: Curves.easeOutBack, // iOS-like popping effect
               opacity: _blurOpacity,
-              duration: const Duration(milliseconds: 200), // Animation duration
+              duration: _isPopupMenuOpen
+                  ? const Duration(milliseconds: 333) // Duration when opening
+                  : const Duration(milliseconds: 533), // Duration when closing
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
