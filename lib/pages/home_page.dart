@@ -366,7 +366,7 @@ class _HomePageState extends State<HomePage> {
               opacity: _blurOpacity,
               duration: const Duration(milliseconds: 50), // Animation duration
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
                   color: Colors.black.withOpacity(0.2), // Semi-transparent overlay
                 ),
