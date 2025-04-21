@@ -159,6 +159,8 @@ class _HomePageState extends State<HomePage> {
                 Padding(
                   padding: const EdgeInsets.only(top: 4, right: 4),
                   child: PopupMenuButton<String>(
+                    //shape: Border.all(style: BorderStyle.none),
+                    surfaceTintColor: MyColors.backgroundColor,
                     tooltip: "",
                     //requestFocus: false,
                     icon: const Icon(Icons.more_vert, color: MyColors.appbarTextColor,size: 29,),

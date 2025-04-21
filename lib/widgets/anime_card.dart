@@ -39,6 +39,7 @@ class AnimeCard extends StatelessWidget {
                 child: CupertinoContextMenu(
                   actions: [
                     CupertinoContextMenuAction(
+                      trailingIcon: CupertinoIcons.doc_on_clipboard_fill,
                       onPressed: () async {
                         try {
                           // Download the image as bytes
@@ -74,19 +75,12 @@ class AnimeCard extends StatelessWidget {
                       },
                       child: const Padding(
                         padding: EdgeInsets.only(bottom: 4),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                "Copy Image",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ),
-                            Icon(CupertinoIcons.doc_on_clipboard_fill),
-                          ],
+                        child: Text(
+                          "Copy Image",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
                     ),
