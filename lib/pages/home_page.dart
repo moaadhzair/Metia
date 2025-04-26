@@ -322,7 +322,10 @@ class _HomePageState extends State<HomePage> {
                       return Tab(
                         child: Text(
                           tabName,
-                          style: const TextStyle(
+                          style: TextStyle(
+                            color: tabName.startsWith("NEW EPISODE") 
+              ? Colors.orange // Set color to orange for "NEW EPISODE"
+              : MyColors.appbarTextColor,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),

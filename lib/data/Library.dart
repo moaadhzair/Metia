@@ -9,5 +9,8 @@ class AnimeLibrary {
 
   void addAnime(AnimeState anime) {
     lib.add(anime);
-    }
+  }
+  void addAnimes(int index, AnimeState anime) {
+    lib.insert(index, anime);
+  }
 }

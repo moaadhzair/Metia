@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 //import 'dart:js_interop';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -43,6 +44,10 @@ class AnilistApi {
               coverImage {
                 extraLarge
               }
+              nextAiringEpisode {
+                airingAt
+                episode
+              }
             }
             progress
             status
@@ -83,6 +88,8 @@ class AnilistApi {
       String state = element["name"].toString().toUpperCase();
 
 
+
+
 /*
       switch (element["name"].toString()) {
         case "Completed":
@@ -100,6 +107,23 @@ class AnilistApi {
       }*/
       final Anime = AnimeState(state, element["entries"]);
       animeLib.addAnime(Anime);
+    }
+    List animes = [];
+    for (AnimeState state in animeLib.lib) {
+      if(state.state == "WATCHING"){
+        for (var data in state.data) {
+          if (data["media"]["nextAiringEpisode"] != null) {
+            int episode = int.parse(data["media"]["nextAiringEpisode"]["episode"].toString());
+            int progress = int.parse(data["progress"].toString());
+            if(episode -1 > progress){
+              animes.add(AnimeState("NEW EPISODE", [data]));
+            }
+          }
+        }
+      }
+    }
+    for (var anime in animes) {
+      animeLib.addAnimes(0, anime);
     }
 
     //print(animeLib.lib);
