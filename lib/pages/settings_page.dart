@@ -1,14 +1,74 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:metia/constants/Colors.dart';
 import 'package:metia/data/setting.dart';
+import 'package:metia/pages/home_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _posterUrlController = TextEditingController(
     text: Setting.posterUrl,
   );
-  final TextEditingController _defaultSearchController = TextEditingController(
+  final TextEditingController _UserIdController = TextEditingController(
     text: "",
   );
+
+  late bool _initialSwitchValue; // Store the initial value of the switch
+  late String _initialUserId; // Store the initial value of the user ID
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Load the custom_user_id from SharedPreferences if it exists
+    SharedPreferences.getInstance().then((prefs) {
+      if (prefs.containsKey("custom_user_id")) {
+        final userId = prefs.getInt("custom_user_id").toString();
+        setState(() {
+          _UserIdController.text = userId; // Set the value in the TextFormField
+          _initialUserId = userId; // Store the initial value
+        });
+      } else {
+        _initialUserId = ""; // Default to an empty string if no value exists
+      }
+    });
+
+    // Load the useSettingsUserId value
+    Setting.getuseSettingsUserId().then((_) {
+      //Setting.getuseSettingsUserId();
+      setState(() {
+        
+        _initialSwitchValue = Setting.useSettingsUserId; // Store the initial value
+      });
+    });
+  }
+
+  void _handleBackNavigation() async {
+    final currentSwitchValue = Setting.useSettingsUserId;
+    
+    String currentUserId = "";
+
+    await SharedPreferences.getInstance().then((pref){
+      currentUserId = pref.getInt("custom_user_id").toString();
+    });
+
+    // Check if either the switch value or the user ID has changed
+    if (currentSwitchValue != _initialSwitchValue || currentUserId != _initialUserId) {
+      // If changes are detected, navigate back to the HomePage
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
+    } else {
+      // If no changes are detected, just pop the navigation
+      Navigator.pop(context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,12 +77,9 @@ class SettingsPage extends StatelessWidget {
         iconTheme: IconThemeData(color: MyColors.appbarTextColor),
         leading: Row(
           children: [
-            //SizedBox(width: 10),
             IconButton(
               icon: Icon(Icons.arrow_back, color: MyColors.appbarTextColor),
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              onPressed: _handleBackNavigation, // Handle back navigation
             ),
           ],
         ),
@@ -50,7 +107,6 @@ class SettingsPage extends StatelessWidget {
                     flex: 9,
                     child: TextFormField(
                       controller: _posterUrlController,
-                      //controller: TextEditingController(text: Setting.posterUrl),
                       style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
                         labelStyle: TextStyle(color: MyColors.unselectedColor),
@@ -60,7 +116,6 @@ class SettingsPage extends StatelessWidget {
                             color: MyColors.unselectedColor,
                           ),
                         ),
-                        //hintText: "Enter text here",
                         focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(
                             color: MyColors.appbarTextColor,
@@ -77,7 +132,6 @@ class SettingsPage extends StatelessWidget {
                     child: IconButton(
                       onPressed: () {
                         final posterUrl = _posterUrlController.text;
-                        //final posterUrl = (TextEditingController(text: Setting.posterUrl)).text;
                         Setting.savePosterUrl(context, posterUrl);
                       },
                       icon: Icon(Icons.save, color: MyColors.appbarTextColor),
@@ -85,14 +139,15 @@ class SettingsPage extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 10,),
+              SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
                     flex: 9,
                     child: TextFormField(
-                      controller: _defaultSearchController,
-                      //controller: TextEditingController(text: Setting.posterUrl),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      controller: _UserIdController,
                       style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
                         labelStyle: TextStyle(color: MyColors.unselectedColor),
@@ -102,7 +157,6 @@ class SettingsPage extends StatelessWidget {
                             color: MyColors.unselectedColor,
                           ),
                         ),
-                        //hintText: "Enter text here",
                         focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(
                             color: MyColors.appbarTextColor,
@@ -110,7 +164,7 @@ class SettingsPage extends StatelessWidget {
                           ),
                         ),
                         border: OutlineInputBorder(),
-                        labelText: "Enter the name of anime you wnat the mock data of",
+                        labelText: "Enter the user Id for testing",
                       ),
                     ),
                   ),
@@ -118,16 +172,37 @@ class SettingsPage extends StatelessWidget {
                     flex: 1,
                     child: IconButton(
                       onPressed: () {
-                        final defaultSearch = _defaultSearchController.text;
-                        //final posterUrl = (TextEditingController(text: Setting.posterUrl)).text;
-                        Setting.savedefaultSearch(context, defaultSearch);
+                        final userId = _UserIdController.text;
+                        Setting.saveUserId(userId);
                       },
                       icon: Icon(Icons.save, color: MyColors.appbarTextColor),
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 10,),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Enable ID testing?",
+                    style: TextStyle(
+                      color: MyColors.appbarTextColor,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: Setting.useSettingsUserId,
+                    onChanged: (bool value) {
+                      setState(() {
+                        Setting.useSettingsUserId = value;
+                        Setting.setuseSettingsUserId();
+                      });
+                    },
+                    activeColor: MyColors.appbarTextColor,
+                  ),
+                ],
+              ),
             ],
           ),
         ),

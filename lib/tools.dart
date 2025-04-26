@@ -1,8 +1,41 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:metia/constants/Colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
-class Tools {
+
+class Tools 
+{
+  static Future<String> fetchAniListAccessToken(String authorizationCode) async {
+    final Uri tokenEndpoint = Uri.https('anilist.co', '/api/v2/oauth/token');
+    final Map<String, String> payload = {
+      'grant_type': 'authorization_code',
+      'client_id': '25588',
+      'client_secret': 'QCzgwOKG6kJRzRL91evKRXXGfDCHlmgXfi44A0Ok',
+      'redirect_uri': 'metia://',
+      'code': authorizationCode,
+    };
+
+    try {
+      final http.Response response = await http.post(
+        tokenEndpoint,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        return responseData['access_token'] as String;
+      } else {
+        throw Exception('Failed to retrieve access token: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Request failed: $e');
+    }
+  }
+
   static void Toast(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

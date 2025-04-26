@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:metia/api/anilist_search.dart';
 import 'package:metia/constants/Colors.dart';
 import 'package:metia/data/Library.dart';
+import 'package:metia/data/setting.dart';
 import 'package:metia/pages/settings_page.dart';
 import 'package:metia/pages/user_page.dart';
 import 'package:metia/tools.dart';
@@ -27,17 +28,11 @@ class _HomePageState extends State<HomePage> {
   bool _isPopupMenuOpen = false; // Track whether the popup menu is open
   double _blurOpacity = 0.0; // Track the opacity of the blur effect
 
-  List<String> tabs = [
-    "WATCHING",
-    "COMPLETED",
-    "PAUSED",
-    "DROPPED",
-    "PLANNING",
-  ];
+  List<String> tabs = [];
 
-  List<int> itemCounts = [0, 0, 0, 0, 0];
+  List<int> itemCounts = [];
 
-  List<animeState>? _animeLibrary;
+  List<AnimeState>? _animeLibrary;
   bool _loading = true;
   String? _error;
 
@@ -113,16 +108,34 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getInt('user_id') ?? 0;
-      final data = await AnilistApi.fetchAnimeListofID(userId);
-      setState(() {
-        _animeLibrary = data;
-        for (int i = 0; i < _animeLibrary!.length; i++) {
-          itemCounts[i] = _animeLibrary![i].data.length;
-          tabs[i] = "${tabs[i].split('(')[0]}(${itemCounts[i]})";
+      Setting.getuseSettingsUserId().then((value) async {
+        final prefs = await SharedPreferences.getInstance();
+        final userId = prefs.getInt('user_id') ?? 0;
+        final customUserId = prefs.getInt("custom_user_id") ?? 0;
+        List<AnimeState> data;
+
+        if (Setting.useSettingsUserId) {
+          data = await AnilistApi.fetchAnimeListofID(customUserId);
+          print("custom");
+        } else {
+          print("loged in");
+          data = await AnilistApi.fetchAnimeListofID(userId);
         }
-        _loading = false;
+        //data = await AnilistApi.fetchAnimeListofID(customUserId);
+        itemCounts = List.empty(growable: true);
+        tabs = List.empty(growable: true);
+        for (var state in data) {
+          itemCounts.add(0);
+          tabs.add(state.state.toString());
+        }
+        setState(() {
+          _animeLibrary = data;
+          for (int i = 0; i < _animeLibrary!.length; i++) {
+            itemCounts[i] = _animeLibrary![i].data.length;
+            tabs[i] = "${tabs[i].split('(')[0]} (${itemCounts[i]})";
+          }
+          _loading = false;
+        });
       });
     } catch (e) {
       setState(() {
@@ -163,7 +176,11 @@ class _HomePageState extends State<HomePage> {
                     surfaceTintColor: MyColors.backgroundColor,
                     tooltip: "",
                     //requestFocus: false,
-                    icon: const Icon(Icons.more_vert, color: MyColors.appbarTextColor,size: 29,),
+                    icon: const Icon(
+                      Icons.more_vert,
+                      color: MyColors.appbarTextColor,
+                      size: 29,
+                    ),
                     onOpened: () {
                       setState(() {
                         _isPopupMenuOpen = true;
@@ -177,103 +194,104 @@ class _HomePageState extends State<HomePage> {
                       });
                     },
                     constraints: const BoxConstraints(maxWidth: 140),
-                    itemBuilder: (context) => <PopupMenuEntry<String>>[
-                      PopupMenuItem<String>(
-                        onTap: () {
-                          Tools.Toast(context, "Refreshing...");
-                          _fetchAnimeLibrary();
-                        },
-                        height: 35,
-                        child: const Row(
-                          children: [
-                            Icon(
-                              Icons.refresh,
-                              size: 30,
-                              color: MyColors.unselectedColor,
+                    itemBuilder:
+                        (context) => <PopupMenuEntry<String>>[
+                          PopupMenuItem<String>(
+                            onTap: () {
+                              Tools.Toast(context, "Refreshing...");
+                              _fetchAnimeLibrary();
+                            },
+                            height: 35,
+                            child: const Row(
+                              children: [
+                                Icon(
+                                  Icons.refresh,
+                                  size: 30,
+                                  color: MyColors.unselectedColor,
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  "Refresh",
+                                  style: TextStyle(
+                                    color: MyColors.unselectedColor,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(width: 10),
-                            Text(
-                              "Refresh",
-                              style: TextStyle(
-                                color: MyColors.unselectedColor,
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuDivider(height: 10),
-                      PopupMenuItem<String>(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SettingsPage(),
-                            ),
-                          );
-                        },
-                        height: 35,
-                        child: const Row(
-                          children: [
-                            Icon(
-                              Icons.settings,
-                              size: 30,
-                              color: MyColors.unselectedColor,
-                            ),
-                            SizedBox(width: 10),
-                            Text(
-                              "Settings",
-                              style: TextStyle(
-                                color: MyColors.unselectedColor,
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuDivider(height: 10),
-                      PopupMenuItem<String>(
-                        onTap: () {
-                          SharedPreferences.getInstance().then((prefs) {
-                            final authCode = prefs.getString('auth_key');
-                            if (authCode != null && authCode.isNotEmpty) {
+                          ),
+                          const PopupMenuDivider(height: 10),
+                          PopupMenuItem<String>(
+                            onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const UserPage(),
+                                  builder: (context) => SettingsPage(),
                                 ),
                               );
-                            } else {
-                              final url = Uri.parse(
-                                "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
-                              );
-                              _launchURL(url);
-                            }
-                          });
-                        },
-                        height: 35,
-                        child: const Row(
-                          children: [
-                            Icon(
-                              Icons.login,
-                              size: 30,
-                              color: MyColors.unselectedColor,
+                            },
+                            height: 35,
+                            child: const Row(
+                              children: [
+                                Icon(
+                                  Icons.settings,
+                                  size: 30,
+                                  color: MyColors.unselectedColor,
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  "Settings",
+                                  style: TextStyle(
+                                    color: MyColors.unselectedColor,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(width: 10),
-                            Text(
-                              "Login",
-                              style: TextStyle(
-                                color: MyColors.unselectedColor,
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          ),
+                          const PopupMenuDivider(height: 10),
+                          PopupMenuItem<String>(
+                            onTap: () {
+                              SharedPreferences.getInstance().then((prefs) {
+                                final authCode = prefs.getString('auth_key');
+                                if (authCode != null && authCode.isNotEmpty) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const UserPage(),
+                                    ),
+                                  );
+                                } else {
+                                  final url = Uri.parse(
+                                    "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
+                                  );
+                                  _launchURL(url);
+                                }
+                              });
+                            },
+                            height: 35,
+                            child: const Row(
+                              children: [
+                                Icon(
+                                  Icons.login,
+                                  size: 30,
+                                  color: MyColors.unselectedColor,
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  "Login",
+                                  style: TextStyle(
+                                    color: MyColors.unselectedColor,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    ],
+                          ),
+                        ],
                     color: MyColors.backgroundColor,
                   ),
                 ),
@@ -299,87 +317,98 @@ class _HomePageState extends State<HomePage> {
                 tabAlignment: TabAlignment.start,
                 labelColor: MyColors.appbarTextColor,
                 unselectedLabelColor: MyColors.unselectedColor,
-                tabs: tabs.map((String tabName) {
-                  return Tab(
-                    child: Text(
-                      tabName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  );
-                }).toList(),
+                tabs:
+                    tabs.map((String tabName) {
+                      return Tab(
+                        child: Text(
+                          tabName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    }).toList(),
               ),
             ),
             body: Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error ==
+              child:
+                  _loading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _error ==
                           "Exception: Please sign in to fetch your anime list."
                       ? const Center(
-                          child: Text(
-                            "Sign In",
-                            style: TextStyle(
-                              color: MyColors.appbarTextColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 25,
-                            ),
+                        child: Text(
+                          "Sign In",
+                          style: TextStyle(
+                            color: MyColors.appbarTextColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 25,
                           ),
-                        )
+                        ),
+                      )
                       : _error == "Failed to fetch anime list: 429"
-                          ? const Center(
-                              child: Text(
-                                "chill buddy you made waaaay to many request",
-                                style: TextStyle(
-                                  color: MyColors.appbarTextColor,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 25,
-                                ),
-                              ),
-                            )
-                          : TabBarView(
-                              children: _animeLibrary!.map((animeState state) {
-                                return GridView.builder(
-                                  cacheExtent: 500,
-                                  gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount:
-                                        Tools.getResponsiveCrossAxisVal(
-                                      MediaQuery.of(context).size.width,
-                                      itemWidth: 460 / 4,
+                      ? const Center(
+                        child: Text(
+                          "chill buddy you made waaaay to many request",
+                          style: TextStyle(
+                            color: MyColors.appbarTextColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 25,
+                          ),
+                        ),
+                      )
+                      : TabBarView(
+                        children:
+                            _animeLibrary!.map((AnimeState state) {
+                              return GridView.builder(
+                                cacheExtent: 500,
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount:
+                                          Tools.getResponsiveCrossAxisVal(
+                                            MediaQuery.of(context).size.width,
+                                            itemWidth: 460 / 4,
+                                          ),
+                                      mainAxisExtent: 260,
+                                      crossAxisSpacing: 10,
+                                      mainAxisSpacing: 10,
+                                      childAspectRatio: 0.7,
                                     ),
-                                    mainAxisExtent: 260,
-                                    crossAxisSpacing: 10,
-                                    mainAxisSpacing: 10,
-                                    childAspectRatio: 0.7,
-                                  ),
-                                  itemCount: state.data.length,
-                                  itemBuilder: (context, index) {
-                                    return AnimeCard(
-                                      index: index,
-                                      tabName: state.state.name,
-                                      data: state.data[index],
-                                    );
-                                  },
-                                );
-                              }).toList(),
-                            ),
+                                itemCount: state.data.length,
+                                itemBuilder: (context, index) {
+                                  return AnimeCard(
+                                    index: index,
+                                    tabName: state.state,
+                                    data: state.data[index],
+                                  );
+                                },
+                              );
+                            }).toList(),
+                      ),
             ),
           ),
           IgnorePointer(
-            ignoring: !_isPopupMenuOpen, // Allow touch events when blur is inactive
+            ignoring:
+                !_isPopupMenuOpen, // Allow touch events when blur is inactive
             child: AnimatedOpacity(
               curve: Curves.easeOutBack, // iOS-like popping effect
               opacity: _blurOpacity,
-              duration: _isPopupMenuOpen
-                  ? const Duration(milliseconds: 333) // Duration when opening
-                  : const Duration(milliseconds: 533), // Duration when closing
+              duration:
+                  _isPopupMenuOpen
+                      ? const Duration(
+                        milliseconds: 333,
+                      ) // Duration when opening
+                      : const Duration(
+                        milliseconds: 533,
+                      ), // Duration when closing
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
-                  color: Colors.black.withOpacity(0.2), // Semi-transparent overlay
+                  color: Colors.black.withOpacity(
+                    0.2,
+                  ), // Semi-transparent overlay
                 ),
               ),
             ),

@@ -19,8 +19,7 @@ class AnilistApi {
     const String url = 'https://graphql.anilist.co';
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
-      /*'Authorization': 'Bearer $authKey',*/
-      // i found out i didn't need the authentication key to fetch the anime list lol
+      'Authorization': 'Bearer $authKey',
       'Accept': 'application/json',
     };
 
@@ -73,16 +72,18 @@ class AnilistApi {
     }
   }
 
-  static Future<List<animeState>> fetchAnimeListofID(int userId) async {
+  static Future<List<AnimeState>> fetchAnimeListofID(int userId) async {
     //final defaultSearch = await Setting.getdefaultSearch();
     final result = await fetchUserAnimeList(userId);
     //Tools.Toast(context, );
-    //print("hereeee");
-    var animeLib = animeLibrary();
+    var animeLib = AnimeLibrary();
     //print(jsonEncode(result["data"]["MediaListCollection"]["lists"]));
     for (var element in result["data"]["MediaListCollection"]["lists"]) {
       //print(element["name"]);
-      var State;
+      String state = element["name"].toString().toUpperCase();
+
+
+/*
       switch (element["name"].toString()) {
         case "Completed":
           State = States.COMPLETED;
@@ -96,8 +97,8 @@ class AnilistApi {
           State = States.PLANNING;
         default:
           State = States.WATCHING;
-      }
-      final Anime = animeState(State, element["entries"]);
+      }*/
+      final Anime = AnimeState(state, element["entries"]);
       animeLib.addAnime(Anime);
     }
 

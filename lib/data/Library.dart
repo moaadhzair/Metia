@@ -1,16 +1,13 @@
-class animeState {
-  States state;
+class AnimeState {
+  String state; // the state is the name of the list of entries which is received by anilist api
   List<dynamic> data;
-  animeState(this.state, this.data);
+  AnimeState(this.state, this.data);
 }
 
-class animeLibrary {
-  List<animeState> lib = [];
+class AnimeLibrary {
+  List<AnimeState> lib = [];
 
-  void addAnime(animeState anime) {
+  void addAnime(AnimeState anime) {
     lib.add(anime);
-    lib.sort((a, b) => States.values.indexOf(a.state).compareTo(States.values.indexOf(b.state)));
-  }
+    }
 }
-
-enum States { WATCHING, COMPLETED, PAUSED, DROPPED, PLANNING }
