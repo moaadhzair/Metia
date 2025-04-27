@@ -120,7 +120,7 @@ class AnimeCard extends StatelessWidget {
             Stack(
               children: [
                 Align(
-                  // Progress
+                  // Rating
                   alignment: Alignment.bottomRight,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -144,7 +144,7 @@ class AnimeCard extends StatelessWidget {
                   ),
                 ),
                 Align(
-                  // Rating
+                  // Progress
                   alignment: Alignment.bottomLeft,
                   child: Padding(
                     padding: const EdgeInsets.only(top: 2.3),
@@ -153,15 +153,27 @@ class AnimeCard extends StatelessWidget {
                         children: [
                           TextSpan(
                             text: data["progress"].toString(),
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: MyColors.appbarTextColor,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          data["media"]["nextAiringEpisode"].toString() !=
+                                      "null"
+                              ? TextSpan(
+                                text:
+                                    "/${data["media"]["nextAiringEpisode"]["episode"]-1}",
+                                style: const TextStyle(
+                                  color: Colors.orange,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                              : const TextSpan(),
                           TextSpan(
-                            text: "/" + data["media"]["episodes"].toString(),
-                            style: TextStyle(
+                            text: "/${data["media"]["episodes"]}",
+                            style: const TextStyle(
                               color: MyColors.unselectedColor,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
