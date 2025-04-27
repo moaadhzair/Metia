@@ -367,44 +367,53 @@ class _HomePageState extends State<HomePage> {
                         ),
                       )
                       : TabBarView(
-                          children: _animeLibrary!.map((AnimeState state) {
-                            return Platform.isIOS
-                                ? CustomScrollView(
-                                    slivers: [
-                                      CupertinoSliverRefreshControl(
-                                        onRefresh: () async {
-                                          print("object");
-                                          await _fetchAnimeLibrary(true);
-                                          print("object2");
-                                        },
-                                      ),
-                                      SliverGrid(
-                                        gridDelegate:
-                                            SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount:
-                                              Tools.getResponsiveCrossAxisVal(
-                                            MediaQuery.of(context).size.width,
-                                            itemWidth: 460 / 4,
-                                          ),
-                                          mainAxisExtent: 260,
-                                          crossAxisSpacing: 10,
-                                          mainAxisSpacing: 10,
-                                          childAspectRatio: 0.7,
+                        children:
+                            _animeLibrary!.map((AnimeState state) {
+                              return Platform.isAndroid
+                                  ? CupertinoTheme(
+                                    data: const CupertinoThemeData(
+                                      primaryColor: MyColors.appbarTextColor,
+                                    ),
+                                    child: CustomScrollView(
+                                      //physics: AlwaysScrollableScrollPhysics(),
+                                      slivers: [
+                                        CupertinoSliverRefreshControl(
+                                          onRefresh: () async {
+                                            print("object");
+                                            await _fetchAnimeLibrary(true);
+                                            print("object2");
+                                          },
                                         ),
-                                        delegate: SliverChildBuilderDelegate(
-                                          (context, index) {
+                                        SliverGrid(
+                                          gridDelegate:
+                                              SliverGridDelegateWithFixedCrossAxisCount(
+                                                crossAxisCount:
+                                                    Tools.getResponsiveCrossAxisVal(
+                                                      MediaQuery.of(
+                                                        context,
+                                                      ).size.width,
+                                                      itemWidth: 460 / 4,
+                                                    ),
+                                                mainAxisExtent: 260,
+                                                crossAxisSpacing: 10,
+                                                mainAxisSpacing: 10,
+                                                childAspectRatio: 0.7,
+                                              ),
+                                          delegate: SliverChildBuilderDelegate((
+                                            context,
+                                            index,
+                                          ) {
                                             return AnimeCard(
                                               index: index,
                                               tabName: state.state,
                                               data: state.data[index],
                                             );
-                                          },
-                                          childCount: state.data.length,
+                                          }, childCount: state.data.length),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   )
-                                : RefreshIndicator.adaptive(
+                                  : RefreshIndicator.adaptive(
                                     backgroundColor: MyColors.backgroundColor,
                                     strokeWidth: 3,
                                     color: MyColors.appbarTextColor,
@@ -414,8 +423,9 @@ class _HomePageState extends State<HomePage> {
                                       print("object2");
                                     },
                                     child: ScrollConfiguration(
-                                      behavior: ScrollConfiguration.of(context)
-                                          .copyWith(
+                                      behavior: ScrollConfiguration.of(
+                                        context,
+                                      ).copyWith(
                                         dragDevices: {
                                           PointerDeviceKind.touch,
                                           PointerDeviceKind.mouse,
@@ -425,16 +435,18 @@ class _HomePageState extends State<HomePage> {
                                         cacheExtent: 500,
                                         gridDelegate:
                                             SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount:
-                                              Tools.getResponsiveCrossAxisVal(
-                                            MediaQuery.of(context).size.width,
-                                            itemWidth: 460 / 4,
-                                          ),
-                                          mainAxisExtent: 260,
-                                          crossAxisSpacing: 10,
-                                          mainAxisSpacing: 10,
-                                          childAspectRatio: 0.7,
-                                        ),
+                                              crossAxisCount:
+                                                  Tools.getResponsiveCrossAxisVal(
+                                                    MediaQuery.of(
+                                                      context,
+                                                    ).size.width,
+                                                    itemWidth: 460 / 4,
+                                                  ),
+                                              mainAxisExtent: 260,
+                                              crossAxisSpacing: 10,
+                                              mainAxisSpacing: 10,
+                                              childAspectRatio: 0.7,
+                                            ),
                                         itemCount: state.data.length,
                                         itemBuilder: (context, index) {
                                           return AnimeCard(
@@ -446,8 +458,8 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     ),
                                   );
-                          }).toList(),
-                        ),
+                            }).toList(),
+                      ),
             ),
           ),
           IgnorePointer(
