@@ -479,7 +479,7 @@ class _HomePageState extends State<HomePage> {
                         milliseconds: 533,
                       ), // Duration when closing
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
                 child: Container(
                   color: Colors.black.withOpacity(
                     0.2,
