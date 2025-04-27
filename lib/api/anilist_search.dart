@@ -87,10 +87,7 @@ class AnilistApi {
       //print(element["name"]);
       String state = element["name"].toString().toUpperCase();
 
-
-
-
-/*
+      /*
       switch (element["name"].toString()) {
         case "Completed":
           State = States.COMPLETED;
@@ -110,21 +107,23 @@ class AnilistApi {
     }
     List animes = [];
     for (AnimeState state in animeLib.lib) {
-      if(state.state == "WATCHING"){
+      if (state.state == "WATCHING") {
         for (var data in state.data) {
           if (data["media"]["nextAiringEpisode"] != null) {
-            int episode = int.parse(data["media"]["nextAiringEpisode"]["episode"].toString());
+            int episode = int.parse(
+              data["media"]["nextAiringEpisode"]["episode"].toString(),
+            );
             int progress = int.parse(data["progress"].toString());
-            if(episode -1 > progress){
-              animes.add(AnimeState("NEW EPISODE", [data]));
+            if (episode - 1 > progress) {
+              //animes.add(AnimeState("NEW EPISODE", [data]));
+              animes.add(data);
             }
           }
         }
       }
     }
-    for (var anime in animes) {
-      animeLib.addAnimes(0, anime);
-    }
+
+    animeLib.addAnimes(0, AnimeState("NEW EPISODE", animes));
 
     //print(animeLib.lib);
     return animeLib.lib;

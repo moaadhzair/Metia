@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _initDeepLinking();
-    _fetchAnimeLibrary();
+    _fetchAnimeLibrary(false);
   }
 
   Future<String> fetchAniListAccessToken(String authorizationCode) async {
@@ -101,41 +101,41 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _fetchAnimeLibrary() async {
+  Future<void> _fetchAnimeLibrary(bool _isrefreshing) async {
     setState(() {
-      _loading = true;
+      _loading = _isrefreshing ? false : true;
       _error = null;
     });
 
     try {
-      Setting.getuseSettingsUserId().then((value) async {
-        final prefs = await SharedPreferences.getInstance();
-        final userId = prefs.getInt('user_id') ?? 0;
-        final customUserId = prefs.getInt("custom_user_id") ?? 0;
-        List<AnimeState> data;
+      await Setting.getuseSettingsUserId(); // Await this call
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id') ?? 0;
+      final customUserId = prefs.getInt("custom_user_id") ?? 0;
+      List<AnimeState> data;
 
-        if (Setting.useSettingsUserId) {
-          data = await AnilistApi.fetchAnimeListofID(customUserId);
-          print("custom");
-        } else {
-          print("loged in");
-          data = await AnilistApi.fetchAnimeListofID(userId);
+      if (Setting.useSettingsUserId) {
+        data = await AnilistApi.fetchAnimeListofID(customUserId);
+        print("custom");
+      } else {
+        print("loged in");
+        data = await AnilistApi.fetchAnimeListofID(userId);
+      }
+
+      itemCounts = List.empty(growable: true);
+      tabs = List.empty(growable: true);
+      for (var state in data) {
+        itemCounts.add(0);
+        tabs.add(state.state.toString());
+      }
+
+      setState(() {
+        _animeLibrary = data;
+        for (int i = 0; i < _animeLibrary!.length; i++) {
+          itemCounts[i] = _animeLibrary![i].data.length;
+          tabs[i] = "${tabs[i].split('(')[0]} (${itemCounts[i]})";
         }
-        //data = await AnilistApi.fetchAnimeListofID(customUserId);
-        itemCounts = List.empty(growable: true);
-        tabs = List.empty(growable: true);
-        for (var state in data) {
-          itemCounts.add(0);
-          tabs.add(state.state.toString());
-        }
-        setState(() {
-          _animeLibrary = data;
-          for (int i = 0; i < _animeLibrary!.length; i++) {
-            itemCounts[i] = _animeLibrary![i].data.length;
-            tabs[i] = "${tabs[i].split('(')[0]} (${itemCounts[i]})";
-          }
-          _loading = false;
-        });
+        _loading = false;
       });
     } catch (e) {
       setState(() {
@@ -199,7 +199,7 @@ class _HomePageState extends State<HomePage> {
                           PopupMenuItem<String>(
                             onTap: () {
                               Tools.Toast(context, "Refreshing...");
-                              _fetchAnimeLibrary();
+                              _fetchAnimeLibrary(false);
                             },
                             height: 35,
                             child: const Row(
@@ -364,43 +364,57 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                       )
-                      : RefreshIndicator(
-                        onRefresh: () async {
-                          setState(() {
-                            _loading = true;
-                            _fetchAnimeLibrary();
-                            _loading = false;
-                          });
-                        },
-                        child: TabBarView(
-                          //wrap me with a refrehindicator and onTefresh set it to do the same as what refresh does from the popupmenu and a good styling please
-                          children:
-                              _animeLibrary!.map((AnimeState state) {
-                                return GridView.builder(
-                                  cacheExtent: 500,
-                                  gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount:
-                                            Tools.getResponsiveCrossAxisVal(
-                                              MediaQuery.of(context).size.width,
-                                              itemWidth: 460 / 4,
-                                            ),
-                                        mainAxisExtent: 260,
-                                        crossAxisSpacing: 10,
-                                        mainAxisSpacing: 10,
-                                        childAspectRatio: 0.7,
-                                      ),
-                                  itemCount: state.data.length,
-                                  itemBuilder: (context, index) {
-                                    return AnimeCard(
-                                      index: index,
-                                      tabName: state.state,
-                                      data: state.data[index],
-                                    );
-                                  },
-                                );
-                              }).toList(),
-                        ),
+                      : TabBarView(
+                        //wrap me with a refrehindicator and onTefresh set it to do the same as what refresh does from the popupmenu and a good styling please
+                        //physics: const AlwaysScrollableScrollPhysics(),
+                        children:
+                            _animeLibrary!.map((AnimeState state) {
+                              return RefreshIndicator.adaptive(
+                                backgroundColor: MyColors.backgroundColor,
+                                strokeWidth: 3,
+                                color: MyColors.appbarTextColor,
+                                onRefresh: () async {
+                                  print("object");
+                                  await _fetchAnimeLibrary(true);
+                                  print("object2");
+                                },
+                                child: ScrollConfiguration(
+                                  behavior: ScrollConfiguration.of(
+                                    context,
+                                  ).copyWith(
+                                    dragDevices: {
+                                      PointerDeviceKind.touch,
+                                      PointerDeviceKind.mouse,
+                                    },
+                                  ),
+                                  child: GridView.builder(
+                                    cacheExtent: 500,
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount:
+                                              Tools.getResponsiveCrossAxisVal(
+                                                MediaQuery.of(
+                                                  context,
+                                                ).size.width,
+                                                itemWidth: 460 / 4,
+                                              ),
+                                          mainAxisExtent: 260,
+                                          crossAxisSpacing: 10,
+                                          mainAxisSpacing: 10,
+                                          childAspectRatio: 0.7,
+                                        ),
+                                    itemCount: state.data.length,
+                                    itemBuilder: (context, index) {
+                                      return AnimeCard(
+                                        index: index,
+                                        tabName: state.state,
+                                        data: state.data[index],
+                                      );
+                                    },
+                                  ),
+                                ),
+                              );
+                            }).toList(),
                       ),
             ),
           ),
