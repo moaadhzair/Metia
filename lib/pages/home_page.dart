@@ -362,7 +362,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                       )
-                      : TabBarView(
+                      : TabBarView( //wrap me with a refrehindicator and onTefresh set it to do the same as what refresh does from the popupmenu and a good styling please
                         children:
                             _animeLibrary!.map((AnimeState state) {
                               return GridView.builder(
