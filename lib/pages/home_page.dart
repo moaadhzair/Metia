@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:ui';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:metia/api/anilist_search.dart';
 import 'package:metia/constants/Colors.dart';
@@ -365,57 +367,87 @@ class _HomePageState extends State<HomePage> {
                         ),
                       )
                       : TabBarView(
-                        //wrap me with a refrehindicator and onTefresh set it to do the same as what refresh does from the popupmenu and a good styling please
-                        //physics: const AlwaysScrollableScrollPhysics(),
-                        children:
-                            _animeLibrary!.map((AnimeState state) {
-                              return RefreshIndicator.adaptive(
-                                backgroundColor: MyColors.backgroundColor,
-                                strokeWidth: 3,
-                                color: MyColors.appbarTextColor,
-                                onRefresh: () async {
-                                  print("object");
-                                  await _fetchAnimeLibrary(true);
-                                  print("object2");
-                                },
-                                child: ScrollConfiguration(
-                                  behavior: ScrollConfiguration.of(
-                                    context,
-                                  ).copyWith(
-                                    dragDevices: {
-                                      PointerDeviceKind.touch,
-                                      PointerDeviceKind.mouse,
-                                    },
-                                  ),
-                                  child: GridView.builder(
-                                    cacheExtent: 500,
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
+                          children: _animeLibrary!.map((AnimeState state) {
+                            return Platform.isIOS
+                                ? CustomScrollView(
+                                    slivers: [
+                                      CupertinoSliverRefreshControl(
+                                        onRefresh: () async {
+                                          print("object");
+                                          await _fetchAnimeLibrary(true);
+                                          print("object2");
+                                        },
+                                      ),
+                                      SliverGrid(
+                                        gridDelegate:
+                                            SliverGridDelegateWithFixedCrossAxisCount(
                                           crossAxisCount:
                                               Tools.getResponsiveCrossAxisVal(
-                                                MediaQuery.of(
-                                                  context,
-                                                ).size.width,
-                                                itemWidth: 460 / 4,
-                                              ),
+                                            MediaQuery.of(context).size.width,
+                                            itemWidth: 460 / 4,
+                                          ),
                                           mainAxisExtent: 260,
                                           crossAxisSpacing: 10,
                                           mainAxisSpacing: 10,
                                           childAspectRatio: 0.7,
                                         ),
-                                    itemCount: state.data.length,
-                                    itemBuilder: (context, index) {
-                                      return AnimeCard(
-                                        index: index,
-                                        tabName: state.state,
-                                        data: state.data[index],
-                                      );
+                                        delegate: SliverChildBuilderDelegate(
+                                          (context, index) {
+                                            return AnimeCard(
+                                              index: index,
+                                              tabName: state.state,
+                                              data: state.data[index],
+                                            );
+                                          },
+                                          childCount: state.data.length,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : RefreshIndicator.adaptive(
+                                    backgroundColor: MyColors.backgroundColor,
+                                    strokeWidth: 3,
+                                    color: MyColors.appbarTextColor,
+                                    onRefresh: () async {
+                                      print("object");
+                                      await _fetchAnimeLibrary(true);
+                                      print("object2");
                                     },
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                      ),
+                                    child: ScrollConfiguration(
+                                      behavior: ScrollConfiguration.of(context)
+                                          .copyWith(
+                                        dragDevices: {
+                                          PointerDeviceKind.touch,
+                                          PointerDeviceKind.mouse,
+                                        },
+                                      ),
+                                      child: GridView.builder(
+                                        cacheExtent: 500,
+                                        gridDelegate:
+                                            SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount:
+                                              Tools.getResponsiveCrossAxisVal(
+                                            MediaQuery.of(context).size.width,
+                                            itemWidth: 460 / 4,
+                                          ),
+                                          mainAxisExtent: 260,
+                                          crossAxisSpacing: 10,
+                                          mainAxisSpacing: 10,
+                                          childAspectRatio: 0.7,
+                                        ),
+                                        itemCount: state.data.length,
+                                        itemBuilder: (context, index) {
+                                          return AnimeCard(
+                                            index: index,
+                                            tabName: state.state,
+                                            data: state.data[index],
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  );
+                          }).toList(),
+                        ),
             ),
           ),
           IgnorePointer(
