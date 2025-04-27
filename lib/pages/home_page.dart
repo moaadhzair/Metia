@@ -323,9 +323,11 @@ class _HomePageState extends State<HomePage> {
                         child: Text(
                           tabName,
                           style: TextStyle(
-                            color: tabName.startsWith("NEW EPISODE") 
-              ? Colors.orange // Set color to orange for "NEW EPISODE"
-              : null,
+                            color:
+                                tabName.startsWith("NEW EPISODE")
+                                    ? Colors
+                                        .orange // Set color to orange for "NEW EPISODE"
+                                    : null,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -362,33 +364,43 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                       )
-                      : TabBarView( //wrap me with a refrehindicator and onTefresh set it to do the same as what refresh does from the popupmenu and a good styling please
-                        children:
-                            _animeLibrary!.map((AnimeState state) {
-                              return GridView.builder(
-                                cacheExtent: 500,
-                                gridDelegate:
-                                    SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount:
-                                          Tools.getResponsiveCrossAxisVal(
-                                            MediaQuery.of(context).size.width,
-                                            itemWidth: 460 / 4,
-                                          ),
-                                      mainAxisExtent: 260,
-                                      crossAxisSpacing: 10,
-                                      mainAxisSpacing: 10,
-                                      childAspectRatio: 0.7,
-                                    ),
-                                itemCount: state.data.length,
-                                itemBuilder: (context, index) {
-                                  return AnimeCard(
-                                    index: index,
-                                    tabName: state.state,
-                                    data: state.data[index],
-                                  );
-                                },
-                              );
-                            }).toList(),
+                      : RefreshIndicator(
+                        onRefresh: () async {
+                          setState(() {
+                            _loading = true;
+                            _fetchAnimeLibrary();
+                            _loading = false;
+                          });
+                        },
+                        child: TabBarView(
+                          //wrap me with a refrehindicator and onTefresh set it to do the same as what refresh does from the popupmenu and a good styling please
+                          children:
+                              _animeLibrary!.map((AnimeState state) {
+                                return GridView.builder(
+                                  cacheExtent: 500,
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount:
+                                            Tools.getResponsiveCrossAxisVal(
+                                              MediaQuery.of(context).size.width,
+                                              itemWidth: 460 / 4,
+                                            ),
+                                        mainAxisExtent: 260,
+                                        crossAxisSpacing: 10,
+                                        mainAxisSpacing: 10,
+                                        childAspectRatio: 0.7,
+                                      ),
+                                  itemCount: state.data.length,
+                                  itemBuilder: (context, index) {
+                                    return AnimeCard(
+                                      index: index,
+                                      tabName: state.state,
+                                      data: state.data[index],
+                                    );
+                                  },
+                                );
+                              }).toList(),
+                        ),
                       ),
             ),
           ),
