@@ -6,10 +6,7 @@ A new Flutter project.
 
 # Install App
 
-<a href="https://moaadhzair.github.io/Metia/" target="_blank">
-  <img src="https://img.shields.io/badge/Install-App-blue" alt="Install App">
-</a>
-
+[👉 Head to our website to install](https://moaadhzair.github.io/Metia/)
 
 This project is a starting point for a Flutter application.
 
