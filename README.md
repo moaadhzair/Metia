@@ -4,13 +4,12 @@ A new Flutter project.
 
 ## Getting Started
 
-## Install Metia
+# Install App
 
-To install Metia, use the following link:
+<a href="https://yourusername.github.io/yourrepo/" target="_blank">
+  <img src="https://img.shields.io/badge/Install-App-blue" alt="Install App">
+</a>
 
-[Install Metia](itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/moaadhzair/Metia/refs/heads/main/SyncingStuff/OTA/manifest.plist)
-
-> **Note:** GitHub may not recognize `itms-services` as a valid URL scheme for highlighting. However, the link should work as intended on supported devices.
 
 This project is a starting point for a Flutter application.
 
