@@ -3,13 +3,52 @@
 <head>
   <title>Installing App...</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+      color: white;
+      text-align: center;
+      padding: 50px;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+
+    button {
+      background-color: #ffffff;
+      color: #2575fc;
+      border: none;
+      padding: 15px 30px;
+      font-size: 1.2em;
+      font-weight: bold;
+      border-radius: 25px;
+      cursor: pointer;
+      margin: 10px;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #2575fc;
+      color: #ffffff;
+      transform: scale(1.1);
+    }
+  </style>
   <script>
-    window.onload = function() {
+    function installDNS() {
+      window.location.href = "https://raw.githubusercontent.com/moaadhzair/Metia/refs/heads/main/SyncingStuff/OTA/madNS.mobileconfig";
+    }
+
+    function downloadApp() {
       window.location.href = "itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/moaadhzair/Metia/main/SyncingStuff/OTA/manifest.plist";
     }
   </script>
 </head>
 <body>
-  <p>If you are not redirected, <a href="itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/moaadhzair/Metia/main/SyncingStuff/OTA/manifest.plist">tap here</a>.</p>
+  <h1>Install Your App</h1>
+  <button onclick="installDNS()">Step 1: Install the DNS to block apple from revoking the app</button>
+  <button onclick="downloadApp()">Step 2: Download App</button>
 </body>
 </html>
