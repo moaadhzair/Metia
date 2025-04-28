@@ -6,6 +6,8 @@ A new Flutter project.
 
 [Install Metia](itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/moaadhzair/Metia/refs/heads/main/SyncingStuff/OTA/manifest.plist)
 
+itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/moaadhzair/Metia/refs/heads/main/SyncingStuff/OTA/manifest.plist
+
 
 This project is a starting point for a Flutter application.
 
