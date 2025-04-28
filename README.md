@@ -6,8 +6,7 @@ A new Flutter project.
 
 # Install App
 
-<a href="itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/moaadhzair/Metia/main/SyncingStuff/OTA/manifest.plist
-" target="_blank">
+<a href="https://moaadhzair.github.io/Metia/" target="_blank">
   <img src="https://img.shields.io/badge/Install-App-blue" alt="Install App">
 </a>
 
