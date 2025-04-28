@@ -12,7 +12,7 @@
           <key>kind</key>
           <string>software-package</string>
           <key>url</key>
-          <string>https://github.com/moaadhzair/Metia/releases/download/v1.0.1/metia.ipa</string> <!-- link to .ipa -->
+          <string>https://github.com/moaadhzair/Metia/raw/refs/heads/main/SyncingStuff/OTA/signed_metia.ipa</string> <!-- link to .ipa -->
         </dict>
       </array>
       <key>metadata</key>
