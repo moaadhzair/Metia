@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ffi';
 //import 'dart:js_interop';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -123,7 +122,9 @@ class AnilistApi {
       }
     }
 
-    animeLib.addAnimes(0, AnimeState("NEW EPISODE", animes));
+    if (animes.isNotEmpty) {
+      animeLib.addAnimes(0, AnimeState("NEW EPISODE", animes));
+    }
 
     //print(animeLib.lib);
     return animeLib.lib;

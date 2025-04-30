@@ -90,10 +90,12 @@ class _HomePageState extends State<HomePage> {
             .then((accessToken) {
               SharedPreferences.getInstance().then((prefs) {
                 prefs.setString('auth_key', accessToken);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const UserPage()),
-                );
+                if (mounted) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const UserPage()),
+                  );
+                }
               });
             })
             .catchError((error) {
@@ -255,23 +257,26 @@ class _HomePageState extends State<HomePage> {
                           ),
                           const PopupMenuDivider(height: 10),
                           PopupMenuItem<String>(
-                            onTap: () {
-                              SharedPreferences.getInstance().then((prefs) {
-                                final authCode = prefs.getString('auth_key');
-                                if (authCode != null && authCode.isNotEmpty) {
+                            onTap: () async {
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              final authCode = prefs.getString('auth_key');
+                              if (authCode != null && authCode.isNotEmpty) {
+                                if (mounted) {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => const UserPage(),
                                     ),
                                   );
-                                } else {
-                                  final url = Uri.parse(
-                                    "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
-                                  );
-                                  _launchURL(url);
                                 }
-                              });
+                              } else {
+                                await _launchUrl(
+                                  Uri.parse(
+                                    "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
+                                  ),
+                                );
+                              }
                             },
                             height: 35,
                             child: const Row(
@@ -338,131 +343,149 @@ class _HomePageState extends State<HomePage> {
                     }).toList(),
               ),
             ),
-            body: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : _error ==
-                    "Exception: Please sign in to fetch your anime list."
-                ? const Center(
-                  child: Text(
-                    "Sign In",
-                    style: TextStyle(
-                      color: MyColors.appbarTextColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 25,
-                    ),
-                  ),
-                )
-                : _error == "Failed to fetch anime list: 429"
-                ? const Center(
-                  child: Text(
-                    "chill buddy you made waaaay to many request",
-                    style: TextStyle(
-                      color: MyColors.appbarTextColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 25,
-                    ),
-                  ),
-                )
-                : TabBarView(
-                  children:
-                      _animeLibrary!.map((AnimeState state) {
-                        return Platform.isIOS
-                            ? CupertinoTheme(
-                              data: const CupertinoThemeData(
-                                primaryColor: MyColors.appbarTextColor,
-                              ),
-                              child: Padding(
-                                padding: EdgeInsets.only(top: 8, left: 4, right: 4),
-                                child: CustomScrollView(
-                                  //physics: AlwaysScrollableScrollPhysics(),
-                                  slivers: [
-                                    CupertinoSliverRefreshControl(
-                                      onRefresh: () async {
-                                        print("object");
-                                        await _fetchAnimeLibrary(true);
-                                        print("object2");
+            body:
+                _loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _error ==
+                        "Exception: Please sign in to fetch your anime list."
+                    ? Center(
+                      child: GestureDetector(
+                        onTap: () async {
+                          await _launchUrl(
+                            Uri.parse(
+                              "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          "Sign In",
+                          style: TextStyle(
+                            color: MyColors.appbarTextColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 25,
+                          ),
+                        ),
+                      ),
+                    )
+                    : _error == "Failed to fetch anime list: 429"
+                    ? const Center(
+                      child: Text(
+                        "chill buddy you made waaaay to many request",
+                        style: TextStyle(
+                          color: MyColors.appbarTextColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 25,
+                        ),
+                      ),
+                    )
+                    : TabBarView(
+                      children:
+                          _animeLibrary!.map((AnimeState state) {
+                            return Platform.isIOS
+                                ? CupertinoTheme(
+                                  data: const CupertinoThemeData(
+                                    primaryColor: MyColors.appbarTextColor,
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                      top: 8,
+                                      left: 4,
+                                      right: 4,
+                                    ),
+                                    child: CustomScrollView(
+                                      //physics: AlwaysScrollableScrollPhysics(),
+                                      slivers: [
+                                        CupertinoSliverRefreshControl(
+                                          onRefresh: () async {
+                                            print("object");
+                                            await _fetchAnimeLibrary(true);
+                                            print("object2");
+                                          },
+                                        ),
+                                        SliverGrid(
+                                          gridDelegate:
+                                              SliverGridDelegateWithFixedCrossAxisCount(
+                                                crossAxisCount:
+                                                    Tools.getResponsiveCrossAxisVal(
+                                                      MediaQuery.of(
+                                                        context,
+                                                      ).size.width,
+                                                      itemWidth: 460 / 4,
+                                                    ),
+                                                mainAxisExtent: 270,
+                                                crossAxisSpacing: 10,
+                                                mainAxisSpacing: 10,
+                                                childAspectRatio: 0.7,
+                                              ),
+                                          delegate: SliverChildBuilderDelegate((
+                                            context,
+                                            index,
+                                          ) {
+                                            return AnimeCard(
+                                              index: index,
+                                              tabName: state.state,
+                                              data: state.data[index],
+                                            );
+                                          }, childCount: state.data.length),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                                : RefreshIndicator.adaptive(
+                                  backgroundColor: MyColors.backgroundColor,
+                                  strokeWidth: 3,
+                                  color: MyColors.appbarTextColor,
+                                  onRefresh: () async {
+                                    print("object");
+                                    await _fetchAnimeLibrary(true);
+                                    print("object2");
+                                  },
+                                  child: ScrollConfiguration(
+                                    behavior: ScrollConfiguration.of(
+                                      context,
+                                    ).copyWith(
+                                      dragDevices: {
+                                        PointerDeviceKind.touch,
+                                        PointerDeviceKind.mouse,
                                       },
                                     ),
-                                    SliverGrid(
-                                      gridDelegate:
-                                          SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount:
-                                                Tools.getResponsiveCrossAxisVal(
-                                                  MediaQuery.of(
-                                                    context,
-                                                  ).size.width,
-                                                  itemWidth: 460 / 4,
-                                                ),
-                                            mainAxisExtent: 260,
-                                            crossAxisSpacing: 10,
-                                            mainAxisSpacing: 10,
-                                            childAspectRatio: 0.7,
-                                          ),
-                                      delegate: SliverChildBuilderDelegate((
-                                        context,
-                                        index,
-                                      ) {
-                                        return AnimeCard(
-                                          index: index,
-                                          tabName: state.state,
-                                          data: state.data[index],
-                                        );
-                                      }, childCount: state.data.length),
+                                    child: Padding(
+                                      padding: EdgeInsets.only(
+                                        top: 8,
+                                        left: 4,
+                                        right: 4,
+                                      ),
+                                      child: GridView.builder(
+                                        cacheExtent: 500,
+                                        gridDelegate:
+                                            SliverGridDelegateWithFixedCrossAxisCount(
+                                              crossAxisCount:
+                                                  Tools.getResponsiveCrossAxisVal(
+                                                    MediaQuery.of(
+                                                      context,
+                                                    ).size.width,
+                                                    itemWidth: 460 / 4,
+                                                  ),
+                                              mainAxisExtent: 270,
+                                              crossAxisSpacing: 10,
+                                              mainAxisSpacing: 10,
+                                              childAspectRatio: 0.7,
+                                            ),
+                                        itemCount: state.data.length,
+                                        itemBuilder: (context, index) {
+                                          return AnimeCard(
+                                            index: index,
+                                            tabName: state.state,
+                                            data: state.data[index],
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  ],
-                                ),
-                              ),
-                            )
-                            : RefreshIndicator.adaptive(
-                              backgroundColor: MyColors.backgroundColor,
-                              strokeWidth: 3,
-                              color: MyColors.appbarTextColor,
-                              onRefresh: () async {
-                                print("object");
-                                await _fetchAnimeLibrary(true);
-                                print("object2");
-                              },
-                              child: ScrollConfiguration(
-                                behavior: ScrollConfiguration.of(
-                                  context,
-                                ).copyWith(
-                                  dragDevices: {
-                                    PointerDeviceKind.touch,
-                                    PointerDeviceKind.mouse,
-                                  },
-                                ),
-                                child: Padding(
-                                  padding: EdgeInsets.only(top: 8, left: 4, right: 4),
-                                  child: GridView.builder(
-                                    cacheExtent: 500,
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount:
-                                              Tools.getResponsiveCrossAxisVal(
-                                                MediaQuery.of(
-                                                  context,
-                                                ).size.width,
-                                                itemWidth: 460 / 4,
-                                              ),
-                                          mainAxisExtent: 260,
-                                          crossAxisSpacing: 10,
-                                          mainAxisSpacing: 10,
-                                          childAspectRatio: 0.7,
-                                        ),
-                                    itemCount: state.data.length,
-                                    itemBuilder: (context, index) {
-                                      return AnimeCard(
-                                        index: index,
-                                        tabName: state.state,
-                                        data: state.data[index],
-                                      );
-                                    },
                                   ),
-                                ),
-                              ),
-                            );
-                      }).toList(),
-                ),
+                                );
+                          }).toList(),
+                    ),
           ),
           IgnorePointer(
             ignoring:
@@ -493,11 +516,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _launchURL(Uri url) async {
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
-      throw 'Could not launch $url';
+  Future<void> _launchUrl(Uri url) async {
+    if (!await launchUrl(url)) {
+      throw Exception('Could not launch $url');
     }
   }
 }
