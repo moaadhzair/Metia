@@ -119,11 +119,11 @@ class _HomePageState extends State<HomePage> {
       List<AnimeState> data;
 
       if (Setting.useSettingsUserId) {
-        data = await AnilistApi.fetchAnimeListofID(customUserId);
+        data = await AnilistApi.fetchAnimeListofID(customUserId, false);
         print("custom");
       } else {
         print("loged in");
-        data = await AnilistApi.fetchAnimeListofID(userId);
+        data = await AnilistApi.fetchAnimeListofID(userId, true);
       }
 
       itemCounts = List.empty(growable: true);

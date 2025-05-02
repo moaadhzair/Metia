@@ -8,20 +8,33 @@ import 'package:metia/tools.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AnilistApi {
-  static Future<Map<String, dynamic>> fetchUserAnimeList(int userId) async {
+  static Future<Map<String, dynamic>> fetchUserAnimeList(
+    int userId,
+    bool signedIn,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
 
-    if (authKey == null || authKey.isEmpty) {
+    if (signedIn == false) {
+    } else if (authKey == null || authKey.isEmpty) {
       throw Exception('Please sign in to fetch your anime list.');
     }
 
     const String url = 'https://graphql.anilist.co';
-    final Map<String, String> headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $authKey',
-      'Accept': 'application/json',
-    };
+    Map<String, String> headers;
+    if (signedIn == true) {
+      headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authKey',
+        'Accept': 'application/json',
+      };
+    } else {
+      headers = {
+        'Content-Type': 'application/json',
+        //'Authorization': 'Bearer $authKey',
+        'Accept': 'application/json',
+      };
+    }
 
     final String body = jsonEncode({
       'query': '''
@@ -78,9 +91,12 @@ query (\$type: MediaType!, \$userId: Int!) {
     }
   }
 
-  static Future<List<AnimeState>> fetchAnimeListofID(int userId) async {
+  static Future<List<AnimeState>> fetchAnimeListofID(
+    int userId,
+    bool signedIn,
+  ) async {
     //final defaultSearch = await Setting.getdefaultSearch();
-    final result = await fetchUserAnimeList(userId);
+    final result = await fetchUserAnimeList(userId, signedIn);
     //Tools.Toast(context, );
     var animeLib = AnimeLibrary();
     //print(jsonEncode(result["data"]["MediaListCollection"]["lists"]));
