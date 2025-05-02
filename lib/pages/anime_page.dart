@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:metia/constants/Colors.dart';
@@ -17,6 +16,35 @@ class AnimePage extends StatefulWidget {
 }
 
 class _AnimePageState extends State<AnimePage> {
+  final ScrollController _scrollController = ScrollController();
+  bool _isCollapsed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_scrollListener);
+  }
+
+  void _scrollListener() {
+    // You may need to adjust this value depending on your expandedHeight
+    final collapseOffset =
+        (MediaQuery.of(context).size.width * 2) * 0.9 - kToolbarHeight - 10;
+    if (_scrollController.hasClients) {
+      final shouldBeCollapsed = _scrollController.offset > collapseOffset;
+      if (_isCollapsed != shouldBeCollapsed) {
+        setState(() {
+          _isCollapsed = shouldBeCollapsed;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final title =
@@ -30,36 +58,25 @@ class _AnimePageState extends State<AnimePage> {
       body: SafeArea(
         top: false,
         child: CustomScrollView(
-          physics: BouncingScrollPhysics(),
+          controller: _scrollController,
+          physics: const BouncingScrollPhysics(),
           scrollDirection: Axis.vertical,
           shrinkWrap: true,
           slivers: [
             SliverAppBar(
               backgroundColor: MyColors.appbarColor,
+              foregroundColor: MyColors.appbarTextColor,
               stretch: true,
               collapsedHeight: kToolbarHeight,
               stretchTriggerOffset: 50,
               pinned: true,
-
-            foregroundColor: MyColors.appbarTextColor,
-              // Only show title when collapsed
-              title: LayoutBuilder(
-                builder: (context, constraints) {
-                  // When the app bar is fully collapsed, its height is kToolbarHeight
-                  final settings = context.dependOnInheritedWidgetOfExactType<FlexibleSpaceBarSettings>();
-                  final isCollapsed = settings != null && settings.currentExtent <= kToolbarHeight + 10;
-                  return AnimatedOpacity(
-                    opacity: isCollapsed ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Text(
-                      title,
-                      style: const TextStyle(
-                        //color: MyColors.appbarTextColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  );
-                },
+              title: AnimatedOpacity(
+                opacity: _isCollapsed ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                child: Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
               expandedHeight: (MediaQuery.of(context).size.width * 2) * 0.9,
               flexibleSpace: FlexibleSpaceBar(
@@ -75,7 +92,10 @@ class _AnimePageState extends State<AnimePage> {
               delegate: SliverChildListDelegate.fixed([
                 ...List.generate(
                   100,
-                  (index) => Text("     Episode ${index}", style: TextStyle(color: Colors.white)),
+                  (index) => Text(
+                    "     Episode $index",
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ),
               ]),
             ),
@@ -121,38 +141,29 @@ class AnimeCover extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         CachedNetworkImage(
-          
           imageUrl: imageUrl,
-          fit: BoxFit.fitWidth,
+          fit: BoxFit.cover,
           alignment: Alignment.topCenter,
-          placeholder:
-              (context, url) => Container(
-                color: Colors.black12,
-                child: const Center(child: CircularProgressIndicator()),
-              ),
-          errorWidget:
-              (context, url, error) => Container(
-                color: Colors.black12,
-                child: const Center(
-                  child: Icon(Icons.broken_image, color: Colors.white),
-                ),
-              ),
         ),
         Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                colors: [Colors.transparent, MyColors.backgroundColor],
-                stops: [.4, .8]
-              )
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.transparent, MyColors.backgroundColor],
+              stops: [.3, .75],
             ),
           ),
+        ),
+
         Align(
+          // the text data of the anime
           alignment: Alignment.bottomLeft,
           child: Padding(
             padding: const EdgeInsets.only(
               left: 16.0,
-              bottom: 24.0,
+              bottom: 16.0,
+              right: 16.0,
             ), // adjust as needed
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -175,7 +186,7 @@ class AnimeCover extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -196,7 +207,7 @@ class AnimeCover extends StatelessWidget {
                     const Icon(Icons.star, color: Colors.orange, size: 18),
                   ],
                 ),
-                SizedBox(height: 2,),
+                const SizedBox(height: 2),
                 const Text(
                   "Synopsis",
                   style: TextStyle(
@@ -205,12 +216,12 @@ class AnimeCover extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                SizedBox(height: 4,),
+                const SizedBox(height: 4),
                 Text(
                   description,
                   maxLines: 10,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     height: 1.1,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
