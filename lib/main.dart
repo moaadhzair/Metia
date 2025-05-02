@@ -9,12 +9,12 @@ import 'package:metia/conflict/register_custom_scheme_stub.dart'
     if (dart.library.io) 'package:metia/conflict/register_custom_scheme_windows.dart';
 
 void main() {
-  if(Platform.isWindows)
-    {
-      registerCustomScheme('metia');
-    }
+  if (Platform.isWindows) {
+    registerCustomScheme('metia');
+  }
   runApp(const Main());
 }
+
 
 class Main extends StatelessWidget {
   const Main({super.key});
