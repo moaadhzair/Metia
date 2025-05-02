@@ -25,13 +25,15 @@ class AnilistApi {
 
     final String body = jsonEncode({
       'query': '''
-    query (\$type: MediaType!, \$userId: Int!) {
+query (\$type: MediaType!, \$userId: Int!) {
       MediaListCollection(type: \$type, userId: \$userId, sort: UPDATED_TIME_DESC) {
         lists {
           name
           entries {
             id
             media {
+              description
+              genres
               id
               title {
                 romaji
