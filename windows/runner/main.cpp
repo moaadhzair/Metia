@@ -67,7 +67,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
-  Win32Window::Size size(375, 812);
+  // Set window size to 4:3 aspect ratio, e.g., 800x600
+  Win32Window::Size size(390, 844);
   if (!window.Create(L"metia", origin, size)) {
     return EXIT_FAILURE;
   }

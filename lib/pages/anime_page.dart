@@ -60,15 +60,15 @@ class _AnimePageState extends State<AnimePage> {
         child: CustomScrollView(
           controller: _scrollController,
           physics: const BouncingScrollPhysics(),
-          scrollDirection: Axis.vertical,
-          shrinkWrap: true,
+          //scrollDirection: Axis.vertical,
+          //shrinkWrap: true,
           slivers: [
             SliverAppBar(
               backgroundColor: MyColors.appbarColor,
               foregroundColor: MyColors.appbarTextColor,
               stretch: true,
-              collapsedHeight: kToolbarHeight,
-              stretchTriggerOffset: 50,
+              //collapsedHeight: kToolbarHeight,
+              //stretchTriggerOffset: 10,
               pinned: true,
               title: AnimatedOpacity(
                 opacity: _isCollapsed ? 1.0 : 0.0,
@@ -78,7 +78,7 @@ class _AnimePageState extends State<AnimePage> {
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
-              expandedHeight: (MediaQuery.of(context).size.width * 2) * 0.9,
+              expandedHeight: (MediaQuery.of(context).size.height) * 0.8,
               flexibleSpace: FlexibleSpaceBar(
                 collapseMode: CollapseMode.parallax,
                 stretchModes: const [
@@ -88,17 +88,7 @@ class _AnimePageState extends State<AnimePage> {
                 background: AnimeCover(animeData: widget.animeData),
               ),
             ),
-            SliverList(
-              delegate: SliverChildListDelegate.fixed([
-                ...List.generate(
-                  100,
-                  (index) => Text(
-                    "     Episode $index",
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ]),
-            ),
+            AnimeEpisodes(),
           ],
         ),
       ),
@@ -106,11 +96,114 @@ class _AnimePageState extends State<AnimePage> {
   }
 }
 
+class AnimeEpisodes extends StatelessWidget {
+  const AnimeEpisodes({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverList.list(
+      children: [
+        Container(
+          // extension picker, start watching button, tabs
+          color: MyColors.backgroundColor,
+          height: 200,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
+                child: DropdownMenu(
+                  width: 600,
+                  enableSearch: false,
+                  menuStyle: MenuStyle(
+                    backgroundColor: WidgetStateProperty.all(
+                      MyColors.backgroundColor,
+                    ),
+                  ),
+                  initialSelection: "null",
+                  label: const Text("Extensions"),
+                  inputDecorationTheme: InputDecorationTheme(
+                    labelStyle: TextStyle(
+                      color: MyColors.coolPurple,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    suffixIconColor: MyColors.coolPurple,
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: MyColors.coolPurple,
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: MyColors.coolPurple,
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: MyColors.coolPurple,
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                    disabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: MyColors.coolPurple,
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                  ),
+                  textStyle: TextStyle(
+                    color: MyColors.unselectedColor,
+                    
+                  ),
+                  dropdownMenuEntries: [
+                    DropdownMenuEntry(
+                      value: "null",
+                      label: "No Extensions Installed",
+                      style: ButtonStyle(
+                        foregroundColor: WidgetStateProperty.all(
+                          MyColors.unselectedColor,
+                        ),
+                      ),
+                    ),
+                    DropdownMenuEntry(
+                      value: "animepahe",
+                      label: "AnimePahe",
+                      style: ButtonStyle(
+                        foregroundColor: WidgetStateProperty.all(
+                          MyColors.unselectedColor,
+                        ),
+                      ),
+                    ),
+                    DropdownMenuEntry(
+                      value: "hianime",
+                      label: "HiAnime",
+                      style: ButtonStyle(
+                        foregroundColor: WidgetStateProperty.all(
+                          MyColors.unselectedColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class AnimeCover extends StatelessWidget {
   const AnimeCover({super.key, required this.animeData});
-
   final dynamic animeData;
-
   String processHtml(String htmlContent) {
     // Replace <br> with newlines
     htmlContent = htmlContent.replaceAll(RegExp(r'<br\s*/?>'), '\n');
@@ -143,15 +236,18 @@ class AnimeCover extends StatelessWidget {
         CachedNetworkImage(
           imageUrl: imageUrl,
           fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
+          alignment: Alignment.center,
         ),
-        Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.transparent, MyColors.backgroundColor],
-              stops: [.3, .75],
+        Transform.translate(
+          offset: Offset(0, 4),
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.transparent, MyColors.backgroundColor],
+                //stops: [.5, 1],
+              ),
             ),
           ),
         ),
