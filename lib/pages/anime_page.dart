@@ -325,7 +325,7 @@ class AnimeEpisode extends StatelessWidget {
         child: Row(
           children: [
             SizedBox(
-              height: 80,
+              height: 100,
               child: AspectRatio(
                 aspectRatio: 16 / 9,
                 child: ClipRRect(
@@ -340,51 +340,45 @@ class AnimeEpisode extends StatelessWidget {
                 ),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.only(left: 16),
-              child: SizedBox(
-                height:
-                    80, // Match the image height for alignment
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: 4,
-                  ),
-                  child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
-                    mainAxisAlignment:
-                        MainAxisAlignment
-                            .spaceBetween, // <-- This spaces items evenly
-                    children: [
-                      Text(
-                        "Fire Force Season 3",
-                        style: TextStyle(
-                          color:
-                              MyColors
-                                  .unselectedColor,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+            const Expanded( // <-- This constrains the width of the text area
+              child: Padding(
+                padding: EdgeInsets.only(left: 16),
+                child: SizedBox(
+                  height: 100,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Fire Force Season 3",
+                          style: TextStyle(
+                            color: MyColors.unselectedColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      Text(
-                        "S3 E1 - Indomitable Resolve",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                        Text(
+                          "S3 E1 - Indomitable Resolve",
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      Text(
-                        "Dub | Sub",
-                        style: TextStyle(
-                          color:
-                              MyColors
-                                  .unselectedColor,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                        Text(
+                          "Dub | Sub",
+                          style: TextStyle(
+                            color: MyColors.unselectedColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
