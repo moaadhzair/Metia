@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class MyColors {
+  static const Color coolPurple2 = Color(0xFF221C26);
   static const Color coolGreen = Color(0xFF376A3E);
   static const Color coolPurple = Color(0xFF65558F);
   static const Color appbarTextColor = Color(0xFF98CAFE);

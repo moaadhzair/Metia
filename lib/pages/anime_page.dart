@@ -60,132 +60,154 @@ class _AnimePageState extends State<AnimePage> {
           length: 10,
           child: NestedScrollView(
             controller: _scrollController,
-            headerSliverBuilder: (context, innerBoxIsScrolled) => [
-              SliverAppBar(
-                backgroundColor: MyColors.appbarColor,
-                foregroundColor: MyColors.appbarTextColor,
-                stretch: true,
-                pinned: true,
-                title: AnimatedOpacity(
-                  opacity: _isCollapsed ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: Text(
-                    title,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+            headerSliverBuilder:
+                (context, innerBoxIsScrolled) => [
+                  SliverAppBar(
+                    backgroundColor: MyColors.appbarColor,
+                    foregroundColor: MyColors.appbarTextColor,
+                    stretch: true,
+                    pinned: true,
+                    title: AnimatedOpacity(
+                      opacity: _isCollapsed ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 300),
+                      child: Text(
+                        title,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    expandedHeight: (MediaQuery.of(context).size.height) * 0.8,
+                    flexibleSpace: FlexibleSpaceBar(
+                      collapseMode: CollapseMode.parallax,
+                      stretchModes: const [
+                        StretchMode.zoomBackground,
+                        StretchMode.blurBackground,
+                      ],
+                      background: AnimeCover(animeData: widget.animeData),
+                    ),
                   ),
-                ),
-                expandedHeight: (MediaQuery.of(context).size.height) * 0.8,
-                flexibleSpace: FlexibleSpaceBar(
-                  collapseMode: CollapseMode.parallax,
-                  stretchModes: const [
-                    StretchMode.zoomBackground,
-                    StretchMode.blurBackground,
-                  ],
-                  background: AnimeCover(animeData: widget.animeData),
-                ),
-              ),
-            ],
-            body: Padding(
-              padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
-              child: Column(
-                children: [
-                  // DropdownMenu (extension picker)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: DropdownMenu(
-                      width: 600,
-                      enableSearch: false,
-                      menuStyle: MenuStyle(
-                        backgroundColor: WidgetStateProperty.all(
-                          MyColors.backgroundColor,
-                        ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        left: 16,
+                        right: 16,
+                        top: 12,
                       ),
-                      initialSelection: "null",
-                      label: const Text("Extensions"),
-                      inputDecorationTheme: InputDecorationTheme(
-                        labelStyle: TextStyle(
-                          color: MyColors.coolPurple,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        suffixIconColor: MyColors.coolPurple,
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: MyColors.coolPurple,
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(7),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: MyColors.coolPurple,
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(7),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: MyColors.coolPurple,
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(7),
-                        ),
-                        disabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: MyColors.coolPurple,
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(7),
-                        ),
-                      ),
-                      textStyle: TextStyle(color: MyColors.unselectedColor),
-                      dropdownMenuEntries: [
-                        DropdownMenuEntry(
-                          value: "null",
-                          label: "No Extensions Installed",
-                          style: ButtonStyle(
-                            foregroundColor: WidgetStateProperty.all(
-                              MyColors.unselectedColor,
+                      child: Column(
+                        children: [
+                          // DropdownMenu (extension picker)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: DropdownMenu(
+                              width: 600,
+                              enableSearch: false,
+                              menuStyle: MenuStyle(
+                                backgroundColor: WidgetStateProperty.all(
+                                  MyColors.backgroundColor,
+                                ),
+                              ),
+                              initialSelection: "null",
+                              label: const Text("Extensions"),
+                              inputDecorationTheme: InputDecorationTheme(
+                                labelStyle: const TextStyle(
+                                  color: MyColors.coolPurple,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                suffixIconColor: MyColors.coolPurple,
+                                border: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color: MyColors.coolPurple,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(7),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color: MyColors.coolPurple,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(7),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color: MyColors.coolPurple,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(7),
+                                ),
+                                disabledBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color: MyColors.coolPurple,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(7),
+                                ),
+                              ),
+                              textStyle: const TextStyle(
+                                color: MyColors.unselectedColor,
+                              ),
+                              dropdownMenuEntries: [
+                                DropdownMenuEntry(
+                                  value: "null",
+                                  label: "No Extensions Installed",
+                                  style: ButtonStyle(
+                                    foregroundColor: WidgetStateProperty.all(
+                                      MyColors.unselectedColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Start Watching Button
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: TextButton.icon(
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.only(
-                            top: 16,
-                            left: 16,
-                            right: 16,
-                            bottom: 16,
+                          // Start Watching Button
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: TextButton.icon(
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.only(
+                                    top: 16,
+                                    left: 16,
+                                    right: 16,
+                                    bottom: 16,
+                                  ),
+                                  foregroundColor: MyColors.coolGreen,
+                                  shape: RoundedRectangleBorder(
+                                    side: const BorderSide(
+                                      color: MyColors.coolGreen,
+                                    ),
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                ),
+                                label: const Text(
+                                  "START WATCHING ",
+                                  style: TextStyle(
+                                    color: MyColors.coolGreen,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                onPressed: () {},
+                                icon: const Icon(
+                                  Icons.play_arrow_outlined,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
                           ),
-                          foregroundColor: MyColors.coolGreen,
-                          shape: RoundedRectangleBorder(
-                            side: BorderSide(color: MyColors.coolGreen),
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                        ),
-                        label: Text(
-                          "START WATCHING ",
-                          style: TextStyle(
-                            color: MyColors.coolGreen,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        onPressed: () {},
-                        icon: Icon(Icons.play_arrow_outlined, size: 20),
+                        ],
                       ),
                     ),
                   ),
+                ],
+            body: Padding(
+              padding: const EdgeInsets.only(left: 12, right: 12),
+              child: Column(
+                children: [
                   // TabBar
                   Builder(
                     builder: (context) {
-                      final TabController tabController = DefaultTabController.of(context);
+                      final TabController tabController =
+                          DefaultTabController.of(context);
                       return StatefulBuilder(
                         builder: (context, setState) {
                           tabController.addListener(() {
@@ -212,18 +234,31 @@ class _AnimePageState extends State<AnimePage> {
                             tabs: List.generate(labels.length, (i) {
                               final bool selected = tabController.index == i;
                               return Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 5),
-                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                  horizontal: 8,
+                                ),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(8),
-                                  color: selected ? Colors.white : Colors.transparent,
-                                  border: Border.all(color: MyColors.coolPurple),
+                                  color:
+                                      selected
+                                          ? Colors.white
+                                          : Colors.transparent,
+                                  border: Border.all(
+                                    color: MyColors.coolPurple,
+                                  ),
                                 ),
                                 child: Center(
                                   child: Text(
                                     labels[i],
                                     style: TextStyle(
-                                      color: selected ? MyColors.coolPurple : const Color(0xFF9A989B),
+                                      color:
+                                          selected
+                                              ? MyColors.coolPurple
+                                              : const Color(0xFF9A989B),
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -242,10 +277,15 @@ class _AnimePageState extends State<AnimePage> {
                       child: TabBarView(
                         //physics: const NeverScrollableScrollPhysics(),
                         children: List.generate(10, (tabIndex) {
-                          return ListView.builder(
+                          return ListView.separated(
+                            separatorBuilder:
+                                (context, index) => const SizedBox(height: 7),
+                            padding: const EdgeInsets.only(bottom: 8),
                             itemCount: 100,
                             itemBuilder: (context, index) {
-                              return Text("Episode $index", style: TextStyle(color: Colors.white),);
+                              return AnimeEpisode(onClicked: (details){
+                                Tools.Toast(context, "lmao");
+                              }, episodeData: "");
                             },
                           );
                         }),
@@ -256,6 +296,99 @@ class _AnimePageState extends State<AnimePage> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class AnimeEpisode extends StatelessWidget {
+  const AnimeEpisode({
+    super.key, required this.onClicked, required this.episodeData,
+  });
+
+  final void Function(TapUpDetails)? onClicked;
+  final dynamic episodeData;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapUp: onClicked,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: MyColors.coolPurple2,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              height: 80,
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(
+                    6,
+                  ),
+                  child: CachedNetworkImage(
+                    imageUrl:
+                        "https://imgsrv.crunchyroll.com/cdn-cgi/image/fit=contain,format=auto,quality=70,width=320,height=180/catalog/crunchyroll/51f4f0e6b0122b8497ddd1044a27c6c4.jpg",
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.only(left: 16),
+              child: SizedBox(
+                height:
+                    80, // Match the image height for alignment
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: 4,
+                  ),
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    mainAxisAlignment:
+                        MainAxisAlignment
+                            .spaceBetween, // <-- This spaces items evenly
+                    children: [
+                      Text(
+                        "Fire Force Season 3",
+                        style: TextStyle(
+                          color:
+                              MyColors
+                                  .unselectedColor,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        "S3 E1 - Indomitable Resolve",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        "Dub | Sub",
+                        style: TextStyle(
+                          color:
+                              MyColors
+                                  .unselectedColor,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -300,7 +433,7 @@ class AnimeCover extends StatelessWidget {
           alignment: Alignment.center,
         ),
         Transform.translate(
-          offset: Offset(0, 4),
+          offset: const Offset(0, 4),
           child: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -348,10 +481,10 @@ class AnimeCover extends StatelessWidget {
                       animeData["media"]["averageScore"].toString() == "null"
                           ? "0.0"
                           : Tools.insertAt(
-                              animeData["media"]["averageScore"].toString(),
-                              ".",
-                              1,
-                            ),
+                            animeData["media"]["averageScore"].toString(),
+                            ".",
+                            1,
+                          ),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
