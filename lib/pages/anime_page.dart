@@ -284,9 +284,14 @@ class _AnimePageState extends State<AnimePage> {
                             padding: const EdgeInsets.only(bottom: 8),
                             itemCount: 100,
                             itemBuilder: (context, index) {
-                              return AnimeEpisode(onClicked: (details){
-                                Tools.Toast(context, "lmao");
-                              }, episodeData: "");
+                              return AnimeEpisode(
+                                seen: widget.animeData["progress"] - 1 > index,
+                                index: index,
+                                onClicked: (details) {
+                                  Tools.Toast(context, "lmao");
+                                },
+                                episodeData: "",
+                              );
                             },
                           );
                         }),
@@ -305,85 +310,128 @@ class _AnimePageState extends State<AnimePage> {
 
 class AnimeEpisode extends StatelessWidget {
   const AnimeEpisode({
-    super.key, required this.onClicked, required this.episodeData,
+    super.key,
+    required this.onClicked,
+    required this.episodeData,
+    required this.seen,
+    required this.index,
   });
 
   final void Function(TapUpDetails)? onClicked;
   final dynamic episodeData;
+  final bool seen;
+  final int index;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTapUp: onClicked,
       child: Container(
-        padding: const EdgeInsets.all(4),
         width: double.infinity,
+        height: 100,
         decoration: BoxDecoration(
           color: MyColors.coolPurple2,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Row(
-          children: [
-            SizedBox(
-              height: 100,
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(
-                    6,
-                  ),
-                  child: CachedNetworkImage(
-                    imageUrl:
-                        "https://imgsrv.crunchyroll.com/cdn-cgi/image/fit=contain,format=auto,quality=70,width=320,height=180/catalog/crunchyroll/51f4f0e6b0122b8497ddd1044a27c6c4.jpg",
-                    fit: BoxFit.cover,
-                  ),
+        child: Opacity(
+          opacity: seen ? 0.5 : 1,
+          child: Stack(
+            //fit: StackFit.expand,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(4),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      height: 100,
+                      child: AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Stack(
+                            children: [
+                              CachedNetworkImage(
+                                imageUrl:
+                                    "https://imgsrv.crunchyroll.com/cdn-cgi/image/fit=contain,format=auto,quality=70,width=320,height=180/catalog/crunchyroll/51f4f0e6b0122b8497ddd1044a27c6c4.jpg",
+                                fit: BoxFit.cover,
+                              ),
+                              Center(child: Icon(Icons.done, color: Colors.white,size: seen? 40 : 0,)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Expanded(
+                      // <-- This constrains the width of the text area
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 16),
+                        child: SizedBox(
+                          height: 100,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 4),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Fire Force Season 3",
+                                  style: TextStyle(
+                                    color: MyColors.unselectedColor,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  "S3 E1 - Indomitable Resolve",
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  "Dub | Sub",
+                                  style: TextStyle(
+                                    color: MyColors.unselectedColor,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const Expanded( // <-- This constrains the width of the text area
-              child: Padding(
-                padding: EdgeInsets.only(left: 16),
-                child: SizedBox(
-                  height: 100,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Fire Force Season 3",
-                          style: TextStyle(
-                            color: MyColors.unselectedColor,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          "S3 E1 - Indomitable Resolve",
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          "Dub | Sub",
-                          style: TextStyle(
-                            color: MyColors.unselectedColor,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: MyColors.coolPurple2,
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(12),
+                      bottomLeft: Radius.circular(12),
+                    ),
+                  ),
+                  padding: const EdgeInsets.only(left: 15, right: 15),
+                  child: Text(
+                    "${index + 1}",
+                    style: const TextStyle(
+                      letterSpacing: 2,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                      fontSize: 18,
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
