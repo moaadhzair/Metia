@@ -240,7 +240,7 @@ class _AnimePageState extends State<AnimePage> {
                     child: Padding(
                       padding: const EdgeInsets.only(top: 12),
                       child: TabBarView(
-                        physics: const NeverScrollableScrollPhysics(),
+                        //physics: const NeverScrollableScrollPhysics(),
                         children: List.generate(10, (tabIndex) {
                           return ListView.builder(
                             itemCount: 100,
