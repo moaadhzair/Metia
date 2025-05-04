@@ -26,7 +26,6 @@ class _AnimePageState extends State<AnimePage> {
   }
 
   void _scrollListener() {
-    // You may need to adjust this value depending on your expandedHeight
     final collapseOffset =
         (MediaQuery.of(context).size.width * 2) * 0.9 - kToolbarHeight - 10;
     if (_scrollController.hasClients) {
@@ -57,146 +56,208 @@ class _AnimePageState extends State<AnimePage> {
       backgroundColor: MyColors.backgroundColor,
       body: SafeArea(
         top: false,
-        child: CustomScrollView(
-          controller: _scrollController,
-          physics: const BouncingScrollPhysics(),
-          //scrollDirection: Axis.vertical,
-          //shrinkWrap: true,
-          slivers: [
-            SliverAppBar(
-              backgroundColor: MyColors.appbarColor,
-              foregroundColor: MyColors.appbarTextColor,
-              stretch: true,
-              //collapsedHeight: kToolbarHeight,
-              //stretchTriggerOffset: 10,
-              pinned: true,
-              title: AnimatedOpacity(
-                opacity: _isCollapsed ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 300),
-                child: Text(
-                  title,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+        child: DefaultTabController(
+          length: 10,
+          child: NestedScrollView(
+            controller: _scrollController,
+            headerSliverBuilder: (context, innerBoxIsScrolled) => [
+              SliverAppBar(
+                backgroundColor: MyColors.appbarColor,
+                foregroundColor: MyColors.appbarTextColor,
+                stretch: true,
+                pinned: true,
+                title: AnimatedOpacity(
+                  opacity: _isCollapsed ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 300),
+                  child: Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
-              ),
-              expandedHeight: (MediaQuery.of(context).size.height) * 0.8,
-              flexibleSpace: FlexibleSpaceBar(
-                collapseMode: CollapseMode.parallax,
-                stretchModes: const [
-                  StretchMode.zoomBackground,
-                  StretchMode.blurBackground,
-                ],
-                background: AnimeCover(animeData: widget.animeData),
-              ),
-            ),
-            AnimeEpisodes(),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class AnimeEpisodes extends StatelessWidget {
-  const AnimeEpisodes({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverList.list(
-      children: [
-        Container(
-          // extension picker, start watching button, tabs
-          color: MyColors.backgroundColor,
-          height: 200,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
-                child: DropdownMenu(
-                  width: 600,
-                  enableSearch: false,
-                  menuStyle: MenuStyle(
-                    backgroundColor: WidgetStateProperty.all(
-                      MyColors.backgroundColor,
-                    ),
-                  ),
-                  initialSelection: "null",
-                  label: const Text("Extensions"),
-                  inputDecorationTheme: InputDecorationTheme(
-                    labelStyle: TextStyle(
-                      color: MyColors.coolPurple,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    suffixIconColor: MyColors.coolPurple,
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: MyColors.coolPurple,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: MyColors.coolPurple,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: MyColors.coolPurple,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                    disabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: MyColors.coolPurple,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                  ),
-                  textStyle: TextStyle(
-                    color: MyColors.unselectedColor,
-                    
-                  ),
-                  dropdownMenuEntries: [
-                    DropdownMenuEntry(
-                      value: "null",
-                      label: "No Extensions Installed",
-                      style: ButtonStyle(
-                        foregroundColor: WidgetStateProperty.all(
-                          MyColors.unselectedColor,
-                        ),
-                      ),
-                    ),
-                    DropdownMenuEntry(
-                      value: "animepahe",
-                      label: "AnimePahe",
-                      style: ButtonStyle(
-                        foregroundColor: WidgetStateProperty.all(
-                          MyColors.unselectedColor,
-                        ),
-                      ),
-                    ),
-                    DropdownMenuEntry(
-                      value: "hianime",
-                      label: "HiAnime",
-                      style: ButtonStyle(
-                        foregroundColor: WidgetStateProperty.all(
-                          MyColors.unselectedColor,
-                        ),
-                      ),
-                    ),
+                expandedHeight: (MediaQuery.of(context).size.height) * 0.8,
+                flexibleSpace: FlexibleSpaceBar(
+                  collapseMode: CollapseMode.parallax,
+                  stretchModes: const [
+                    StretchMode.zoomBackground,
+                    StretchMode.blurBackground,
                   ],
+                  background: AnimeCover(animeData: widget.animeData),
                 ),
               ),
             ],
+            body: Padding(
+              padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
+              child: Column(
+                children: [
+                  // DropdownMenu (extension picker)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: DropdownMenu(
+                      width: 600,
+                      enableSearch: false,
+                      menuStyle: MenuStyle(
+                        backgroundColor: WidgetStateProperty.all(
+                          MyColors.backgroundColor,
+                        ),
+                      ),
+                      initialSelection: "null",
+                      label: const Text("Extensions"),
+                      inputDecorationTheme: InputDecorationTheme(
+                        labelStyle: TextStyle(
+                          color: MyColors.coolPurple,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        suffixIconColor: MyColors.coolPurple,
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: MyColors.coolPurple,
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(7),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: MyColors.coolPurple,
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(7),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: MyColors.coolPurple,
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(7),
+                        ),
+                        disabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: MyColors.coolPurple,
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(7),
+                        ),
+                      ),
+                      textStyle: TextStyle(color: MyColors.unselectedColor),
+                      dropdownMenuEntries: [
+                        DropdownMenuEntry(
+                          value: "null",
+                          label: "No Extensions Installed",
+                          style: ButtonStyle(
+                            foregroundColor: WidgetStateProperty.all(
+                              MyColors.unselectedColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Start Watching Button
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: TextButton.icon(
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.only(
+                            top: 16,
+                            left: 16,
+                            right: 16,
+                            bottom: 16,
+                          ),
+                          foregroundColor: MyColors.coolGreen,
+                          shape: RoundedRectangleBorder(
+                            side: BorderSide(color: MyColors.coolGreen),
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                        ),
+                        label: Text(
+                          "START WATCHING ",
+                          style: TextStyle(
+                            color: MyColors.coolGreen,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        onPressed: () {},
+                        icon: Icon(Icons.play_arrow_outlined, size: 20),
+                      ),
+                    ),
+                  ),
+                  // TabBar
+                  Builder(
+                    builder: (context) {
+                      final TabController tabController = DefaultTabController.of(context);
+                      return StatefulBuilder(
+                        builder: (context, setState) {
+                          tabController.addListener(() {
+                            setState(() {});
+                          });
+                          List<String> labels = [
+                            "1 - 99",
+                            "100 - 199",
+                            "200 - 299",
+                            "300 - 399",
+                            "400 - 499",
+                            "500 - 599",
+                            "600 - 699",
+                            "700 - 799",
+                            "800 - 899",
+                            "900 - 999",
+                          ];
+                          return TabBar(
+                            tabAlignment: TabAlignment.start,
+                            labelPadding: EdgeInsets.zero,
+                            isScrollable: true,
+                            indicatorColor: Colors.transparent,
+                            dividerColor: Colors.transparent,
+                            tabs: List.generate(labels.length, (i) {
+                              final bool selected = tabController.index == i;
+                              return Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 5),
+                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: selected ? Colors.white : Colors.transparent,
+                                  border: Border.all(color: MyColors.coolPurple),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    labels[i],
+                                    style: TextStyle(
+                                      color: selected ? MyColors.coolPurple : const Color(0xFF9A989B),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                  // TabBarView
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: TabBarView(
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: List.generate(10, (tabIndex) {
+                          return ListView.builder(
+                            itemCount: 100,
+                            itemBuilder: (context, index) {
+                              return Text("Episode $index", style: TextStyle(color: Colors.white),);
+                            },
+                          );
+                        }),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -246,21 +307,18 @@ class AnimeCover extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [Colors.transparent, MyColors.backgroundColor],
-                //stops: [.5, 1],
               ),
             ),
           ),
         ),
-
         Align(
-          // the text data of the anime
           alignment: Alignment.bottomLeft,
           child: Padding(
             padding: const EdgeInsets.only(
               left: 16.0,
               bottom: 16.0,
               right: 16.0,
-            ), // adjust as needed
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,10 +348,10 @@ class AnimeCover extends StatelessWidget {
                       animeData["media"]["averageScore"].toString() == "null"
                           ? "0.0"
                           : Tools.insertAt(
-                            animeData["media"]["averageScore"].toString(),
-                            ".",
-                            1,
-                          ),
+                              animeData["media"]["averageScore"].toString(),
+                              ".",
+                              1,
+                            ),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
