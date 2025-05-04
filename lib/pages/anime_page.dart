@@ -56,6 +56,7 @@ class _AnimePageState extends State<AnimePage> {
       backgroundColor: MyColors.backgroundColor,
       body: SafeArea(
         top: false,
+        bottom: false,
         child: DefaultTabController(
           length: 10,
           child: NestedScrollView(
