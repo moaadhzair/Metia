@@ -282,7 +282,7 @@ class _AnimePageState extends State<AnimePage> {
                             separatorBuilder:
                                 (context, index) => const SizedBox(height: 7),
                             padding: const EdgeInsets.only(bottom: 8),
-                            itemCount: 100,
+                            itemCount: widget.animeData["media"]["episodes"],
                             itemBuilder: (context, index) {
                               return AnimeEpisode(
                                 seen: widget.animeData["progress"] - 1 > index,
