@@ -8,6 +8,7 @@ import 'package:metia/api/anilist_search.dart';
 import 'package:metia/constants/Colors.dart';
 import 'package:metia/data/Library.dart';
 import 'package:metia/data/setting.dart';
+import 'package:metia/pages/extensions_page.dart';
 import 'package:metia/pages/settings_page.dart';
 import 'package:metia/pages/user_page.dart';
 import 'package:metia/tools.dart';
@@ -105,9 +106,9 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> _fetchAnimeLibrary(bool _isrefreshing) async {
+  Future<void> _fetchAnimeLibrary(bool isrefreshing) async {
     setState(() {
-      _loading = _isrefreshing ? false : true;
+      _loading = isrefreshing ? false : true;
       _error = null;
     });
 
@@ -197,7 +198,7 @@ class _HomePageState extends State<HomePage> {
                         _blurOpacity = 0.0; // Hide the blur effect
                       });
                     },
-                    constraints: const BoxConstraints(maxWidth: 140),
+                    constraints: const BoxConstraints(maxWidth: 160),
                     itemBuilder:
                         (context) => <PopupMenuEntry<String>>[
                           PopupMenuItem<String>(
@@ -224,6 +225,39 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ],
                             ),
+                          ),
+                          const PopupMenuDivider(height: 10),
+                          PopupMenuItem<String>(
+                            height: 35,
+                            child: const Row(
+                              children: [
+                                Icon(
+                                  Icons.extension,
+                                  size: 30,
+                                  color: MyColors.unselectedColor,
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  "Extensions",
+                                  style: TextStyle(
+                                    color: MyColors.unselectedColor,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            onTap: () {
+                              if (mounted) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => const ExtensionsPage(),
+                                  ),
+                                );
+                              }
+                            },
                           ),
                           const PopupMenuDivider(height: 10),
                           PopupMenuItem<String>(
@@ -387,7 +421,7 @@ class _HomePageState extends State<HomePage> {
                                     primaryColor: MyColors.appbarTextColor,
                                   ),
                                   child: Padding(
-                                    padding: EdgeInsets.only(
+                                    padding: const EdgeInsets.only(
                                       top: 8,
                                       left: 4,
                                       right: 4,
@@ -451,7 +485,7 @@ class _HomePageState extends State<HomePage> {
                                       },
                                     ),
                                     child: Padding(
-                                      padding: EdgeInsets.only(
+                                      padding: const EdgeInsets.only(
                                         top: 8,
                                         left: 4,
                                         right: 4,

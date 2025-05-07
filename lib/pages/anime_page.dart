@@ -68,7 +68,7 @@ class _AnimePageState extends State<AnimePage> {
 
   void _scrollListener() {
     final collapseOffset =
-        (MediaQuery.of(context).size.width * 2) * 0.9 - kToolbarHeight - 10;
+        (MediaQuery.of(context).size.height) * 0.9 - kToolbarHeight - 10;
     if (_scrollController.hasClients) {
       final shouldBeCollapsed = _scrollController.offset > collapseOffset;
       if (_isCollapsed != shouldBeCollapsed) {
