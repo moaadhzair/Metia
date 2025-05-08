@@ -17,25 +17,31 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
   List<Map<String, dynamic>> availableExtensions = [
     {
       "title": "AnimePahe",
-      "iconUrl": "https://assets.apk.live/com.animepahe.show_animes--128-icon.png",
+      "iconUrl":
+          "https://assets.apk.live/com.animepahe.show_animes--128-icon.png",
       "dub": true,
       "sub": true,
       "language": "English",
-    },{
+    },
+    {
       "title": "HiAnime",
-      "iconUrl": "https://cdn2.steamgriddb.com/icon_thumb/a0e7be097b3b5eb71d106dd32f2312ac.png",
+      "iconUrl":
+          "https://cdn2.steamgriddb.com/icon_thumb/a0e7be097b3b5eb71d106dd32f2312ac.png",
       "dub": true,
       "sub": true,
       "language": "English",
-    },{
+    },
+    {
       "title": "GojoWTF",
       "iconUrl": "https://gojo.wtf/android-chrome-512x512.png",
       "dub": true,
       "sub": true,
       "language": "English",
-    },{
+    },
+    {
       "title": "AnimeKai",
-      "iconUrl": "https://i.postimg.cc/jttw9rQ9/Screenshot-2025-05-07-191754.png?dl=1",
+      "iconUrl":
+          "https://i.postimg.cc/jttw9rQ9/Screenshot-2025-05-07-191754.png?dl=1",
       "dub": true,
       "sub": true,
       "language": "English",
@@ -45,84 +51,47 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: MyColors.backgroundColor,
-        appBar: AppBar(
-          foregroundColor: MyColors.appbarTextColor,
-          backgroundColor: MyColors.appbarColor,
-          title: const Row(
-            children: [
-              SizedBox(width: 20),
-              Text(
-                "Extensions",
-                style: TextStyle(
-                  color: MyColors.appbarTextColor,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          bottom: TabBar(
-            overlayColor: WidgetStateProperty.all(Colors.transparent),
-            dividerColor: const Color.fromARGB(255, 69, 69, 70),
-            dividerHeight: 1,
-            indicatorColor: MyColors.appbarTextColor,
-            labelColor: MyColors.appbarTextColor,
-            unselectedLabelColor: MyColors.unselectedColor,
-            tabs: const [
-              Padding(
-                padding: EdgeInsets.only(bottom: 10),
-                child: Text(
-                  "Available Extensions",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(bottom: 10),
-                child: Text(
-                  "Installed Extensions",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-        ),
-        body: TabBarView(
+    return Scaffold(
+      backgroundColor: MyColors.backgroundColor,
+      appBar: AppBar(
+        foregroundColor: MyColors.appbarTextColor,
+        backgroundColor: MyColors.appbarColor,
+        title: const Row(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: ListView.separated(
-                separatorBuilder: (context, index) {
-                  return const SizedBox(height: 12);
-                },
-                itemCount: availableExtensions.length,
-                itemBuilder: (context, index) {
-                  final ext = availableExtensions[index];
-                  return ExtensionTile(
-                    title: ext["title"],
-                    iconUrl: ext["iconUrl"],
-                    dub: ext["dub"],
-                    sub: ext["sub"],
-                    language: ext["language"],
-                    onDeleted: (context) {
-                      setState(() {
-                        availableExtensions.removeAt(index);
-                      });
-                    },
-                  );
-                },
+            SizedBox(width: 20),
+            Text(
+              "Installed Extensions",
+              style: TextStyle(
+                color: MyColors.appbarTextColor,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
-            ),
-            ListView.builder(
-              //installed Extensions
-              itemBuilder: (context, index) {
-                return null;
-              },
             ),
           ],
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: ListView.separated(
+          separatorBuilder: (context, index) {
+            return const SizedBox(height: 12);
+          },
+          itemCount: availableExtensions.length,
+          itemBuilder: (context, index) {
+            final ext = availableExtensions[index];
+            return ExtensionTile(
+              title: ext["title"],
+              iconUrl: ext["iconUrl"],
+              dub: ext["dub"],
+              sub: ext["sub"],
+              language: ext["language"],
+              onDeleted: (context) {
+                setState(() {
+                  availableExtensions.removeAt(index);
+                });
+              },
+            );
+          },
         ),
       ),
     );
