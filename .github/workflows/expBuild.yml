@@ -76,42 +76,44 @@ jobs:
           path: build/ios/iphoneos/metia.ipa
 
   release:
-    name: Create GitHub Release
+    name: Create/Update GitHub Release
     runs-on: ubuntu-latest
     needs: [build-android, build-ios]
     if: success()
     steps:
       - uses: actions/checkout@v3
 
+      - name: Get Version
+        id: get_version
+        run: |
+          VERSION=$(cat pubspec.yaml | grep "version:" | cut -d'+' -f1 | cut -d' ' -f2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Download Android APK
+        if: success()
         uses: actions/download-artifact@v4
         with:
           name: android-apk
           path: artifacts/android/
 
       - name: Download iOS IPA
+        if: success()
         uses: actions/download-artifact@v4
         with:
           name: ios-ipa
           path: artifacts/ios/
 
-      - name: Get Version
-        id: get_version
-        run: |
-          VERSION=$(cat pubspec.yaml | grep "version:" | cut -d'+' -f1 | cut -d' ' -f2)
-          echo "version=$VERSION" >> $GITHUB_ENV
-
-      - name: Create Release
+      - name: Create or Update Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ env.version }}
-          name: Release v${{ env.version }}
+          tag_name: v${{ steps.get_version.outputs.version }}
+          name: Release v${{ steps.get_version.outputs.version }}
           body: |
             🚀 New Release
             
             ### Changes
             - Android and iOS builds updated
-            - Version: ${{ env.version }}
+            - Version: ${{ steps.get_version.outputs.version }}
             
             ### Downloads
             - Android APK available in the release assets
