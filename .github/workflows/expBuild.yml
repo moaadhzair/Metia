@@ -2,6 +2,14 @@ name: metia-build-exp
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main  # or your default branch name
+    paths:
+      - 'lib/**'
+      - 'ios/**'
+      - 'android/**'
+      - 'pubspec.yaml'
 
 jobs:
   build-android:
@@ -46,10 +54,18 @@ jobs:
 
       - run: flutter pub get
 
+      # Setup certificate for enterprise signing
+      - name: Setup Enterprise Certificate
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
+          cp certificate.esigncert ~/Library/MobileDevice/Provisioning\ Profiles/
+          security import certificate.esigncert -k ~/Library/Keychains/login.keychain -P ${{ secrets.CERTIFICATE_PASSWORD }} -A
+
       - run: pod repo update
         working-directory: ios
 
-      - run: flutter build ios --release --no-codesign
+      # Build with enterprise signing
+      - run: flutter build ios --release
 
       - run: mkdir Payload
         working-directory: build/ios/iphoneos
@@ -71,6 +87,7 @@ jobs:
     name: Create GitHub Release
     runs-on: ubuntu-latest
     needs: [build-android, build-ios]
+    if: success()
     steps:
       - uses: actions/checkout@v3
 
@@ -86,18 +103,40 @@ jobs:
           name: ios-ipa
           path: artifacts/ios/
 
-      - name: Upload to GitHub Release
-        uses: ncipollo/release-action@v1
+      - name: Get Version
+        id: get_version
+        run: |
+          VERSION=$(cat pubspec.yaml | grep "version:" | cut -d'+' -f1 | cut -d' ' -f2)
+          echo "version=$VERSION" >> $GITHUB_ENV
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
         with:
-          artifacts: "artifacts/android/*, artifacts/ios/*"
-          tag: v1.0.1
-          token: ${{ secrets.GITHUB_TOKEN }}
-          body: "🚀 New Release: Android & iOS builds"
+          tag_name: v${{ env.version }}
+          name: Release v${{ env.version }}
+          body: |
+            🚀 New Release
+            
+            ### Changes
+            - Android and iOS builds updated
+            - Version: ${{ env.version }}
+            
+            ### Downloads
+            - Android APK available in the release assets
+            - iOS IPA available in the release assets
+          files: |
+            artifacts/android/*.apk
+            artifacts/ios/*.ipa
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   update-json:
     name: Update JSON File
     runs-on: ubuntu-latest
     needs: release
+    if: success()
     steps:
       - uses: actions/checkout@v3
         with:
@@ -105,7 +144,8 @@ jobs:
 
       - name: Download Latest IPA from Release
         run: |
-          curl -L -o metia.ipa "https://github.com/moaadhzair/Metia/releases/download/v1.0.1/metia.ipa"
+          VERSION=$(cat pubspec.yaml | grep "version:" | cut -d'+' -f1 | cut -d' ' -f2)
+          curl -L -o metia.ipa "https://github.com/moaadhzair/Metia/releases/download/v$VERSION/metia.ipa"
 
       - name: Get IPA File Size
         id: get_size
