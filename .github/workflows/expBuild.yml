@@ -75,10 +75,51 @@ jobs:
           name: ios-ipa
           path: build/ios/iphoneos/metia.ipa
 
-  release:
-    name: Create/Update GitHub Release
+  release-ios:
+    name: Create iOS Release
     runs-on: ubuntu-latest
-    needs: [build-android, build-ios]
+    needs: [build-ios]
+    if: success()
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get Version
+        id: get_version
+        run: |
+          VERSION=$(cat pubspec.yaml | grep "version:" | cut -d'+' -f1 | cut -d' ' -f2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Download iOS IPA
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-ipa
+          path: artifacts/ios/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          name: Release v${{ steps.get_version.outputs.version }}
+          body: |
+            🚀 New Release
+            
+            ### Changes
+            - iOS build available
+            - Version: ${{ steps.get_version.outputs.version }}
+            
+            ### Downloads
+            - iOS IPA available in the release assets
+          files: |
+            artifacts/ios/*.ipa
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-android:
+    name: Update Release with Android
+    runs-on: ubuntu-latest
+    needs: [build-android, release-ios]
     if: success()
     steps:
       - uses: actions/checkout@v3
@@ -90,20 +131,12 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Download Android APK
-        if: success()
         uses: actions/download-artifact@v4
         with:
           name: android-apk
           path: artifacts/android/
 
-      - name: Download iOS IPA
-        if: success()
-        uses: actions/download-artifact@v4
-        with:
-          name: ios-ipa
-          path: artifacts/ios/
-
-      - name: Create or Update Release
+      - name: Update Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.get_version.outputs.version }}
@@ -112,15 +145,14 @@ jobs:
             🚀 New Release
             
             ### Changes
-            - Android and iOS builds updated
+            - iOS and Android builds available
             - Version: ${{ steps.get_version.outputs.version }}
             
             ### Downloads
-            - Android APK available in the release assets
             - iOS IPA available in the release assets
+            - Android APK available in the release assets
           files: |
             artifacts/android/*.apk
-            artifacts/ios/*.ipa
           draft: false
           prerelease: false
         env:
@@ -129,7 +161,7 @@ jobs:
   update-json:
     name: Update JSON File
     runs-on: ubuntu-latest
-    needs: release
+    needs: [release-android]
     if: success()
     steps:
       - uses: actions/checkout@v3
