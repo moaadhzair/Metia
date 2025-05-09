@@ -54,18 +54,10 @@ jobs:
 
       - run: flutter pub get
 
-      # Setup certificate for enterprise signing
-      - name: Setup Enterprise Certificate
-        run: |
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
-          cp certificate.esigncert ~/Library/MobileDevice/Provisioning\ Profiles/
-          security import certificate.esigncert -k ~/Library/Keychains/login.keychain -P ${{ secrets.CERTIFICATE_PASSWORD }} -A
-
       - run: pod repo update
         working-directory: ios
 
-      # Build with enterprise signing
-      - run: flutter build ios --release
+      - run: flutter build ios --release --no-codesign
 
       - run: mkdir Payload
         working-directory: build/ios/iphoneos
