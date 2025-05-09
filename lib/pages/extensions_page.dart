@@ -32,14 +32,16 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
       await _extensionManager.setExtensions([
         {
           "title": "AnimePahe",
-          "iconUrl": "https://assets.apk.live/com.animepahe.show_animes--128-icon.png",
+          "iconUrl":
+              "https://assets.apk.live/com.animepahe.show_animes--128-icon.png",
           "dub": true,
           "sub": true,
           "language": "English",
         },
         {
           "title": "HiAnime",
-          "iconUrl": "https://cdn2.steamgriddb.com/icon_thumb/a0e7be097b3b5eb71d106dd32f2312ac.png",
+          "iconUrl":
+              "https://cdn2.steamgriddb.com/icon_thumb/a0e7be097b3b5eb71d106dd32f2312ac.png",
           "dub": true,
           "sub": true,
           "language": "English",
@@ -53,7 +55,8 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
         },
         {
           "title": "AnimeKai",
-          "iconUrl": "https://i.postimg.cc/jttw9rQ9/Screenshot-2025-05-07-191754.png?dl=1",
+          "iconUrl":
+              "https://i.postimg.cc/jttw9rQ9/Screenshot-2025-05-07-191754.png?dl=1",
           "dub": true,
           "sub": true,
           "language": "English",
@@ -83,6 +86,7 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
           sub: removedItem["sub"],
           language: removedItem["language"],
           onDeleted: (_) {}, // Empty function since this is just for animation
+          id: removedItem["id"],
         ),
       ),
       duration: Duration.zero,
@@ -124,57 +128,63 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
-        child: availableExtensions.isEmpty
-            ? const Center(
-                child: Text(
-                  "No extensions installed",
-                  style: TextStyle(
-                    color: MyColors.appbarTextColor,
-                    fontSize: 16,
+        child:
+            availableExtensions.isEmpty
+                ? const Center(
+                  child: Text(
+                    "No extensions installed",
+                    style: TextStyle(
+                      color: MyColors.appbarTextColor,
+                      fontSize: 16,
+                    ),
                   ),
-                ),
-              )
-            : AnimatedList(
-                key: _listKey,
-                initialItemCount: availableExtensions.length,
-                itemBuilder: (context, index, animation) {
-                  final ext = availableExtensions[index];
-                  return FadeTransition(
-                    opacity: animation.drive(
-                      Tween(
-                        begin: 0.0,
-                        end: 1.0,
-                      ).chain(CurveTween(curve: Curves.easeIn)),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: ExtensionTile(
-                        title: ext["title"],
-                        iconUrl: ext["iconUrl"],
-                        dub: ext["dub"],
-                        sub: ext["sub"],
-                        language: ext["language"],
-                        onDeleted: (context) async {
-                          // Get the current list before deletion
-                          final currentList = _extensionManager.getExtensions();
-                          // Find the index of the extension to delete
-                          final indexToDelete = currentList.indexWhere(
-                            (e) => e["title"] == ext["title"] && 
-                                  e["iconUrl"] == ext["iconUrl"]
-                          );
-                          
-                          if (indexToDelete != -1) {
-                            await _extensionManager.removeExtension(indexToDelete);
-                            if (mounted) {
-                              _removeExtension(index);
-                            }
-                          }
-                        },
+                )
+                : AnimatedList(
+                  key: _listKey,
+                  initialItemCount: availableExtensions.length,
+                  itemBuilder: (context, index, animation) {
+                    final ext = availableExtensions[index];
+                    return FadeTransition(
+                      opacity: animation.drive(
+                        Tween(
+                          begin: 0.0,
+                          end: 1.0,
+                        ).chain(CurveTween(curve: Curves.easeIn)),
                       ),
-                    ),
-                  );
-                },
-              ),
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: ExtensionTile(
+                          title: ext["title"],
+                          iconUrl: ext["iconUrl"],
+                          dub: ext["dub"],
+                          sub: ext["sub"],
+                          language: ext["language"],
+                          onDeleted: (context) async {
+                            // Get the current list before deletion
+                            final currentList =
+                                _extensionManager.getExtensions();
+                            // Find the index of the extension to delete
+                            final indexToDelete = currentList.indexWhere(
+                              (e) =>
+                                  e["title"] == ext["title"] &&
+                                  e["iconUrl"] == ext["iconUrl"],
+                            );
+
+                            if (indexToDelete != -1) {
+                              await _extensionManager.removeExtension(
+                                indexToDelete,
+                              );
+                              if (mounted) {
+                                _removeExtension(index);
+                              }
+                            }
+                          },
+                          id: ext["id"],
+                        ),
+                      ),
+                    );
+                  },
+                ),
       ),
     );
   }
@@ -182,7 +192,7 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
   Future<void> _showAddExtensionDialog(BuildContext context) async {
     String extensionUrl = '';
     String? errorText;
-    
+
     final result = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -244,7 +254,7 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
                         );
                         if (response.statusCode == 200) {
                           final jsonData = jsonDecode(response.body);
-                          
+
                           // Validate required fields
                           if (!_isValidExtensionJson(jsonData)) {
                             setState(() {
@@ -286,7 +296,7 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
     if (result == true && mounted) {
       final newExtensions = _extensionManager.getExtensions();
       final newItem = newExtensions.last;
-      
+
       setState(() {
         availableExtensions = newExtensions;
       });
@@ -297,7 +307,7 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
           duration: const Duration(milliseconds: 300),
         );
       }
-      
+
       Tools.Toast(context, "Extension added");
     }
   }
@@ -322,6 +332,7 @@ class ExtensionTile extends StatelessWidget {
   final bool sub;
   final String language;
   final void Function(BuildContext) onDeleted;
+  final int id;
 
   const ExtensionTile({
     super.key,
@@ -331,6 +342,7 @@ class ExtensionTile extends StatelessWidget {
     required this.sub,
     required this.language,
     required this.onDeleted,
+    required this.id,
   });
 
   @override
@@ -404,6 +416,30 @@ class ExtensionTile extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child:
+                      ExtensionManager().isMainExtension({
+                            "id": id,
+                            "title": title,
+                            "iconUrl": iconUrl,
+                            "dub": dub,
+                            "sub": sub,
+                            "language": language,
+                          })
+                          ? const Padding(
+                            padding: EdgeInsets.only(right: 8),
+                            child: Icon(
+                              Icons.check,
+                              color: MyColors.coolPurple,
+                              size: 27,
+                            ),
+                          )
+                          : null,
                 ),
               ),
             ],

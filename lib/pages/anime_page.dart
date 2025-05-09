@@ -4,6 +4,7 @@ import 'package:metia/constants/Colors.dart';
 
 import 'package:html/parser.dart' as html_parser;
 import 'package:html/dom.dart' as html_dom;
+import 'package:metia/managers/extension_manager.dart';
 import 'package:metia/tools.dart';
 
 class AnimePage extends StatefulWidget {
@@ -23,10 +24,14 @@ class _AnimePageState extends State<AnimePage> {
   int tabCount = 0;
   List<String> labels = [];
   List<int> tabItemCounts = [];
+  bool _isLoading = true;
+  String? _selectedExtension;
 
   @override
   void initState() {
     super.initState();
+
+    _initializeData();
 
     itemCount =
         widget.animeData["media"]["nextAiringEpisode"] != null
@@ -64,6 +69,15 @@ class _AnimePageState extends State<AnimePage> {
     }
 
     _scrollController.addListener(_scrollListener);
+  }
+
+  Future<void> _initializeData() async {
+    await ExtensionManager().init();
+    final currentExtension = ExtensionManager().getCurrentExtension();
+    setState(() {
+      _isLoading = false;
+      _selectedExtension = currentExtension?["id"]?.toString();
+    });
   }
 
   void _scrollListener() {
@@ -169,7 +183,9 @@ class _AnimePageState extends State<AnimePage> {
                         // DropdownMenu (extension picker)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12),
-                          child: DropdownMenu(
+                          child: _isLoading
+                              ? const CircularProgressIndicator()
+                              : DropdownMenu(
                             width: 600,
                             enableSearch: false,
                             menuStyle: MenuStyle(
@@ -177,7 +193,15 @@ class _AnimePageState extends State<AnimePage> {
                                 MyColors.backgroundColor,
                               ),
                             ),
-                            initialSelection: "null",
+                            initialSelection: _selectedExtension,
+                            onSelected: (value) {
+                              if (value != null) {
+                                setState(() {
+                                  _selectedExtension = value;
+                                });
+                                ExtensionManager().setCurrentExtension(int.parse(value));
+                              }
+                            },
                             label: const Text("Extensions"),
                             inputDecorationTheme: InputDecorationTheme(
                               labelStyle: const TextStyle(
@@ -218,17 +242,36 @@ class _AnimePageState extends State<AnimePage> {
                             textStyle: const TextStyle(
                               color: MyColors.unselectedColor,
                             ),
-                            dropdownMenuEntries: [
-                              DropdownMenuEntry(
-                                value: "null",
-                                label: "No Extensions Installed",
-                                style: ButtonStyle(
-                                  foregroundColor: WidgetStateProperty.all(
-                                    MyColors.unselectedColor,
-                                  ),
-                                ),
-                              ),
-                            ],
+                            dropdownMenuEntries: ExtensionManager()
+                                .getExtensions()
+                                .map((extension) => DropdownMenuEntry(
+                                      value: extension["id"].toString(),
+                                      label: extension["title"],
+                                      trailingIcon: ExtensionManager().isMainExtension(extension) 
+                                          ? const Icon(
+                                              Icons.check,
+                                              color: MyColors.coolPurple,
+                                              size: 20,
+                                            )
+                                          : null,
+                                      leadingIcon: SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(4),
+                                          child: CachedNetworkImage(
+                                            imageUrl: extension["iconUrl"],
+                                            fit: BoxFit.contain,
+                                          ),
+                                        ),
+                                      ),
+                                      style: ButtonStyle(
+                                        foregroundColor: WidgetStateProperty.all(
+                                          MyColors.unselectedColor,
+                                        ),
+                                      ),
+                                    ))
+                                .toList(),
                           ),
                         ),
                         // Start Watching Button
