@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:metia/api/extension.dart';
 import 'package:metia/constants/Colors.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:metia/tools.dart';
@@ -16,7 +17,7 @@ class ExtensionsPage extends StatefulWidget {
 
 class _ExtensionsPageState extends State<ExtensionsPage> {
   final ExtensionManager _extensionManager = ExtensionManager();
-  List<Map<String, dynamic>> availableExtensions = [];
+  List<Extension> availableExtensions = [];
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
 
   @override
@@ -30,37 +31,45 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
     if (_extensionManager.isEmpty()) {
       // Add default extensions if the manager is empty
       await _extensionManager.setExtensions([
-        {
-          "title": "AnimePahe",
-          "iconUrl":
+        Extension(
+          episodeListApi: "",
+          id: 0,
+          title: "AnimePahe",
+          iconUrl:
               "https://assets.apk.live/com.animepahe.show_animes--128-icon.png",
-          "dub": true,
-          "sub": true,
-          "language": "English",
-        },
-        {
-          "title": "HiAnime",
-          "iconUrl":
+          dub: true,
+          sub: true,
+          language: "English",
+        ),
+        Extension(
+          episodeListApi: "",
+          id: 0,
+          title: "HiAnime",
+          iconUrl:
               "https://cdn2.steamgriddb.com/icon_thumb/a0e7be097b3b5eb71d106dd32f2312ac.png",
-          "dub": true,
-          "sub": true,
-          "language": "English",
-        },
-        {
-          "title": "GojoWTF",
-          "iconUrl": "https://gojo.wtf/android-chrome-512x512.png",
-          "dub": true,
-          "sub": true,
-          "language": "English",
-        },
-        {
-          "title": "AnimeKai",
-          "iconUrl":
+          dub: true,
+          sub: true,
+          language: "English",
+        ),
+        Extension(
+          episodeListApi: "",
+          id: 0,
+          title: "GojoWTF",
+          iconUrl: "https://gojo.wtf/android-chrome-512x512.png",
+          dub: true,
+          sub: true,
+          language: "English",
+        ),
+        Extension(
+          episodeListApi: "",
+          id: 0,
+          title: "AnimeKai",
+          iconUrl:
               "https://i.postimg.cc/jttw9rQ9/Screenshot-2025-05-07-191754.png?dl=1",
-          "dub": true,
-          "sub": true,
-          "language": "English",
-        },
+          dub: true,
+          sub: true,
+          language: "English",
+        ),
       ]);
     }
     if (mounted) {
@@ -80,13 +89,16 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
       (context, animation) => Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: ExtensionTile(
-          title: removedItem["title"],
-          iconUrl: removedItem["iconUrl"],
-          dub: removedItem["dub"],
-          sub: removedItem["sub"],
-          language: removedItem["language"],
+          extension: Extension(
+            episodeListApi: removedItem.episodeListApi,
+            title: removedItem.title,
+            iconUrl: removedItem.iconUrl,
+            dub: removedItem.dub,
+            sub: removedItem.sub,
+            language: removedItem.language,
+            id: removedItem.id,
+          ),
           onDeleted: (_) {}, // Empty function since this is just for animation
-          id: removedItem["id"],
         ),
       ),
       duration: Duration.zero,
@@ -154,11 +166,15 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: ExtensionTile(
-                          title: ext["title"],
-                          iconUrl: ext["iconUrl"],
-                          dub: ext["dub"],
-                          sub: ext["sub"],
-                          language: ext["language"],
+                          extension: Extension(
+                            episodeListApi: ext.episodeListApi,
+                            title: ext.title,
+                            iconUrl: ext.iconUrl,
+                            dub: ext.dub,
+                            sub: ext.sub,
+                            language: ext.language,
+                            id: ext.id,
+                          ),
                           onDeleted: (context) async {
                             // Get the current list before deletion
                             final currentList =
@@ -166,8 +182,8 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
                             // Find the index of the extension to delete
                             final indexToDelete = currentList.indexWhere(
                               (e) =>
-                                  e["title"] == ext["title"] &&
-                                  e["iconUrl"] == ext["iconUrl"],
+                                  e.title == ext.title &&
+                                  e.iconUrl == ext.iconUrl,
                             );
 
                             if (indexToDelete != -1) {
@@ -179,7 +195,6 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
                               }
                             }
                           },
-                          id: ext["id"],
                         ),
                       ),
                     );
@@ -264,13 +279,17 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
                           }
 
                           // Add the extension
-                          await _extensionManager.addExtension({
-                            "title": jsonData['title'],
-                            "iconUrl": jsonData['iconUrl'],
-                            "dub": jsonData['dub'],
-                            "sub": jsonData['sub'],
-                            "language": jsonData['language'],
-                          });
+                          await _extensionManager.addExtension(
+                            Extension(
+                              episodeListApi: jsonData["episodeListApi"],
+                              id: 0,
+                              title: jsonData['title'],
+                              iconUrl: jsonData['iconUrl'],
+                              dub: jsonData['dub'],
+                              sub: jsonData['sub'],
+                              language: jsonData['language'],
+                            ),
+                          );
 
                           Navigator.of(context).pop(true);
                         } else {
@@ -326,23 +345,13 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
 }
 
 class ExtensionTile extends StatelessWidget {
-  final String title;
-  final String iconUrl;
-  final bool dub;
-  final bool sub;
-  final String language;
+  final Extension extension;
   final void Function(BuildContext) onDeleted;
-  final int id;
 
   const ExtensionTile({
     super.key,
-    required this.title,
-    required this.iconUrl,
-    required this.dub,
-    required this.sub,
-    required this.language,
+    required this.extension,
     required this.onDeleted,
-    required this.id,
   });
 
   @override
@@ -379,7 +388,7 @@ class ExtensionTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     child: CachedNetworkImage(
                       fit: BoxFit.cover,
-                      imageUrl: iconUrl,
+                      imageUrl: extension.iconUrl,
                     ),
                   ),
                 ),
@@ -391,7 +400,7 @@ class ExtensionTile extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      title,
+                      extension.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -402,11 +411,11 @@ class ExtensionTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      "$language - ${dub & sub
+                      "${extension.language} - ${extension.dub & extension.sub
                           ? "Dub | Sub"
-                          : sub
+                          : extension.sub
                           ? "Sub"
-                          : dub
+                          : extension.dub
                           ? "Dub"
                           : "not specified"}",
                       style: const TextStyle(
@@ -423,14 +432,17 @@ class ExtensionTile extends StatelessWidget {
                 child: Align(
                   alignment: Alignment.centerRight,
                   child:
-                      ExtensionManager().isMainExtension({
-                            "id": id,
-                            "title": title,
-                            "iconUrl": iconUrl,
-                            "dub": dub,
-                            "sub": sub,
-                            "language": language,
-                          })
+                      ExtensionManager().isMainExtension(
+                            Extension(
+                              episodeListApi: extension.episodeListApi,
+                              id: extension.id,
+                              title: extension.title,
+                              iconUrl: extension.iconUrl,
+                              dub: extension.dub,
+                              sub: extension.sub,
+                              language: extension.language,
+                            ),
+                          )
                           ? const Padding(
                             padding: EdgeInsets.only(right: 8),
                             child: Icon(

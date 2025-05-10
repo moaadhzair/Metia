@@ -17,6 +17,7 @@ class AnimePage extends StatefulWidget {
 
 class _AnimePageState extends State<AnimePage> {
   final ScrollController _scrollController = ScrollController();
+
   bool _isCollapsed = false;
   int itemCount = 0;
   int firstTabCount = 99;
@@ -26,49 +27,64 @@ class _AnimePageState extends State<AnimePage> {
   List<int> tabItemCounts = [];
   bool _isLoading = true;
   String? _selectedExtension;
+  List<Map<String, dynamic>> EpisodeList = [];
 
   @override
   void initState() {
     super.initState();
 
-    _initializeData();
+    ExtensionManager().init().then((value) async {
+      _initializeData();
 
-    itemCount =
+      
+
+      /* itemCount =
         widget.animeData["media"]["nextAiringEpisode"] != null
             ? widget.animeData["media"]["nextAiringEpisode"]["episode"] - 1
-            : widget.animeData["media"]["episodes"] ?? 0;
+            : widget.animeData["media"]["episodes"] ?? 0;*/
 
-    int remaining = itemCount - firstTabCount;
-    int otherTabs = (remaining / eachItemForTab).ceil();
-    tabCount = 1 + (remaining > 0 ? otherTabs : 0);
+      EpisodeList =
+          await ExtensionManager().getCurrentExtension()?.getEpisodeList(
+            "69",
+          ) ??
+          [];
+      itemCount = EpisodeList.length;
 
-    tabItemCounts = [];
-    if (itemCount <= firstTabCount) {
-      tabItemCounts.add(itemCount);
-    } else {
-      tabItemCounts.add(firstTabCount);
-      for (int i = 0; i < otherTabs; i++) {
-        int start = firstTabCount + i * eachItemForTab + 1;
-        int end = start + eachItemForTab - 1;
-        if (end > itemCount) end = itemCount;
-        tabItemCounts.add(end - start + 1);
+      int remaining = itemCount - firstTabCount;
+      int otherTabs = (remaining / eachItemForTab).ceil();
+      tabCount = 1 + (remaining > 0 ? otherTabs : 0);
+
+      tabItemCounts = [];
+      if (itemCount <= firstTabCount) {
+        tabItemCounts.add(itemCount);
+      } else {
+        tabItemCounts.add(firstTabCount);
+        for (int i = 0; i < otherTabs; i++) {
+          int start = firstTabCount + i * eachItemForTab + 1;
+          int end = start + eachItemForTab - 1;
+          if (end > itemCount) end = itemCount;
+          tabItemCounts.add(end - start + 1);
+        }
       }
-    }
 
-    labels = [];
-    if (itemCount <= firstTabCount) {
-      labels.add("1 - $itemCount");
-    } else {
-      labels.add("1 - $firstTabCount");
-      for (int i = 0; i < otherTabs; i++) {
-        int start = firstTabCount + i * eachItemForTab + 1;
-        int end = start + eachItemForTab - 1;
-        if (end > itemCount) end = itemCount;
-        labels.add("$start - $end");
+      labels = [];
+      if (itemCount <= firstTabCount) {
+        labels.add("1 - $itemCount");
+      } else {
+        labels.add("1 - $firstTabCount");
+        for (int i = 0; i < otherTabs; i++) {
+          int start = firstTabCount + i * eachItemForTab + 1;
+          int end = start + eachItemForTab - 1;
+          if (end > itemCount) end = itemCount;
+          labels.add("$start - $end");
+        }
       }
-    }
 
-    _scrollController.addListener(_scrollListener);
+      _scrollController.addListener(_scrollListener);
+      setState(() {
+        
+      });
+    });
   }
 
   Future<void> _initializeData() async {
@@ -76,7 +92,7 @@ class _AnimePageState extends State<AnimePage> {
     final currentExtension = ExtensionManager().getCurrentExtension();
     setState(() {
       _isLoading = false;
-      _selectedExtension = currentExtension?["id"]?.toString();
+      _selectedExtension = currentExtension?.id.toString();
     });
   }
 
@@ -183,96 +199,114 @@ class _AnimePageState extends State<AnimePage> {
                         // DropdownMenu (extension picker)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12),
-                          child: _isLoading
-                              ? const CircularProgressIndicator()
-                              : DropdownMenu(
-                            width: 600,
-                            enableSearch: false,
-                            menuStyle: MenuStyle(
-                              backgroundColor: WidgetStateProperty.all(
-                                MyColors.backgroundColor,
-                              ),
-                            ),
-                            initialSelection: _selectedExtension,
-                            onSelected: (value) {
-                              if (value != null) {
-                                setState(() {
-                                  _selectedExtension = value;
-                                });
-                                ExtensionManager().setCurrentExtension(int.parse(value));
-                              }
-                            },
-                            label: const Text("Extensions"),
-                            inputDecorationTheme: InputDecorationTheme(
-                              labelStyle: const TextStyle(
-                                color: MyColors.coolPurple,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              suffixIconColor: MyColors.coolPurple,
-                              border: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                  color: MyColors.coolPurple,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(7),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                  color: MyColors.coolPurple,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(7),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                  color: MyColors.coolPurple,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(7),
-                              ),
-                              disabledBorder: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                  color: MyColors.coolPurple,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(7),
-                              ),
-                            ),
-                            textStyle: const TextStyle(
-                              color: MyColors.unselectedColor,
-                            ),
-                            dropdownMenuEntries: ExtensionManager()
-                                .getExtensions()
-                                .map((extension) => DropdownMenuEntry(
-                                      value: extension["id"].toString(),
-                                      label: extension["title"],
-                                      trailingIcon: ExtensionManager().isMainExtension(extension) 
-                                          ? const Icon(
-                                              Icons.check,
-                                              color: MyColors.coolPurple,
-                                              size: 20,
+                          child:
+                              _isLoading
+                                  ? const CircularProgressIndicator()
+                                  : DropdownMenu(
+                                    width: 600,
+                                    enableSearch: false,
+                                    menuStyle: MenuStyle(
+                                      backgroundColor: WidgetStateProperty.all(
+                                        MyColors.backgroundColor,
+                                      ),
+                                    ),
+                                    initialSelection: _selectedExtension,
+                                    onSelected: (value) {
+                                      if (value != null) {
+                                        setState(() {
+                                          _selectedExtension = value;
+                                        });
+                                        ExtensionManager().setCurrentExtension(
+                                          int.parse(value),
+                                        );
+                                      }
+                                    },
+                                    label: const Text("Extensions"),
+                                    inputDecorationTheme: InputDecorationTheme(
+                                      labelStyle: const TextStyle(
+                                        color: MyColors.coolPurple,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      suffixIconColor: MyColors.coolPurple,
+                                      border: OutlineInputBorder(
+                                        borderSide: const BorderSide(
+                                          color: MyColors.coolPurple,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(7),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: const BorderSide(
+                                          color: MyColors.coolPurple,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(7),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: const BorderSide(
+                                          color: MyColors.coolPurple,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(7),
+                                      ),
+                                      disabledBorder: OutlineInputBorder(
+                                        borderSide: const BorderSide(
+                                          color: MyColors.coolPurple,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(7),
+                                      ),
+                                    ),
+                                    textStyle: const TextStyle(
+                                      color: MyColors.unselectedColor,
+                                    ),
+                                    dropdownMenuEntries:
+                                        ExtensionManager()
+                                            .getExtensions()
+                                            .map(
+                                              (extension) => DropdownMenuEntry(
+                                                value: extension.id.toString(),
+                                                label: extension.title,
+                                                trailingIcon:
+                                                    ExtensionManager()
+                                                            .isMainExtension(
+                                                              extension,
+                                                            )
+                                                        ? const Icon(
+                                                          Icons.check,
+                                                          color:
+                                                              MyColors
+                                                                  .coolPurple,
+                                                          size: 20,
+                                                        )
+                                                        : null,
+                                                leadingIcon: SizedBox(
+                                                  width: 24,
+                                                  height: 24,
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
+                                                    child: CachedNetworkImage(
+                                                      imageUrl:
+                                                          extension.iconUrl,
+                                                      fit: BoxFit.contain,
+                                                    ),
+                                                  ),
+                                                ),
+                                                style: ButtonStyle(
+                                                  foregroundColor:
+                                                      WidgetStateProperty.all(
+                                                        MyColors
+                                                            .unselectedColor,
+                                                      ),
+                                                ),
+                                              ),
                                             )
-                                          : null,
-                                      leadingIcon: SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(4),
-                                          child: CachedNetworkImage(
-                                            imageUrl: extension["iconUrl"],
-                                            fit: BoxFit.contain,
-                                          ),
-                                        ),
-                                      ),
-                                      style: ButtonStyle(
-                                        foregroundColor: WidgetStateProperty.all(
-                                          MyColors.unselectedColor,
-                                        ),
-                                      ),
-                                    ))
-                                .toList(),
-                          ),
+                                            .toList(),
+                                  ),
                         ),
                         // Start Watching Button
                         Center(
@@ -404,7 +438,9 @@ class _AnimePageState extends State<AnimePage> {
                                     onClicked: (details) {
                                       Tools.Toast(context, "lmao");
                                     },
-                                    episodeData: "",
+                                    episodeData: {
+                                      "episode": EpisodeList[index],
+                                    }, // make it a map of neccesary data that the each extension paases in
                                   ),
                                 );
                               }, childCount: count),
@@ -498,19 +534,25 @@ class AnimeEpisode extends StatelessWidget {
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const Text(
-                                  "S3 E1 - Indomitable Resolve",
+                                Text(
+                                  episodeData["episode"]["name"],
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                const Text(
-                                  "Dub | Sub",
-                                  style: TextStyle(
+                                Text(
+                                  episodeData["episode"]["dub"] && episodeData["episode"]["sub"]
+                                      ? "Sub | Dub"
+                                      : episodeData["episode"]["sub"]
+                                      ? "Sub"
+                                      : episodeData["episode"]["dub"]
+                                      ? "Dub"
+                                      : "not specified",
+                                  style: const TextStyle(
                                     color: MyColors.unselectedColor,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,

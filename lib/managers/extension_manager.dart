@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:metia/api/extension.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ExtensionManager {
@@ -29,33 +30,47 @@ class ExtensionManager {
     return nextId;
   }
 
-  List<Map<String, dynamic>> getExtensions() {
+  List<Extension> getExtensions() {
     if (!_isInitialized) {
       print('ExtensionManager not initialized');
       return [];
     }
-    
+
     final String? extensionsJson = _prefs.getString(_extensionsKey);
     if (extensionsJson == null) return [];
-    
+
     try {
       final List<dynamic> decoded = jsonDecode(extensionsJson);
-      return decoded.cast<Map<String, dynamic>>();
+      List<Extension> extensions = [];
+      for (var extension in decoded) {
+        extensions.add(
+          Extension(
+            episodeListApi: extension["episodeListApi"],
+            title: extension["title"],
+            iconUrl: extension["iconUrl"],
+            dub: extension["dub"],
+            sub: extension["sub"],
+            language: extension["language"],
+            id: extension["id"],
+          ),
+        );
+      }
+      return extensions;
     } catch (e) {
       print('Error decoding extensions: $e');
       return [];
     }
   }
 
-  Future<void> addExtension(Map<String, dynamic> extension) async {
+  Future<void> addExtension(Extension extension) async {
     if (!_isInitialized) {
       print('ExtensionManager not initialized');
       return;
     }
-    
+
     final extensions = getExtensions();
     final id = await _getNextId();
-    extension['id'] = id;
+    extension.id = id;
     extensions.add(extension);
     await _saveExtensions(extensions);
   }
@@ -65,7 +80,7 @@ class ExtensionManager {
       print('ExtensionManager not initialized');
       return;
     }
-    
+
     final extensions = getExtensions();
     if (index >= 0 && index < extensions.length) {
       extensions.removeAt(index);
@@ -73,25 +88,27 @@ class ExtensionManager {
     }
   }
 
-  Future<void> setExtensions(List<Map<String, dynamic>> extensions) async {
+  Future<void> setExtensions(List<Extension> extensions) async {
     if (!_isInitialized) {
       print('ExtensionManager not initialized');
       return;
     }
-    
+
     // Assign IDs to any extensions that don't have them
     for (var extension in extensions) {
-      if (!extension.containsKey('id')) {
-        extension['id'] = await _getNextId();
+      if (!extension.hasId()) {
+        extension.id = await _getNextId();
       }
     }
-    
+
     await _saveExtensions(extensions);
   }
 
-  Future<void> _saveExtensions(List<Map<String, dynamic>> extensions) async {
+  Future<void> _saveExtensions(List<Extension> extensions) async {
     try {
-      final String encoded = jsonEncode(extensions);
+      final String encoded = jsonEncode(
+      extensions.map((extension) => extension.toMap()).toList()
+      );
       await _prefs.setString(_extensionsKey, encoded);
     } catch (e) {
       print('Error saving extensions: $e');
@@ -102,27 +119,35 @@ class ExtensionManager {
     return getExtensions().isEmpty;
   }
 
-  Map<String, dynamic>? getCurrentExtension() {
+  Extension? getCurrentExtension() {
     if (!_isInitialized) {
       print('ExtensionManager not initialized');
       return null;
     }
-    
+
     final String? currentExtensionJson = _prefs.getString(_currentExtensionKey);
     if (currentExtensionJson == null) return null;
-    
+
     try {
       final Map<String, dynamic> decoded = jsonDecode(currentExtensionJson);
-      return decoded;
+      return Extension(
+        episodeListApi: decoded["episodeListApi"],
+        title: decoded["title"],
+        iconUrl: decoded["iconUrl"],
+        dub: decoded["dub"],
+        sub: decoded["sub"],
+        language: decoded["language"],
+        id: decoded["id"],
+      );
     } catch (e) {
       print('Error decoding current extension: $e');
       return null;
     }
   }
 
-  bool isMainExtension(Map<String, dynamic> extension) {
+  bool isMainExtension(Extension extension) {
     final currentExtension = getCurrentExtension();
-    return currentExtension != null && currentExtension["id"] == extension["id"];
+    return currentExtension != null && currentExtension.id == extension.id;
   }
 
   Future<void> setCurrentExtension(int id) async {
@@ -130,18 +155,18 @@ class ExtensionManager {
       print('ExtensionManager not initialized');
       return;
     }
-    
+
     final extensions = getExtensions();
     final extension = extensions.firstWhere(
-      (ext) => ext["id"] == id,
+      (ext) => ext.id == id,
       orElse: () => throw Exception('Extension not found'),
     );
-    
+
     try {
-      final String encoded = jsonEncode(extension);
+      final String encoded = jsonEncode(extension.toMap());
       await _prefs.setString(_currentExtensionKey, encoded);
     } catch (e) {
       print('Error saving current extension: $e');
     }
   }
-} 
+}
