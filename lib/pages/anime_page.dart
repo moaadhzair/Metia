@@ -886,8 +886,11 @@ class AnimeEpisode extends StatelessWidget {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(6),
                           child: CachedNetworkImage(
+                            errorWidget: (context, url, error) {
+                              return Container();
+                            },
                             imageUrl:
-                                animeData["media"]["coverImage"]["extraLarge"],
+                                episodeData["episode"]["cover"],
                             fit:
                                 BoxFit
                                     .cover, // This will crop and fill the width
