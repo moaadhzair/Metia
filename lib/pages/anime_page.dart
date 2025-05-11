@@ -51,7 +51,7 @@ class _AnimePageState extends State<AnimePage> {
 
     final prefs = await SharedPreferences.getInstance();
     final key = "anime_${widget.animeData["media"]["id"]}_extension_id";
-    
+
     // Check if we already have a saved match
     final String? existingMatch = prefs.getString(key);
     if (existingMatch != null) {
@@ -63,12 +63,13 @@ class _AnimePageState extends State<AnimePage> {
         print("Error parsing existing match: $e");
       }
     }
-    
-    final title = widget.animeData["media"]["title"]["english"] ??
+
+    final title =
+        widget.animeData["media"]["title"]["english"] ??
         widget.animeData["media"]["title"]["romaji"] ??
         widget.animeData["media"]["title"]["native"] ??
         "";
-    
+
     if (title.isEmpty) return;
 
     try {
@@ -94,7 +95,7 @@ class _AnimePageState extends State<AnimePage> {
       for (var anime in searchResults) {
         final animeTitle = anime["title"]?.toString() ?? "";
         final normalizedAnimeTitle = normalizeTitle(animeTitle);
-        
+
         if (normalizedAnimeTitle.isEmpty) continue;
 
         double score = 0;
@@ -104,21 +105,21 @@ class _AnimePageState extends State<AnimePage> {
           score = 1.0;
         }
         // Contains match
-        else if (normalizedAnimeTitle.contains(normalizedSearchTitle) || 
-                normalizedSearchTitle.contains(normalizedAnimeTitle)) {
+        else if (normalizedAnimeTitle.contains(normalizedSearchTitle) ||
+            normalizedSearchTitle.contains(normalizedAnimeTitle)) {
           score = 0.8;
         }
         // Word match
         else {
           final animeWords = normalizedAnimeTitle.split(' ');
           int matchingWords = 0;
-          
+
           for (var word in searchWords) {
             if (animeWords.contains(word)) {
               matchingWords++;
             }
           }
-          
+
           if (matchingWords > 0) {
             score = matchingWords / max(searchWords.length, animeWords.length);
           }
@@ -133,6 +134,46 @@ class _AnimePageState extends State<AnimePage> {
       if (bestMatch != null && bestScore >= 0.5) {
         clossestAnime = bestMatch;
         await prefs.setString(key, jsonEncode(bestMatch));
+
+        //here is where we get the episode list
+        EpisodeList =
+            await currentExtension?.getEpisodeList(clossestAnime["session"]) ??
+            [];
+        itemCount = EpisodeList.length;
+
+        int remaining = itemCount - firstTabCount;
+        int otherTabs = (remaining / eachItemForTab).ceil();
+        tabCount = 1 + (remaining > 0 ? otherTabs : 0);
+
+        tabItemCounts = [];
+        if (itemCount <= firstTabCount) {
+          tabItemCounts.add(itemCount);
+        } else {
+          tabItemCounts.add(firstTabCount);
+          for (int i = 0; i < otherTabs; i++) {
+            int start = firstTabCount + i * eachItemForTab + 1;
+            int end = start + eachItemForTab - 1;
+            if (end > itemCount) end = itemCount;
+            tabItemCounts.add(end - start + 1);
+          }
+        }
+
+        labels = [];
+        if (itemCount <= firstTabCount) {
+          labels.add("1 - $itemCount");
+        } else {
+          labels.add("1 - $firstTabCount");
+          for (int i = 0; i < otherTabs; i++) {
+            int start = firstTabCount + i * eachItemForTab + 1;
+            int end = start + eachItemForTab - 1;
+            if (end > itemCount) end = itemCount;
+            labels.add("$start - $end");
+          }
+        }
+        print("done?");
+
+        _scrollController.addListener(_scrollListener);
+
         setState(() {});
       }
     } catch (e) {
@@ -151,8 +192,9 @@ class _AnimePageState extends State<AnimePage> {
         await _findAndSaveMatchingAnime();
       }
 
-
-      EpisodeList = await currentExtension?.getEpisodeList(clossestAnime["session"]) ?? [];
+      EpisodeList =
+          await currentExtension?.getEpisodeList(clossestAnime["session"]) ??
+          [];
       itemCount = EpisodeList.length;
 
       int remaining = itemCount - firstTabCount;
@@ -315,7 +357,7 @@ class _AnimePageState extends State<AnimePage> {
                                       ),
                                     ),
                                     initialSelection: _selectedExtension,
-                                    onSelected: (value) {
+                                    onSelected: (value) async {
                                       if (value != null) {
                                         setState(() {
                                           _selectedExtension = value;
@@ -327,6 +369,7 @@ class _AnimePageState extends State<AnimePage> {
                                         currentExtension =
                                             _localExtensionManager
                                                 .getCurrentExtension();
+                                        await _findAndSaveMatchingAnime();
                                       }
                                     },
                                     label: const Text("Extensions"),
@@ -437,7 +480,7 @@ class _AnimePageState extends State<AnimePage> {
                               ),
                               const SizedBox(width: 10),
                               const Text(
-                                "title:",
+                                "Found:",
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
@@ -449,31 +492,21 @@ class _AnimePageState extends State<AnimePage> {
                                 child: SizedBox(
                                   height: 24, // Fixed height for the text
                                   child: Marquee(
-                                    text: clossestAnime == null
-                                        ? "not found"
-                                        : clossestAnime["title"],
+                                    text:
+                                        clossestAnime == null
+                                            ? ""
+                                            : clossestAnime["title"],
                                     style: const TextStyle(
                                       color: MyColors.appbarTextColor,
                                       fontSize: 16,
                                       fontWeight: FontWeight.w500,
                                     ),
                                     scrollAxis: Axis.horizontal,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     blankSpace: 50.0,
-                                    velocity: 50.0,
-                                    pauseAfterRound: const Duration(seconds: 1),
-                                    startPadding: 10.0,
-                                    accelerationDuration: const Duration(seconds: 1),
-                                    accelerationCurve: Curves.linear,
-                                    decelerationDuration: const Duration(
-                                      milliseconds: 500,
-                                    ),
-                                    decelerationCurve: Curves.easeOut,
-                                    fadingEdgeStartFraction: 0.1,
-                                    fadingEdgeEndFraction: 0.1,
                                   ),
                                 ),
                               ),
+                              const SizedBox(width: 10),
                               GestureDetector(
                                 onTap: () {
                                   final title =
@@ -661,6 +694,101 @@ class _AnimePageState extends State<AnimePage> {
                                                             "Updated matching anime: ${anime["title"]} for key: $key",
                                                           );
 
+                                                          EpisodeList =
+                                                              await currentExtension
+                                                                  ?.getEpisodeList(
+                                                                    clossestAnime["session"],
+                                                                  ) ??
+                                                              [];
+                                                          itemCount =
+                                                              EpisodeList
+                                                                  .length;
+
+                                                          int remaining =
+                                                              itemCount -
+                                                              firstTabCount;
+                                                          int otherTabs =
+                                                              (remaining /
+                                                                      eachItemForTab)
+                                                                  .ceil();
+                                                          tabCount =
+                                                              1 +
+                                                              (remaining > 0
+                                                                  ? otherTabs
+                                                                  : 0);
+
+                                                          tabItemCounts = [];
+                                                          if (itemCount <=
+                                                              firstTabCount) {
+                                                            tabItemCounts.add(
+                                                              itemCount,
+                                                            );
+                                                          } else {
+                                                            tabItemCounts.add(
+                                                              firstTabCount,
+                                                            );
+                                                            for (
+                                                              int i = 0;
+                                                              i < otherTabs;
+                                                              i++
+                                                            ) {
+                                                              int start =
+                                                                  firstTabCount +
+                                                                  i *
+                                                                      eachItemForTab +
+                                                                  1;
+                                                              int end =
+                                                                  start +
+                                                                  eachItemForTab -
+                                                                  1;
+                                                              if (end >
+                                                                  itemCount)
+                                                                end = itemCount;
+                                                              tabItemCounts.add(
+                                                                end - start + 1,
+                                                              );
+                                                            }
+                                                          }
+
+                                                          labels = [];
+                                                          if (itemCount <=
+                                                              firstTabCount) {
+                                                            labels.add(
+                                                              "1 - $itemCount",
+                                                            );
+                                                          } else {
+                                                            labels.add(
+                                                              "1 - $firstTabCount",
+                                                            );
+                                                            for (
+                                                              int i = 0;
+                                                              i < otherTabs;
+                                                              i++
+                                                            ) {
+                                                              int start =
+                                                                  firstTabCount +
+                                                                  i *
+                                                                      eachItemForTab +
+                                                                  1;
+                                                              int end =
+                                                                  start +
+                                                                  eachItemForTab -
+                                                                  1;
+                                                              if (end >
+                                                                  itemCount)
+                                                                end = itemCount;
+                                                              labels.add(
+                                                                "$start - $end",
+                                                              );
+                                                            }
+                                                          }
+
+                                                          _scrollController
+                                                              .addListener(
+                                                                _scrollListener,
+                                                              );
+                                                          setState(() {});
+
                                                           Navigator.pop(
                                                             context,
                                                           ); // Close the modal bottom sheet
@@ -684,9 +812,13 @@ class _AnimePageState extends State<AnimePage> {
                                     },
                                   );
                                 },
-                                child: const Icon(
-                                  Icons.search,
-                                  color: MyColors.appbarTextColor,
+                                child: const Text(
+                                  "Wrong Anime?",
+                                  style: TextStyle(
+                                    color: MyColors.coolPurple,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                               ),
                             ],
@@ -715,7 +847,7 @@ class _AnimePageState extends State<AnimePage> {
                               label: Text(
                                 widget.animeData["progress"] == 0
                                     ? "START WATCHING "
-                                    : "CONTINUE EPISODE ${widget.animeData["progress"]}",
+                                    : "CONTINUE EPISODE ${widget.animeData["progress"] + 1}",
                                 style: const TextStyle(
                                   color: MyColors.coolGreen,
                                   fontWeight: FontWeight.w600,
@@ -814,6 +946,9 @@ class _AnimePageState extends State<AnimePage> {
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 7),
                                   child: AnimeEpisode(
+                                    current:
+                                        widget.animeData["progress"] ==
+                                        episodeIndex,
                                     animeData: widget.animeData,
                                     seen:
                                         widget.animeData["progress"] >
@@ -852,6 +987,7 @@ class AnimeEpisode extends StatelessWidget {
     required this.seen,
     required this.index,
     required this.animeData,
+    required this.current,
   });
 
   final void Function(TapUpDetails)? onClicked;
@@ -859,6 +995,7 @@ class AnimeEpisode extends StatelessWidget {
   final bool seen;
   final int index;
   final dynamic animeData;
+  final bool current;
 
   @override
   Widget build(BuildContext context) {
@@ -868,7 +1005,7 @@ class AnimeEpisode extends StatelessWidget {
         width: double.infinity,
         height: 100,
         decoration: BoxDecoration(
-          color: MyColors.coolPurple2,
+          color: current ? const Color(0xFF3c3243) : MyColors.coolPurple2,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Opacity(
@@ -889,8 +1026,7 @@ class AnimeEpisode extends StatelessWidget {
                             errorWidget: (context, url, error) {
                               return Container();
                             },
-                            imageUrl:
-                                episodeData["episode"]["cover"],
+                            imageUrl: episodeData["episode"]["cover"],
                             fit:
                                 BoxFit
                                     .cover, // This will crop and fill the width
@@ -958,9 +1094,12 @@ class AnimeEpisode extends StatelessWidget {
               Align(
                 alignment: Alignment.bottomLeft,
                 child: Container(
-                  decoration: const BoxDecoration(
-                    color: MyColors.coolPurple2,
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    color:
+                        current
+                            ? const Color(0xFF3c3243)
+                            : MyColors.coolPurple2,
+                    borderRadius: const BorderRadius.only(
                       topRight: Radius.circular(12),
                       bottomLeft: Radius.circular(12),
                     ),

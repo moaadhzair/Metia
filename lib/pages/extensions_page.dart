@@ -19,11 +19,14 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
   final ExtensionManager _extensionManager = ExtensionManager();
   List<Extension> availableExtensions = [];
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  final TextEditingController _textController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-   
+    _extensionManager.init();
+    availableExtensions = _extensionManager.getExtensions();
+    setState(() {});
   }
 
   
@@ -156,6 +159,9 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
   }
 
   Future<void> _showAddExtensionDialog(BuildContext context) async {
+    
+    await ExtensionManager().init();
+
     String extensionUrl = '';
     String? errorText;
 
@@ -171,25 +177,28 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
                 style: TextStyle(color: MyColors.appbarTextColor),
               ),
               content: TextField(
+                enabled: true,
                 style: const TextStyle(color: MyColors.appbarTextColor),
-                decoration: InputDecoration(
-                  hintText: 'Enter extension JSON URL',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  enabledBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: MyColors.coolPurple),
-                  ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: MyColors.coolPurple2),
-                  ),
-                  errorText: errorText,
-                  errorStyle: const TextStyle(color: Colors.red),
-                ),
+                controller: _textController,
                 onChanged: (value) {
                   extensionUrl = value;
-                  setState(() {
-                    errorText = null;
-                  });
                 },
+                decoration: InputDecoration(
+                  hintText: 'Enter extension URL',
+                  hintStyle: TextStyle(color: MyColors.appbarTextColor.withOpacity(0.5)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: MyColors.coolPurple),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: MyColors.coolPurple, width: 2),
+                  ),
+                  errorText: errorText,
+                ),
               ),
               actions: [
                 TextButton(
