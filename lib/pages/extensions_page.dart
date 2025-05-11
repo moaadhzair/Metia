@@ -23,61 +23,10 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
   @override
   void initState() {
     super.initState();
-    _loadExtensions();
+   
   }
 
-  Future<void> _loadExtensions() async {
-    await _extensionManager.init();
-    if (_extensionManager.isEmpty()) {
-      // Add default extensions if the manager is empty
-      await _extensionManager.setExtensions([
-        Extension(
-          episodeListApi: "",
-          id: 0,
-          title: "AnimePahe",
-          iconUrl:
-              "https://assets.apk.live/com.animepahe.show_animes--128-icon.png",
-          dub: true,
-          sub: true,
-          language: "English",
-        ),
-        Extension(
-          episodeListApi: "",
-          id: 0,
-          title: "HiAnime",
-          iconUrl:
-              "https://cdn2.steamgriddb.com/icon_thumb/a0e7be097b3b5eb71d106dd32f2312ac.png",
-          dub: true,
-          sub: true,
-          language: "English",
-        ),
-        Extension(
-          episodeListApi: "",
-          id: 0,
-          title: "GojoWTF",
-          iconUrl: "https://gojo.wtf/android-chrome-512x512.png",
-          dub: true,
-          sub: true,
-          language: "English",
-        ),
-        Extension(
-          episodeListApi: "",
-          id: 0,
-          title: "AnimeKai",
-          iconUrl:
-              "https://i.postimg.cc/jttw9rQ9/Screenshot-2025-05-07-191754.png?dl=1",
-          dub: true,
-          sub: true,
-          language: "English",
-        ),
-      ]);
-    }
-    if (mounted) {
-      setState(() {
-        availableExtensions = _extensionManager.getExtensions();
-      });
-    }
-  }
+  
 
   void _removeExtension(int index) {
     final removedItem = availableExtensions[index];
@@ -90,6 +39,7 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
         padding: const EdgeInsets.only(bottom: 12),
         child: ExtensionTile(
           extension: Extension(
+            searchApi: removedItem.searchApi,
             episodeListApi: removedItem.episodeListApi,
             title: removedItem.title,
             iconUrl: removedItem.iconUrl,
@@ -167,6 +117,7 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
                         padding: const EdgeInsets.only(bottom: 12),
                         child: ExtensionTile(
                           extension: Extension(
+                            searchApi: ext.searchApi,
                             episodeListApi: ext.episodeListApi,
                             title: ext.title,
                             iconUrl: ext.iconUrl,
@@ -281,6 +232,7 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
                           // Add the extension
                           await _extensionManager.addExtension(
                             Extension(
+                              searchApi: jsonData["searchApi"],
                               episodeListApi: jsonData["episodeListApi"],
                               id: 0,
                               title: jsonData['title'],
@@ -434,6 +386,7 @@ class ExtensionTile extends StatelessWidget {
                   child:
                       ExtensionManager().isMainExtension(
                             Extension(
+                              searchApi: extension.searchApi,
                               episodeListApi: extension.episodeListApi,
                               id: extension.id,
                               title: extension.title,

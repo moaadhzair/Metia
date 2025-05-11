@@ -1,11 +1,18 @@
+import 'dart:math';
+import 'dart:convert';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:marquee/marquee.dart';
+import 'package:metia/api/extension.dart';
 import 'package:metia/constants/Colors.dart';
 
 import 'package:html/parser.dart' as html_parser;
 import 'package:html/dom.dart' as html_dom;
 import 'package:metia/managers/extension_manager.dart';
 import 'package:metia/tools.dart';
+import 'package:metia/widgets/anime_card2.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AnimePage extends StatefulWidget {
   final Map<String, dynamic> animeData;
@@ -17,6 +24,10 @@ class AnimePage extends StatefulWidget {
 
 class _AnimePageState extends State<AnimePage> {
   final ScrollController _scrollController = ScrollController();
+  late ExtensionManager _localExtensionManager;
+  Extension? currentExtension;
+
+  dynamic clossestAnime;
 
   bool _isCollapsed = false;
   int itemCount = 0;
@@ -27,27 +38,121 @@ class _AnimePageState extends State<AnimePage> {
   List<int> tabItemCounts = [];
   bool _isLoading = true;
   String? _selectedExtension;
-  List<Map<String, dynamic>> EpisodeList = [];
+  List<dynamic> EpisodeList = [];
+  final bool _isSearchLoading = false;
+  final List<Map<String, dynamic>> _searchResults = [];
+
+  String currentAnime = "";
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
+
+  Future<void> _findAndSaveMatchingAnime() async {
+    if (currentExtension == null) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final key = "anime_${widget.animeData["media"]["id"]}_extension_id";
+    
+    // Check if we already have a saved match
+    final String? existingMatch = prefs.getString(key);
+    if (existingMatch != null) {
+      try {
+        clossestAnime = jsonDecode(existingMatch);
+        setState(() {});
+        return;
+      } catch (e) {
+        print("Error parsing existing match: $e");
+      }
+    }
+    
+    final title = widget.animeData["media"]["title"]["english"] ??
+        widget.animeData["media"]["title"]["romaji"] ??
+        widget.animeData["media"]["title"]["native"] ??
+        "";
+    
+    if (title.isEmpty) return;
+
+    try {
+      final searchResults = await currentExtension!.search(title);
+      if (searchResults.isEmpty) return;
+
+      // Find the best match
+      Map<dynamic, dynamic>? bestMatch;
+      double bestScore = 0;
+
+      // Clean and normalize titles for comparison
+      String normalizeTitle(String title) {
+        return title
+            .toLowerCase()
+            .replaceAll(RegExp(r'[^\w\s]'), '')
+            .replaceAll(RegExp(r'\s+'), ' ')
+            .trim();
+      }
+
+      final normalizedSearchTitle = normalizeTitle(title);
+      final searchWords = normalizedSearchTitle.split(' ');
+
+      for (var anime in searchResults) {
+        final animeTitle = anime["title"]?.toString() ?? "";
+        final normalizedAnimeTitle = normalizeTitle(animeTitle);
+        
+        if (normalizedAnimeTitle.isEmpty) continue;
+
+        double score = 0;
+
+        // Exact match
+        if (normalizedAnimeTitle == normalizedSearchTitle) {
+          score = 1.0;
+        }
+        // Contains match
+        else if (normalizedAnimeTitle.contains(normalizedSearchTitle) || 
+                normalizedSearchTitle.contains(normalizedAnimeTitle)) {
+          score = 0.8;
+        }
+        // Word match
+        else {
+          final animeWords = normalizedAnimeTitle.split(' ');
+          int matchingWords = 0;
+          
+          for (var word in searchWords) {
+            if (animeWords.contains(word)) {
+              matchingWords++;
+            }
+          }
+          
+          if (matchingWords > 0) {
+            score = matchingWords / max(searchWords.length, animeWords.length);
+          }
+        }
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestMatch = anime;
+        }
+      }
+
+      if (bestMatch != null && bestScore >= 0.5) {
+        clossestAnime = bestMatch;
+        await prefs.setString(key, jsonEncode(bestMatch));
+        setState(() {});
+      }
+    } catch (e) {
+      print("Error finding matching anime: $e");
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    _localExtensionManager = ExtensionManager();
+    _localExtensionManager.init().then((value) async {
+      await _initializeData();
+      currentExtension = _localExtensionManager.getCurrentExtension();
+      if (currentExtension != null) {
+        await _findAndSaveMatchingAnime();
+      }
 
-    ExtensionManager().init().then((value) async {
-      _initializeData();
 
-      
-
-      /* itemCount =
-        widget.animeData["media"]["nextAiringEpisode"] != null
-            ? widget.animeData["media"]["nextAiringEpisode"]["episode"] - 1
-            : widget.animeData["media"]["episodes"] ?? 0;*/
-
-      EpisodeList =
-          await ExtensionManager().getCurrentExtension()?.getEpisodeList(
-            "69",
-          ) ??
-          [];
+      EpisodeList = await currentExtension?.getEpisodeList(clossestAnime["session"]) ?? [];
       itemCount = EpisodeList.length;
 
       int remaining = itemCount - firstTabCount;
@@ -81,15 +186,13 @@ class _AnimePageState extends State<AnimePage> {
       }
 
       _scrollController.addListener(_scrollListener);
-      setState(() {
-        
-      });
+      setState(() {});
     });
   }
 
   Future<void> _initializeData() async {
-    await ExtensionManager().init();
-    final currentExtension = ExtensionManager().getCurrentExtension();
+    await _localExtensionManager.init();
+    final currentExtension = _localExtensionManager.getCurrentExtension();
     setState(() {
       _isLoading = false;
       _selectedExtension = currentExtension?.id.toString();
@@ -112,6 +215,7 @@ class _AnimePageState extends State<AnimePage> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -216,9 +320,13 @@ class _AnimePageState extends State<AnimePage> {
                                         setState(() {
                                           _selectedExtension = value;
                                         });
-                                        ExtensionManager().setCurrentExtension(
-                                          int.parse(value),
-                                        );
+                                        _localExtensionManager
+                                            .setCurrentExtension(
+                                              int.parse(value),
+                                            );
+                                        currentExtension =
+                                            _localExtensionManager
+                                                .getCurrentExtension();
                                       }
                                     },
                                     label: const Text("Extensions"),
@@ -262,14 +370,14 @@ class _AnimePageState extends State<AnimePage> {
                                       color: MyColors.unselectedColor,
                                     ),
                                     dropdownMenuEntries:
-                                        ExtensionManager()
+                                        _localExtensionManager
                                             .getExtensions()
                                             .map(
                                               (extension) => DropdownMenuEntry(
                                                 value: extension.id.toString(),
                                                 label: extension.title,
                                                 trailingIcon:
-                                                    ExtensionManager()
+                                                    _localExtensionManager
                                                             .isMainExtension(
                                                               extension,
                                                             )
@@ -307,6 +415,282 @@ class _AnimePageState extends State<AnimePage> {
                                             )
                                             .toList(),
                                   ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                height: 24,
+                                child: AspectRatio(
+                                  aspectRatio: 1,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: CachedNetworkImage(
+                                      errorWidget: (context, url, error) {
+                                        return Container();
+                                      },
+                                      imageUrl: currentExtension?.iconUrl ?? "",
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              const Text(
+                                "title:",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: SizedBox(
+                                  height: 24, // Fixed height for the text
+                                  child: Marquee(
+                                    text: clossestAnime == null
+                                        ? "not found"
+                                        : clossestAnime["title"],
+                                    style: const TextStyle(
+                                      color: MyColors.appbarTextColor,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    scrollAxis: Axis.horizontal,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    blankSpace: 50.0,
+                                    velocity: 50.0,
+                                    pauseAfterRound: const Duration(seconds: 1),
+                                    startPadding: 10.0,
+                                    accelerationDuration: const Duration(seconds: 1),
+                                    accelerationCurve: Curves.linear,
+                                    decelerationDuration: const Duration(
+                                      milliseconds: 500,
+                                    ),
+                                    decelerationCurve: Curves.easeOut,
+                                    fadingEdgeStartFraction: 0.1,
+                                    fadingEdgeEndFraction: 0.1,
+                                  ),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  final title =
+                                      widget
+                                          .animeData["media"]["title"]["english"] ??
+                                      widget
+                                          .animeData["media"]["title"]["romaji"] ??
+                                      widget
+                                          .animeData["media"]["title"]["native"] ??
+                                      "";
+
+                                  _searchController.text = title;
+                                  setState(() {
+                                    _searchQuery = title;
+                                  });
+
+                                  showModalBottomSheet(
+                                    context: context,
+                                    backgroundColor: MyColors.backgroundColor,
+                                    builder: (context) {
+                                      return Padding(
+                                        padding: const EdgeInsets.all(16.0),
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: TextField(
+                                                    controller:
+                                                        _searchController,
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                    ),
+                                                    onChanged: (value) {
+                                                      setState(() {
+                                                        _searchQuery = value;
+                                                      });
+                                                    },
+                                                    decoration: InputDecoration(
+                                                      hintText: 'Search...',
+                                                      hintStyle:
+                                                          const TextStyle(
+                                                            color: Colors.grey,
+                                                          ),
+                                                      filled: true,
+                                                      fillColor:
+                                                          MyColors.appbarColor,
+                                                      border: OutlineInputBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              8,
+                                                            ),
+                                                        borderSide:
+                                                            BorderSide.none,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                IconButton(
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      _searchQuery =
+                                                          _searchController
+                                                              .text;
+                                                    });
+                                                  },
+                                                  icon: const Icon(
+                                                    Icons.search,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Expanded(
+                                              child: FutureBuilder<
+                                                List<dynamic>
+                                              >(
+                                                future:
+                                                    _searchQuery.isEmpty
+                                                        ? null
+                                                        : currentExtension
+                                                            ?.search(
+                                                              _searchQuery,
+                                                            ),
+                                                builder: (context, snapshot) {
+                                                  if (_searchQuery.isEmpty) {
+                                                    return const Center(
+                                                      child: Text(
+                                                        'Enter a search term',
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+
+                                                  if (snapshot
+                                                          .connectionState ==
+                                                      ConnectionState.waiting) {
+                                                    return const Center(
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                            color:
+                                                                MyColors
+                                                                    .coolPurple,
+                                                          ),
+                                                    );
+                                                  }
+
+                                                  if (snapshot.hasError) {
+                                                    return Center(
+                                                      child: Text(
+                                                        'Error: ${snapshot.error}',
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+
+                                                  final searchResults =
+                                                      snapshot.data
+                                                          ?.map(
+                                                            (item) =>
+                                                                item
+                                                                    as Map<
+                                                                      String,
+                                                                      dynamic
+                                                                    >,
+                                                          )
+                                                          .toList() ??
+                                                      [];
+
+                                                  return GridView.builder(
+                                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                      crossAxisCount:
+                                                          Tools.getResponsiveCrossAxisVal(
+                                                                    MediaQuery.of(
+                                                                      context,
+                                                                    ).size.width,
+                                                                    itemWidth:
+                                                                        460 / 4,
+                                                                  ) >
+                                                                  5
+                                                              ? 5
+                                                              : Tools.getResponsiveCrossAxisVal(
+                                                                MediaQuery.of(
+                                                                  context,
+                                                                ).size.width,
+                                                                itemWidth:
+                                                                    460 / 4,
+                                                              ),
+                                                      mainAxisExtent: 240,
+                                                      crossAxisSpacing: 10,
+                                                      mainAxisSpacing: 10,
+                                                      childAspectRatio: 0.7,
+                                                    ),
+                                                    itemCount:
+                                                        searchResults.length,
+                                                    itemBuilder: (
+                                                      context,
+                                                      index,
+                                                    ) {
+                                                      final anime =
+                                                          searchResults[index];
+                                                      return AnimeCard2(
+                                                        onTap: (title) async {
+                                                          final prefs =
+                                                              await SharedPreferences.getInstance();
+                                                          final key =
+                                                              "anime_${widget.animeData["media"]["id"]}_extension_id";
+
+                                                          setState(() {
+                                                            clossestAnime =
+                                                                anime;
+                                                          });
+
+                                                          await prefs.setString(
+                                                            key,
+                                                            jsonEncode(anime),
+                                                          );
+                                                          print(
+                                                            "Updated matching anime: ${anime["title"]} for key: $key",
+                                                          );
+
+                                                          Navigator.pop(
+                                                            context,
+                                                          ); // Close the modal bottom sheet
+                                                        },
+                                                        index: index,
+                                                        title:
+                                                            anime["title"] ??
+                                                            "Unknown Title",
+                                                        imageUrl:
+                                                            anime["poster"] ??
+                                                            "",
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                                child: const Icon(
+                                  Icons.search,
+                                  color: MyColors.appbarTextColor,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         // Start Watching Button
                         Center(
@@ -545,7 +929,8 @@ class AnimeEpisode extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  episodeData["episode"]["dub"] && episodeData["episode"]["sub"]
+                                  episodeData["episode"]["dub"] &&
+                                          episodeData["episode"]["sub"]
                                       ? "Sub | Dub"
                                       : episodeData["episode"]["sub"]
                                       ? "Sub"

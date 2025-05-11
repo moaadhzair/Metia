@@ -45,6 +45,7 @@ class ExtensionManager {
       for (var extension in decoded) {
         extensions.add(
           Extension(
+            searchApi: extension["searchApi"],
             episodeListApi: extension["episodeListApi"],
             title: extension["title"],
             iconUrl: extension["iconUrl"],
@@ -131,6 +132,7 @@ class ExtensionManager {
     try {
       final Map<String, dynamic> decoded = jsonDecode(currentExtensionJson);
       return Extension(
+        searchApi: decoded["searchApi"],
         episodeListApi: decoded["episodeListApi"],
         title: decoded["title"],
         iconUrl: decoded["iconUrl"],

@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
 
 class Extension {
   final String title;
@@ -8,6 +11,8 @@ class Extension {
   final String language;
   int id = 0;
   final String episodeListApi;
+  final String searchApi;
+  
 
   Extension({
     required this.title,
@@ -17,10 +22,12 @@ class Extension {
     required this.language,
     required this.id,
     required this.episodeListApi,
+    required this.searchApi,
   });
 
   Map<String, dynamic> toMap() {
     return {
+      'searchApi' : searchApi,
       'episodeListApi' : episodeListApi,
       'title': title,
       'iconUrl': iconUrl,
@@ -33,9 +40,13 @@ class Extension {
 
 
   /// Get list of episodes for a given show
-  Future<List<Map<String, dynamic>>> getEpisodeList(String showId) async {
+  Future<List<dynamic>> getEpisodeList(String sessionId) async {
     //TODO: i'll implement it later
-    await Future.delayed(const Duration(milliseconds: 100));
+    final response = await http.get(Uri.parse(episodeListApi + sessionId));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body)["data"];
+      return data;
+    }
     return [
       {
         "cover" : null,
@@ -78,9 +89,13 @@ class Extension {
   }
 
   /// Search for shows or episodes
-  Future<List<Map<String, dynamic>>> search(String query) async {
+  Future<List<dynamic>> search(String query) async {
     //TODO: i'll implement it later
-    await Future.delayed(const Duration(milliseconds: 100));
+    final response = await http.get(Uri.parse(searchApi + Uri.encodeComponent(query)));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body)["data"];
+      return data;
+    }
     return [];
   }
 
