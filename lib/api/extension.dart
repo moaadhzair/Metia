@@ -12,9 +12,10 @@ class Extension {
   int id = 0;
   final String episodeListApi;
   final String searchApi;
-  
+  final String streamDataApi;
 
   Extension({
+    required this.streamDataApi,
     required this.title,
     required this.iconUrl,
     required this.dub,
@@ -27,8 +28,9 @@ class Extension {
 
   Map<String, dynamic> toMap() {
     return {
-      'searchApi' : searchApi,
-      'episodeListApi' : episodeListApi,
+      'streamDataApi': streamDataApi,
+      'searchApi': searchApi,
+      'episodeListApi': episodeListApi,
       'title': title,
       'iconUrl': iconUrl,
       'dub': dub,
@@ -38,7 +40,6 @@ class Extension {
     };
   }
 
-
   /// Get list of episodes for a given show
   Future<List<dynamic>> getEpisodeList(String sessionId) async {
     //TODO: i'll implement it later
@@ -47,51 +48,15 @@ class Extension {
       final List<dynamic> data = jsonDecode(response.body)["data"];
       return data;
     }
-    return [
-      {
-        "cover" : null,
-        "name" : "haha",
-        "link" : null,
-        "id" : "0",
-        "dub" : true,
-        "sub" : true,
-      },{
-        "cover" : null,
-        "name" : "idk",
-        "link" : null,
-        "id" : "1",
-        "dub" : true,
-        "sub" : true,
-      },{
-        "cover" : null,
-        "name" : "well",
-        "link" : null,
-        "id" : "2",
-        "dub" : true,
-        "sub" : true,
-      },{
-        "cover" : null,
-        "name" : "that",
-        "link" : null,
-        "id" : "3",
-        "dub" : false,
-        "sub" : true,
-      },{
-        "cover" : null,
-        "name" : "was",
-        "link" : null,
-        "id" : "4",
-        "dub" : false,
-        "sub" : true,
-      },
-      
-    ];
+    return [];
   }
 
   /// Search for shows or episodes
   Future<List<dynamic>> search(String query) async {
     //TODO: i'll implement it later
-    final response = await http.get(Uri.parse(searchApi + Uri.encodeComponent(query)));
+    final response = await http.get(
+      Uri.parse(searchApi + Uri.encodeComponent(query)),
+    );
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body)["data"];
       return data;
@@ -100,10 +65,14 @@ class Extension {
   }
 
   /// Get streaming link for a specific episode
-  Future<Map<String, dynamic>> getStreamLink(String episodeId) async {
+  Future<List<dynamic>> getStreamData(String episodeId) async {
     //TODO: i'll implement it later
-    await Future.delayed(const Duration(milliseconds: 100));
-    return {};
+    final response = await http.get(Uri.parse(streamDataApi + episodeId));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body)["data"];
+      return data;
+    }
+    return [];
   }
 
   bool hasId() {

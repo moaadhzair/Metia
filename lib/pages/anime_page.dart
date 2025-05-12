@@ -10,6 +10,7 @@ import 'package:metia/constants/Colors.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:html/dom.dart' as html_dom;
 import 'package:metia/managers/extension_manager.dart';
+import 'package:metia/pages/player_page.dart';
 import 'package:metia/tools.dart';
 import 'package:metia/widgets/anime_card2.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -494,7 +495,7 @@ class _AnimePageState extends State<AnimePage> {
                                   child: Marquee(
                                     text:
                                         clossestAnime == null
-                                            ? ""
+                                            ? " "
                                             : clossestAnime["title"],
                                     style: const TextStyle(
                                       color: MyColors.appbarTextColor,
@@ -954,8 +955,19 @@ class _AnimePageState extends State<AnimePage> {
                                         widget.animeData["progress"] >
                                         episodeIndex,
                                     index: episodeIndex,
-                                    onClicked: (details) {
-                                      Tools.Toast(context, "lmao");
+                                    onClicked: (details) async{
+                                      currentExtension?.getStreamData(
+                                        EpisodeList[index]["id"],
+                                      ).then((value) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => PlayerPage(
+                                              StreamData: value,
+                                            ),
+                                          ),
+                                        );
+                                      });
                                     },
                                     episodeData: {
                                       "episode": EpisodeList[index],

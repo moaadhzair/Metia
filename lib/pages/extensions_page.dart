@@ -42,6 +42,7 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
         padding: const EdgeInsets.only(bottom: 12),
         child: ExtensionTile(
           extension: Extension(
+            streamDataApi: removedItem.streamDataApi,
             searchApi: removedItem.searchApi,
             episodeListApi: removedItem.episodeListApi,
             title: removedItem.title,
@@ -120,6 +121,7 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
                         padding: const EdgeInsets.only(bottom: 12),
                         child: ExtensionTile(
                           extension: Extension(
+                            streamDataApi: ext.streamDataApi,
                             searchApi: ext.searchApi,
                             episodeListApi: ext.episodeListApi,
                             title: ext.title,
@@ -241,6 +243,7 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
                           // Add the extension
                           await _extensionManager.addExtension(
                             Extension(
+                              streamDataApi: jsonData["streamDataApi"],
                               searchApi: jsonData["searchApi"],
                               episodeListApi: jsonData["episodeListApi"],
                               id: 0,
@@ -300,6 +303,9 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
     if (!json.containsKey('dub')) return false;
     if (!json.containsKey('sub')) return false;
     if (!json.containsKey('language')) return false;
+    if (!json.containsKey('streamDataApi')) return false;
+    if (!json.containsKey('searchApi')) return false;
+    if (!json.containsKey('episodeListApi')) return false;
 
     return true;
   }
@@ -395,6 +401,7 @@ class ExtensionTile extends StatelessWidget {
                   child:
                       ExtensionManager().isMainExtension(
                             Extension(
+                              streamDataApi: extension.streamDataApi,
                               searchApi: extension.searchApi,
                               episodeListApi: extension.episodeListApi,
                               id: extension.id,
