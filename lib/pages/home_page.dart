@@ -84,18 +84,13 @@ class _HomePageState extends State<HomePage> {
 
     _appLinks.uriLinkStream.listen((Uri? uri) {
       if (uri != null) {
-        String code = uri.toString().substring(
-          uri.toString().indexOf('code=') + 5,
-        );
+        String code = uri.toString().substring(uri.toString().indexOf('code=') + 5);
         fetchAniListAccessToken(code)
             .then((accessToken) {
               SharedPreferences.getInstance().then((prefs) {
                 prefs.setString('auth_key', accessToken);
                 if (mounted) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const UserPage()),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const UserPage()));
                 }
               });
             })
@@ -166,10 +161,7 @@ class _HomePageState extends State<HomePage> {
                   SvgPicture.asset(
                     'assets/icons/anilist.svg',
                     height: 35,
-                    colorFilter: const ColorFilter.mode(
-                      MyColors.appbarTextColor,
-                      BlendMode.srcIn,
-                    ),
+                    colorFilter: const ColorFilter.mode(MyColors.appbarTextColor, BlendMode.srcIn),
                   ),
                 ],
               ),
@@ -181,11 +173,7 @@ class _HomePageState extends State<HomePage> {
                     surfaceTintColor: MyColors.backgroundColor,
                     tooltip: "",
                     //requestFocus: false,
-                    icon: const Icon(
-                      Icons.more_vert,
-                      color: MyColors.appbarTextColor,
-                      size: 29,
-                    ),
+                    icon: const Icon(Icons.more_vert, color: MyColors.appbarTextColor, size: 29),
                     onOpened: () {
                       setState(() {
                         _isPopupMenuOpen = true;
@@ -209,11 +197,7 @@ class _HomePageState extends State<HomePage> {
                             height: 35,
                             child: const Row(
                               children: [
-                                Icon(
-                                  Icons.refresh,
-                                  size: 30,
-                                  color: MyColors.unselectedColor,
-                                ),
+                                Icon(Icons.refresh, size: 30, color: MyColors.unselectedColor),
                                 SizedBox(width: 10),
                                 Text(
                                   "Refresh",
@@ -231,11 +215,7 @@ class _HomePageState extends State<HomePage> {
                             height: 35,
                             child: const Row(
                               children: [
-                                Icon(
-                                  Icons.extension,
-                                  size: 30,
-                                  color: MyColors.unselectedColor,
-                                ),
+                                Icon(Icons.extension, size: 30, color: MyColors.unselectedColor),
                                 SizedBox(width: 10),
                                 Text(
                                   "Extensions",
@@ -251,10 +231,7 @@ class _HomePageState extends State<HomePage> {
                               if (mounted) {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => const ExtensionsPage(),
-                                  ),
+                                  MaterialPageRoute(builder: (context) => const ExtensionsPage()),
                                 );
                               }
                             },
@@ -262,21 +239,12 @@ class _HomePageState extends State<HomePage> {
                           const PopupMenuDivider(height: 10),
                           PopupMenuItem<String>(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SettingsPage(),
-                                ),
-                              );
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsPage()));
                             },
                             height: 35,
                             child: const Row(
                               children: [
-                                Icon(
-                                  Icons.settings,
-                                  size: 30,
-                                  color: MyColors.unselectedColor,
-                                ),
+                                Icon(Icons.settings, size: 30, color: MyColors.unselectedColor),
                                 SizedBox(width: 10),
                                 Text(
                                   "Settings",
@@ -292,17 +260,11 @@ class _HomePageState extends State<HomePage> {
                           const PopupMenuDivider(height: 10),
                           PopupMenuItem<String>(
                             onTap: () async {
-                              final prefs =
-                                  await SharedPreferences.getInstance();
+                              final prefs = await SharedPreferences.getInstance();
                               final authCode = prefs.getString('auth_key');
                               if (authCode != null && authCode.isNotEmpty) {
                                 if (mounted) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const UserPage(),
-                                    ),
-                                  );
+                                  Navigator.push(context, MaterialPageRoute(builder: (context) => const UserPage()));
                                 }
                               } else {
                                 await _launchUrl(
@@ -315,11 +277,7 @@ class _HomePageState extends State<HomePage> {
                             height: 35,
                             child: const Row(
                               children: [
-                                Icon(
-                                  Icons.login,
-                                  size: 30,
-                                  color: MyColors.unselectedColor,
-                                ),
+                                Icon(Icons.login, size: 30, color: MyColors.unselectedColor),
                                 SizedBox(width: 10),
                                 Text(
                                   "Login",
@@ -342,11 +300,7 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(width: 20),
                   Text(
                     "Metia",
-                    style: TextStyle(
-                      color: MyColors.appbarTextColor,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(color: MyColors.appbarTextColor, fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -380,8 +334,7 @@ class _HomePageState extends State<HomePage> {
             body:
                 _loading
                     ? const Center(child: CircularProgressIndicator())
-                    : _error ==
-                        "Exception: Please sign in to fetch your anime list."
+                    : _error == "Exception: Please sign in to fetch your anime list."
                     ? Center(
                       child: GestureDetector(
                         onTap: () async {
@@ -393,11 +346,7 @@ class _HomePageState extends State<HomePage> {
                         },
                         child: const Text(
                           "Sign In",
-                          style: TextStyle(
-                            color: MyColors.appbarTextColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 25,
-                          ),
+                          style: TextStyle(color: MyColors.appbarTextColor, fontWeight: FontWeight.bold, fontSize: 25),
                         ),
                       ),
                     )
@@ -405,11 +354,7 @@ class _HomePageState extends State<HomePage> {
                     ? const Center(
                       child: Text(
                         "chill buddy you made waaaay to many request",
-                        style: TextStyle(
-                          color: MyColors.appbarTextColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 25,
-                        ),
+                        style: TextStyle(color: MyColors.appbarTextColor, fontWeight: FontWeight.bold, fontSize: 25),
                       ),
                     )
                     : TabBarView(
@@ -417,15 +362,9 @@ class _HomePageState extends State<HomePage> {
                           _animeLibrary!.map((AnimeState state) {
                             return Platform.isIOS
                                 ? CupertinoTheme(
-                                  data: const CupertinoThemeData(
-                                    primaryColor: MyColors.appbarTextColor,
-                                  ),
+                                  data: const CupertinoThemeData(primaryColor: MyColors.appbarTextColor),
                                   child: Padding(
-                                    padding: const EdgeInsets.only(
-                                      top: 8,
-                                      left: 4,
-                                      right: 4,
-                                    ),
+                                    padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
                                     child: CustomScrollView(
                                       //physics: AlwaysScrollableScrollPhysics(),
                                       slivers: [
@@ -437,24 +376,17 @@ class _HomePageState extends State<HomePage> {
                                           },
                                         ),
                                         SliverGrid(
-                                          gridDelegate:
-                                              SliverGridDelegateWithFixedCrossAxisCount(
-                                                crossAxisCount:
-                                                    Tools.getResponsiveCrossAxisVal(
-                                                      MediaQuery.of(
-                                                        context,
-                                                      ).size.width,
-                                                      itemWidth: 460 / 4,
-                                                    ),
-                                                mainAxisExtent: 270,
-                                                crossAxisSpacing: 10,
-                                                mainAxisSpacing: 10,
-                                                childAspectRatio: 0.7,
-                                              ),
-                                          delegate: SliverChildBuilderDelegate((
-                                            context,
-                                            index,
-                                          ) {
+                                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: Tools.getResponsiveCrossAxisVal(
+                                              MediaQuery.of(context).size.width,
+                                              itemWidth: 460 / 4,
+                                            ),
+                                            mainAxisExtent: 270,
+                                            crossAxisSpacing: 10,
+                                            mainAxisSpacing: 10,
+                                            childAspectRatio: 0.7,
+                                          ),
+                                          delegate: SliverChildBuilderDelegate((context, index) {
                                             return AnimeCard(
                                               index: index,
                                               tabName: state.state,
@@ -478,41 +410,24 @@ class _HomePageState extends State<HomePage> {
                                   child: ScrollConfiguration(
                                     behavior: ScrollConfiguration.of(
                                       context,
-                                    ).copyWith(
-                                      dragDevices: {
-                                        PointerDeviceKind.touch,
-                                        PointerDeviceKind.mouse,
-                                      },
-                                    ),
+                                    ).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
                                     child: Padding(
-                                      padding: const EdgeInsets.only(
-                                        top: 8,
-                                        left: 4,
-                                        right: 4,
-                                      ),
+                                      padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
                                       child: GridView.builder(
                                         cacheExtent: 500,
-                                        gridDelegate:
-                                            SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount:
-                                                  Tools.getResponsiveCrossAxisVal(
-                                                    MediaQuery.of(
-                                                      context,
-                                                    ).size.width,
-                                                    itemWidth: 460 / 4,
-                                                  ),
-                                              mainAxisExtent: 270,
-                                              crossAxisSpacing: 10,
-                                              mainAxisSpacing: 10,
-                                              childAspectRatio: 0.7,
-                                            ),
+                                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: Tools.getResponsiveCrossAxisVal(
+                                            MediaQuery.of(context).size.width,
+                                            itemWidth: 460 / 4,
+                                          ),
+                                          mainAxisExtent: 270,
+                                          crossAxisSpacing: 10,
+                                          mainAxisSpacing: 10,
+                                          childAspectRatio: 0.7,
+                                        ),
                                         itemCount: state.data.length,
                                         itemBuilder: (context, index) {
-                                          return AnimeCard(
-                                            index: index,
-                                            tabName: state.state,
-                                            data: state.data[index],
-                                          );
+                                          return AnimeCard(index: index, tabName: state.state, data: state.data[index]);
                                         },
                                       ),
                                     ),
@@ -522,25 +437,18 @@ class _HomePageState extends State<HomePage> {
                     ),
           ),
           IgnorePointer(
-            ignoring:
-                !_isPopupMenuOpen, // Allow touch events when blur is inactive
+            ignoring: !_isPopupMenuOpen, // Allow touch events when blur is inactive
             child: AnimatedOpacity(
               curve: Curves.easeOutBack, // iOS-like popping effect
               opacity: _blurOpacity,
               duration:
                   _isPopupMenuOpen
-                      ? const Duration(
-                        milliseconds: 333,
-                      ) // Duration when opening
-                      : const Duration(
-                        milliseconds: 533,
-                      ), // Duration when closing
+                      ? const Duration(milliseconds: 333) // Duration when opening
+                      : const Duration(milliseconds: 533), // Duration when closing
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
                 child: Container(
-                  color: Colors.black.withOpacity(
-                    0.2,
-                  ), // Semi-transparent overlay
+                  color: Colors.black.withOpacity(0.2), // Semi-transparent overlay
                 ),
               ),
             ),
