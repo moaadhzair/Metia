@@ -9,7 +9,7 @@ import 'package:flutter/services.dart';
 class PlayerPage extends StatefulWidget {
   const PlayerPage({super.key, required this.StreamData});
 
-  final List<dynamic> StreamData;
+  final dynamic StreamData;
 
   @override
   State<PlayerPage> createState() => _PlayerPageState();
@@ -28,7 +28,7 @@ class _PlayerPageState extends State<PlayerPage> {
       DeviceOrientation.landscapeRight,
       DeviceOrientation.landscapeLeft,
     ]);
-    player.open(Media(widget.StreamData[0]["m3u8"]));
+    player.open(Media(widget.StreamData["m3u8"]));
   }
 
   @override
@@ -44,12 +44,15 @@ class _PlayerPageState extends State<PlayerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("lol"),
+      ),
       body: Center(
         child: SizedBox(
           width: MediaQuery.of(context).size.width,
           height: MediaQuery.of(context).size.width * 9.0 / 16.0,
           // Use [Video] widget to display video output.
-          child: Video(controller: controller),
+          child: Video(controller: controller, aspectRatio: 16.0 / 9.0),
         ),
       ),
     );
