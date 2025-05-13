@@ -38,9 +38,11 @@ class _PlayerPageState extends State<PlayerPage> {
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
-  ]);
+    ]);
+    player.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

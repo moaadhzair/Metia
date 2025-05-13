@@ -83,11 +83,7 @@ class _AnimePageState extends State<AnimePage> {
 
       // Clean and normalize titles for comparison
       String normalizeTitle(String title) {
-        return title
-            .toLowerCase()
-            .replaceAll(RegExp(r'[^\w\s]'), '')
-            .replaceAll(RegExp(r'\s+'), ' ')
-            .trim();
+        return title.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '').replaceAll(RegExp(r'\s+'), ' ').trim();
       }
 
       final normalizedSearchTitle = normalizeTitle(title);
@@ -328,9 +324,7 @@ class _AnimePageState extends State<AnimePage> {
                                     width: 600,
                                     enableSearch: false,
                                     menuStyle: MenuStyle(
-                                      backgroundColor: WidgetStateProperty.all(
-                                        MyColors.backgroundColor,
-                                      ),
+                                      backgroundColor: WidgetStateProperty.all(MyColors.backgroundColor),
                                     ),
                                     initialSelection: _selectedExtension,
                                     onSelected: (value) async {
@@ -338,11 +332,8 @@ class _AnimePageState extends State<AnimePage> {
                                         setState(() {
                                           _selectedExtension = value;
                                         });
-                                        _localExtensionManager.setCurrentExtension(
-                                          int.parse(value),
-                                        );
-                                        currentExtension =
-                                            _localExtensionManager.getCurrentExtension();
+                                        _localExtensionManager.setCurrentExtension(int.parse(value));
+                                        currentExtension = _localExtensionManager.getCurrentExtension();
                                         await _findAndSaveMatchingAnime();
                                       }
                                     },
@@ -355,31 +346,19 @@ class _AnimePageState extends State<AnimePage> {
                                       ),
                                       suffixIconColor: MyColors.coolPurple,
                                       border: OutlineInputBorder(
-                                        borderSide: const BorderSide(
-                                          color: MyColors.coolPurple,
-                                          width: 2,
-                                        ),
+                                        borderSide: const BorderSide(color: MyColors.coolPurple, width: 2),
                                         borderRadius: BorderRadius.circular(7),
                                       ),
                                       enabledBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(
-                                          color: MyColors.coolPurple,
-                                          width: 2,
-                                        ),
+                                        borderSide: const BorderSide(color: MyColors.coolPurple, width: 2),
                                         borderRadius: BorderRadius.circular(7),
                                       ),
                                       focusedBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(
-                                          color: MyColors.coolPurple,
-                                          width: 2,
-                                        ),
+                                        borderSide: const BorderSide(color: MyColors.coolPurple, width: 2),
                                         borderRadius: BorderRadius.circular(7),
                                       ),
                                       disabledBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(
-                                          color: MyColors.coolPurple,
-                                          width: 2,
-                                        ),
+                                        borderSide: const BorderSide(color: MyColors.coolPurple, width: 2),
                                         borderRadius: BorderRadius.circular(7),
                                       ),
                                     ),
@@ -392,14 +371,8 @@ class _AnimePageState extends State<AnimePage> {
                                                 value: extension.id.toString(),
                                                 label: extension.title,
                                                 trailingIcon:
-                                                    _localExtensionManager.isMainExtension(
-                                                          extension,
-                                                        )
-                                                        ? const Icon(
-                                                          Icons.check,
-                                                          color: MyColors.coolPurple,
-                                                          size: 20,
-                                                        )
+                                                    _localExtensionManager.isMainExtension(extension)
+                                                        ? const Icon(Icons.check, color: MyColors.coolPurple, size: 20)
                                                         : null,
                                                 leadingIcon: SizedBox(
                                                   width: 24,
@@ -413,9 +386,7 @@ class _AnimePageState extends State<AnimePage> {
                                                   ),
                                                 ),
                                                 style: ButtonStyle(
-                                                  foregroundColor: WidgetStateProperty.all(
-                                                    MyColors.unselectedColor,
-                                                  ),
+                                                  foregroundColor: WidgetStateProperty.all(MyColors.unselectedColor),
                                                 ),
                                               ),
                                             )
@@ -444,11 +415,7 @@ class _AnimePageState extends State<AnimePage> {
                               const SizedBox(width: 10),
                               const Text(
                                 "Found:",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
                               ),
                               const SizedBox(width: 10),
                               Expanded(
@@ -501,9 +468,7 @@ class _AnimePageState extends State<AnimePage> {
                                                     },
                                                     decoration: InputDecoration(
                                                       hintText: 'Search...',
-                                                      hintStyle: const TextStyle(
-                                                        color: Colors.grey,
-                                                      ),
+                                                      hintStyle: const TextStyle(color: Colors.grey),
                                                       filled: true,
                                                       fillColor: MyColors.appbarColor,
                                                       border: OutlineInputBorder(
@@ -520,10 +485,7 @@ class _AnimePageState extends State<AnimePage> {
                                                       _searchQuery = _searchController.text;
                                                     });
                                                   },
-                                                  icon: const Icon(
-                                                    Icons.search,
-                                                    color: Colors.white,
-                                                  ),
+                                                  icon: const Icon(Icons.search, color: Colors.white),
                                                 ),
                                               ],
                                             ),
@@ -544,12 +506,9 @@ class _AnimePageState extends State<AnimePage> {
                                                     );
                                                   }
 
-                                                  if (snapshot.connectionState ==
-                                                      ConnectionState.waiting) {
+                                                  if (snapshot.connectionState == ConnectionState.waiting) {
                                                     return const Center(
-                                                      child: CircularProgressIndicator(
-                                                        color: MyColors.coolPurple,
-                                                      ),
+                                                      child: CircularProgressIndicator(color: MyColors.coolPurple),
                                                     );
                                                   }
 
@@ -564,42 +523,34 @@ class _AnimePageState extends State<AnimePage> {
 
                                                   final searchResults =
                                                       snapshot.data
-                                                          ?.map(
-                                                            (item) => item as Map<String, dynamic>,
-                                                          )
+                                                          ?.map((item) => item as Map<String, dynamic>)
                                                           .toList() ??
                                                       [];
 
                                                   return GridView.builder(
-                                                    gridDelegate:
-                                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                                          crossAxisCount:
-                                                              Tools.getResponsiveCrossAxisVal(
-                                                                        MediaQuery.of(
-                                                                          context,
-                                                                        ).size.width,
-                                                                        itemWidth: 460 / 4,
-                                                                      ) >
-                                                                      5
-                                                                  ? 5
-                                                                  : Tools.getResponsiveCrossAxisVal(
-                                                                    MediaQuery.of(
-                                                                      context,
-                                                                    ).size.width,
+                                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                      crossAxisCount:
+                                                          Tools.getResponsiveCrossAxisVal(
+                                                                    MediaQuery.of(context).size.width,
                                                                     itemWidth: 460 / 4,
-                                                                  ),
-                                                          mainAxisExtent: 240,
-                                                          crossAxisSpacing: 10,
-                                                          mainAxisSpacing: 10,
-                                                          childAspectRatio: 0.7,
-                                                        ),
+                                                                  ) >
+                                                                  5
+                                                              ? 5
+                                                              : Tools.getResponsiveCrossAxisVal(
+                                                                MediaQuery.of(context).size.width,
+                                                                itemWidth: 460 / 4,
+                                                              ),
+                                                      mainAxisExtent: 240,
+                                                      crossAxisSpacing: 10,
+                                                      mainAxisSpacing: 10,
+                                                      childAspectRatio: 0.7,
+                                                    ),
                                                     itemCount: searchResults.length,
                                                     itemBuilder: (context, index) {
                                                       final anime = searchResults[index];
                                                       return AnimeCard2(
                                                         onTap: (title) async {
-                                                          final prefs =
-                                                              await SharedPreferences.getInstance();
+                                                          final prefs = await SharedPreferences.getInstance();
                                                           final key =
                                                               "anime_${widget.animeData["media"]["id"]}_extension_id";
 
@@ -607,27 +558,21 @@ class _AnimePageState extends State<AnimePage> {
                                                             clossestAnime = anime;
                                                           });
 
-                                                          await prefs.setString(
-                                                            key,
-                                                            jsonEncode(anime),
-                                                          );
+                                                          await prefs.setString(key, jsonEncode(anime));
                                                           print(
                                                             "Updated matching anime: ${anime["title"]} for key: $key",
                                                           );
 
                                                           EpisodeList =
-                                                              await currentExtension
-                                                                  ?.getEpisodeList(
-                                                                    clossestAnime["session"],
-                                                                  ) ??
+                                                              await currentExtension?.getEpisodeList(
+                                                                clossestAnime["session"],
+                                                              ) ??
                                                               [];
                                                           itemCount = EpisodeList.length;
 
                                                           int remaining = itemCount - firstTabCount;
-                                                          int otherTabs =
-                                                              (remaining / eachItemForTab).ceil();
-                                                          tabCount =
-                                                              1 + (remaining > 0 ? otherTabs : 0);
+                                                          int otherTabs = (remaining / eachItemForTab).ceil();
+                                                          tabCount = 1 + (remaining > 0 ? otherTabs : 0);
 
                                                           tabItemCounts = [];
                                                           if (itemCount <= firstTabCount) {
@@ -635,10 +580,7 @@ class _AnimePageState extends State<AnimePage> {
                                                           } else {
                                                             tabItemCounts.add(firstTabCount);
                                                             for (int i = 0; i < otherTabs; i++) {
-                                                              int start =
-                                                                  firstTabCount +
-                                                                  i * eachItemForTab +
-                                                                  1;
+                                                              int start = firstTabCount + i * eachItemForTab + 1;
                                                               int end = start + eachItemForTab - 1;
                                                               if (end > itemCount) end = itemCount;
                                                               tabItemCounts.add(end - start + 1);
@@ -651,24 +593,17 @@ class _AnimePageState extends State<AnimePage> {
                                                           } else {
                                                             labels.add("1 - $firstTabCount");
                                                             for (int i = 0; i < otherTabs; i++) {
-                                                              int start =
-                                                                  firstTabCount +
-                                                                  i * eachItemForTab +
-                                                                  1;
+                                                              int start = firstTabCount + i * eachItemForTab + 1;
                                                               int end = start + eachItemForTab - 1;
                                                               if (end > itemCount) end = itemCount;
                                                               labels.add("$start - $end");
                                                             }
                                                           }
 
-                                                          _scrollController.addListener(
-                                                            _scrollListener,
-                                                          );
+                                                          _scrollController.addListener(_scrollListener);
                                                           setState(() {});
 
-                                                          Navigator.pop(
-                                                            context,
-                                                          ); // Close the modal bottom sheet
+                                                          Navigator.pop(context); // Close the modal bottom sheet
                                                         },
                                                         index: index,
                                                         title: anime["title"] ?? "Unknown Title",
@@ -703,12 +638,7 @@ class _AnimePageState extends State<AnimePage> {
                             padding: const EdgeInsets.only(bottom: 12),
                             child: TextButton.icon(
                               style: TextButton.styleFrom(
-                                padding: const EdgeInsets.only(
-                                  top: 16,
-                                  left: 16,
-                                  right: 16,
-                                  bottom: 16,
-                                ),
+                                padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 16),
                                 foregroundColor: MyColors.coolGreen,
                                 shape: RoundedRectangleBorder(
                                   side: const BorderSide(color: MyColors.coolGreen),
@@ -719,10 +649,7 @@ class _AnimePageState extends State<AnimePage> {
                                 widget.animeData["progress"] == 0
                                     ? "START WATCHING "
                                     : "CONTINUE EPISODE ${widget.animeData["progress"] + 1}",
-                                style: const TextStyle(
-                                  color: MyColors.coolGreen,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: const TextStyle(color: MyColors.coolGreen, fontWeight: FontWeight.w600),
                               ),
                               onPressed: () {},
                               icon: const Icon(Icons.play_arrow_outlined, size: 20),
@@ -787,8 +714,7 @@ class _AnimePageState extends State<AnimePage> {
                     child: TabBarView(
                       children: List.generate(tabCount, (tabIndex) {
                         int count = tabItemCounts[tabIndex];
-                        int startIndex =
-                            (tabIndex == 0) ? 0 : firstTabCount + (tabIndex - 1) * eachItemForTab;
+                        int startIndex = (tabIndex == 0) ? 0 : firstTabCount + (tabIndex - 1) * eachItemForTab;
                         return CustomScrollView(
                           slivers: [
                             SliverList(
@@ -809,9 +735,7 @@ class _AnimePageState extends State<AnimePage> {
                                         builder: (context) {
                                           return Container(
                                             child: FutureBuilder(
-                                              future: currentExtension?.getStreamData(
-                                                EpisodeList[index]["id"],
-                                              ),
+                                              future: currentExtension?.getStreamData(EpisodeList[index]["id"]),
                                               builder: (context, snapshot) {
                                                 return snapshot.hasData
                                                     ? Container(
@@ -825,9 +749,7 @@ class _AnimePageState extends State<AnimePage> {
                                                           return Container(
                                                             decoration: BoxDecoration(
                                                               color: MyColors.coolPurple2,
-                                                              borderRadius: BorderRadius.circular(
-                                                                12,
-                                                              ),
+                                                              borderRadius: BorderRadius.circular(12),
                                                             ),
                                                             width: double.infinity,
                                                             height: 60,
@@ -838,7 +760,10 @@ class _AnimePageState extends State<AnimePage> {
                                                                   Navigator.push(
                                                                     context,
                                                                     MaterialPageRoute(
-                                                                      builder: (context) => PlayerPage(StreamData: snapshot.data?[index]),
+                                                                      builder:
+                                                                          (context) => PlayerPage(
+                                                                            StreamData: snapshot.data?[index],
+                                                                          ),
                                                                     ),
                                                                   );
                                                                 },
@@ -860,9 +785,7 @@ class _AnimePageState extends State<AnimePage> {
                                                       height: double.infinity,
                                                       width: double.infinity,
                                                       child: Center(
-                                                        child: CircularProgressIndicator(
-                                                          color: MyColors.coolPurple,
-                                                        ),
+                                                        child: CircularProgressIndicator(color: MyColors.coolPurple),
                                                       ),
                                                     );
                                               },
@@ -1098,22 +1021,11 @@ class AnimeCover extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 36,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
+                Text(title, style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w400)),
                 const SizedBox(height: 4),
                 Text(
                   genres.join(' • '),
-                  style: const TextStyle(
-                    color: Color(0xFFA9A7A7),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: const TextStyle(color: Color(0xFFA9A7A7), fontSize: 15, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 Row(
@@ -1123,11 +1035,7 @@ class AnimeCover extends StatelessWidget {
                       animeData["media"]["averageScore"].toString() == "null"
                           ? "0.0"
                           : Tools.insertAt(animeData["media"]["averageScore"].toString(), ".", 1),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.orange,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange),
                     ),
                     const Icon(Icons.star, color: Colors.orange, size: 18),
                   ],
