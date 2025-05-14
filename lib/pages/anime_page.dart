@@ -83,7 +83,11 @@ class _AnimePageState extends State<AnimePage> {
 
       // Clean and normalize titles for comparison
       String normalizeTitle(String title) {
-        return title.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '').replaceAll(RegExp(r'\s+'), ' ').trim();
+        return title
+            .toLowerCase()
+            .replaceAll(RegExp(r'[^\w\s]'), '')
+            .replaceAll(RegExp(r'\s+'), ' ')
+            .trim();
       }
 
       final normalizedSearchTitle = normalizeTitle(title);
@@ -133,7 +137,9 @@ class _AnimePageState extends State<AnimePage> {
         await prefs.setString(key, jsonEncode(bestMatch));
 
         //here is where we get the episode list
-        EpisodeList = await currentExtension?.getEpisodeList(clossestAnime["session"]) ?? [];
+        EpisodeList =
+            await currentExtension?.getEpisodeList(clossestAnime["session"]) ??
+            [];
         itemCount = EpisodeList.length;
 
         int remaining = itemCount - firstTabCount;
@@ -187,7 +193,9 @@ class _AnimePageState extends State<AnimePage> {
         await _findAndSaveMatchingAnime();
       }
 
-      EpisodeList = await currentExtension?.getEpisodeList(clossestAnime["session"]) ?? [];
+      EpisodeList =
+          await currentExtension?.getEpisodeList(clossestAnime["session"]) ??
+          [];
       itemCount = EpisodeList.length;
 
       int remaining = itemCount - firstTabCount;
@@ -235,7 +243,8 @@ class _AnimePageState extends State<AnimePage> {
   }
 
   void _scrollListener() {
-    final collapseOffset = (MediaQuery.of(context).size.height) * 0.9 - kToolbarHeight - 10;
+    final collapseOffset =
+        (MediaQuery.of(context).size.height) * 0.9 - kToolbarHeight - 10;
     if (_scrollController.hasClients) {
       final shouldBeCollapsed = _scrollController.offset > collapseOffset;
       if (_isCollapsed != shouldBeCollapsed) {
@@ -267,13 +276,19 @@ class _AnimePageState extends State<AnimePage> {
               ? FloatingActionButton(
                 onPressed: () {
                   // Example: Scroll to top when pressed
-                  final double sliverAppBarHeight = MediaQuery.of(context).size.height * 0.8;
-                  const double extensionPickerHeight = 56; // Approximate DropdownMenu height
+                  final double sliverAppBarHeight =
+                      MediaQuery.of(context).size.height * 0.8;
+                  const double extensionPickerHeight =
+                      56; // Approximate DropdownMenu height
                   const double buttonHeight = 56; // Approximate button height
-                  const double verticalPadding = 12 + 12 + 12; // top + between + below
+                  const double verticalPadding =
+                      12 + 12 + 12; // top + between + below
 
                   final double scrollTarget =
-                      sliverAppBarHeight + extensionPickerHeight + buttonHeight + verticalPadding;
+                      sliverAppBarHeight +
+                      extensionPickerHeight +
+                      buttonHeight +
+                      verticalPadding;
 
                   _scrollController.animateTo(
                     scrollTarget - 90,
@@ -282,7 +297,11 @@ class _AnimePageState extends State<AnimePage> {
                   );
                 },
                 backgroundColor: MyColors.coolPurple,
-                child: const Icon(Icons.arrow_upward, size: 30, color: MyColors.coolPurple2),
+                child: const Icon(
+                  Icons.arrow_upward,
+                  size: 30,
+                  color: MyColors.coolPurple2,
+                ),
               )
               : null,
       backgroundColor: MyColors.backgroundColor,
@@ -300,18 +319,28 @@ class _AnimePageState extends State<AnimePage> {
                   title: AnimatedOpacity(
                     opacity: _isCollapsed ? 1.0 : 0.0,
                     duration: const Duration(milliseconds: 300),
-                    child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    child: Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                   ),
                   expandedHeight: (MediaQuery.of(context).size.height) * 0.8,
                   flexibleSpace: FlexibleSpaceBar(
                     collapseMode: CollapseMode.parallax,
-                    stretchModes: const [StretchMode.zoomBackground, StretchMode.blurBackground],
+                    stretchModes: const [
+                      StretchMode.zoomBackground,
+                      StretchMode.blurBackground,
+                    ],
                     background: AnimeCover(animeData: widget.animeData),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
+                    padding: const EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      top: 12,
+                    ),
                     child: Column(
                       children: [
                         // DropdownMenu (extension picker)
@@ -324,7 +353,9 @@ class _AnimePageState extends State<AnimePage> {
                                     width: 600,
                                     enableSearch: false,
                                     menuStyle: MenuStyle(
-                                      backgroundColor: WidgetStateProperty.all(MyColors.backgroundColor),
+                                      backgroundColor: WidgetStateProperty.all(
+                                        MyColors.backgroundColor,
+                                      ),
                                     ),
                                     initialSelection: _selectedExtension,
                                     onSelected: (value) async {
@@ -332,8 +363,13 @@ class _AnimePageState extends State<AnimePage> {
                                         setState(() {
                                           _selectedExtension = value;
                                         });
-                                        _localExtensionManager.setCurrentExtension(int.parse(value));
-                                        currentExtension = _localExtensionManager.getCurrentExtension();
+                                        _localExtensionManager
+                                            .setCurrentExtension(
+                                              int.parse(value),
+                                            );
+                                        currentExtension =
+                                            _localExtensionManager
+                                                .getCurrentExtension();
                                         await _findAndSaveMatchingAnime();
                                       }
                                     },
@@ -346,23 +382,37 @@ class _AnimePageState extends State<AnimePage> {
                                       ),
                                       suffixIconColor: MyColors.coolPurple,
                                       border: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: MyColors.coolPurple, width: 2),
+                                        borderSide: const BorderSide(
+                                          color: MyColors.coolPurple,
+                                          width: 2,
+                                        ),
                                         borderRadius: BorderRadius.circular(7),
                                       ),
                                       enabledBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: MyColors.coolPurple, width: 2),
+                                        borderSide: const BorderSide(
+                                          color: MyColors.coolPurple,
+                                          width: 2,
+                                        ),
                                         borderRadius: BorderRadius.circular(7),
                                       ),
                                       focusedBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: MyColors.coolPurple, width: 2),
+                                        borderSide: const BorderSide(
+                                          color: MyColors.coolPurple,
+                                          width: 2,
+                                        ),
                                         borderRadius: BorderRadius.circular(7),
                                       ),
                                       disabledBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: MyColors.coolPurple, width: 2),
+                                        borderSide: const BorderSide(
+                                          color: MyColors.coolPurple,
+                                          width: 2,
+                                        ),
                                         borderRadius: BorderRadius.circular(7),
                                       ),
                                     ),
-                                    textStyle: const TextStyle(color: MyColors.unselectedColor),
+                                    textStyle: const TextStyle(
+                                      color: MyColors.unselectedColor,
+                                    ),
                                     dropdownMenuEntries:
                                         _localExtensionManager
                                             .getExtensions()
@@ -371,22 +421,39 @@ class _AnimePageState extends State<AnimePage> {
                                                 value: extension.id.toString(),
                                                 label: extension.title,
                                                 trailingIcon:
-                                                    _localExtensionManager.isMainExtension(extension)
-                                                        ? const Icon(Icons.check, color: MyColors.coolPurple, size: 20)
+                                                    _localExtensionManager
+                                                            .isMainExtension(
+                                                              extension,
+                                                            )
+                                                        ? const Icon(
+                                                          Icons.check,
+                                                          color:
+                                                              MyColors
+                                                                  .coolPurple,
+                                                          size: 20,
+                                                        )
                                                         : null,
                                                 leadingIcon: SizedBox(
                                                   width: 24,
                                                   height: 24,
                                                   child: ClipRRect(
-                                                    borderRadius: BorderRadius.circular(4),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
                                                     child: CachedNetworkImage(
-                                                      imageUrl: extension.iconUrl,
+                                                      imageUrl:
+                                                          extension.iconUrl,
                                                       fit: BoxFit.contain,
                                                     ),
                                                   ),
                                                 ),
                                                 style: ButtonStyle(
-                                                  foregroundColor: WidgetStateProperty.all(MyColors.unselectedColor),
+                                                  foregroundColor:
+                                                      WidgetStateProperty.all(
+                                                        MyColors
+                                                            .unselectedColor,
+                                                      ),
                                                 ),
                                               ),
                                             )
@@ -415,14 +482,21 @@ class _AnimePageState extends State<AnimePage> {
                               const SizedBox(width: 10),
                               const Text(
                                 "Found:",
-                                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: SizedBox(
                                   height: 24, // Fixed height for the text
                                   child: Marquee(
-                                    text: clossestAnime == null ? " " : clossestAnime["title"],
+                                    text:
+                                        clossestAnime == null
+                                            ? " "
+                                            : clossestAnime["title"],
                                     style: const TextStyle(
                                       color: MyColors.appbarTextColor,
                                       fontSize: 16,
@@ -437,9 +511,12 @@ class _AnimePageState extends State<AnimePage> {
                               GestureDetector(
                                 onTap: () {
                                   final title =
-                                      widget.animeData["media"]["title"]["english"] ??
-                                      widget.animeData["media"]["title"]["romaji"] ??
-                                      widget.animeData["media"]["title"]["native"] ??
+                                      widget
+                                          .animeData["media"]["title"]["english"] ??
+                                      widget
+                                          .animeData["media"]["title"]["romaji"] ??
+                                      widget
+                                          .animeData["media"]["title"]["native"] ??
                                       "";
 
                                   _searchController.text = title;
@@ -459,8 +536,11 @@ class _AnimePageState extends State<AnimePage> {
                                               children: [
                                                 Expanded(
                                                   child: TextField(
-                                                    controller: _searchController,
-                                                    style: const TextStyle(color: Colors.white),
+                                                    controller:
+                                                        _searchController,
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                    ),
                                                     onChanged: (value) {
                                                       setState(() {
                                                         _searchQuery = value;
@@ -468,12 +548,20 @@ class _AnimePageState extends State<AnimePage> {
                                                     },
                                                     decoration: InputDecoration(
                                                       hintText: 'Search...',
-                                                      hintStyle: const TextStyle(color: Colors.grey),
+                                                      hintStyle:
+                                                          const TextStyle(
+                                                            color: Colors.grey,
+                                                          ),
                                                       filled: true,
-                                                      fillColor: MyColors.appbarColor,
+                                                      fillColor:
+                                                          MyColors.appbarColor,
                                                       border: OutlineInputBorder(
-                                                        borderRadius: BorderRadius.circular(8),
-                                                        borderSide: BorderSide.none,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              8,
+                                                            ),
+                                                        borderSide:
+                                                            BorderSide.none,
                                                       ),
                                                     ),
                                                   ),
@@ -482,33 +570,52 @@ class _AnimePageState extends State<AnimePage> {
                                                 IconButton(
                                                   onPressed: () {
                                                     setState(() {
-                                                      _searchQuery = _searchController.text;
+                                                      _searchQuery =
+                                                          _searchController
+                                                              .text;
                                                     });
                                                   },
-                                                  icon: const Icon(Icons.search, color: Colors.white),
+                                                  icon: const Icon(
+                                                    Icons.search,
+                                                    color: Colors.white,
+                                                  ),
                                                 ),
                                               ],
                                             ),
                                             const SizedBox(height: 16),
                                             Expanded(
-                                              child: FutureBuilder<List<dynamic>>(
+                                              child: FutureBuilder<
+                                                List<dynamic>
+                                              >(
                                                 future:
                                                     _searchQuery.isEmpty
                                                         ? null
-                                                        : currentExtension?.search(_searchQuery),
+                                                        : currentExtension
+                                                            ?.search(
+                                                              _searchQuery,
+                                                            ),
                                                 builder: (context, snapshot) {
                                                   if (_searchQuery.isEmpty) {
                                                     return const Center(
                                                       child: Text(
                                                         'Enter a search term',
-                                                        style: TextStyle(color: Colors.white),
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                        ),
                                                       ),
                                                     );
                                                   }
 
-                                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                                  if (snapshot
+                                                          .connectionState ==
+                                                      ConnectionState.waiting) {
                                                     return const Center(
-                                                      child: CircularProgressIndicator(color: MyColors.coolPurple),
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                            color:
+                                                                MyColors
+                                                                    .coolPurple,
+                                                          ),
                                                     );
                                                   }
 
@@ -516,14 +623,23 @@ class _AnimePageState extends State<AnimePage> {
                                                     return Center(
                                                       child: Text(
                                                         'Error: ${snapshot.error}',
-                                                        style: const TextStyle(color: Colors.white),
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                        ),
                                                       ),
                                                     );
                                                   }
 
                                                   final searchResults =
                                                       snapshot.data
-                                                          ?.map((item) => item as Map<String, dynamic>)
+                                                          ?.map(
+                                                            (item) =>
+                                                                item
+                                                                    as Map<
+                                                                      String,
+                                                                      dynamic
+                                                                    >,
+                                                          )
                                                           .toList() ??
                                                       [];
 
@@ -531,83 +647,160 @@ class _AnimePageState extends State<AnimePage> {
                                                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                                       crossAxisCount:
                                                           Tools.getResponsiveCrossAxisVal(
-                                                                    MediaQuery.of(context).size.width,
-                                                                    itemWidth: 460 / 4,
+                                                                    MediaQuery.of(
+                                                                      context,
+                                                                    ).size.width,
+                                                                    itemWidth:
+                                                                        460 / 4,
                                                                   ) >
                                                                   5
                                                               ? 5
                                                               : Tools.getResponsiveCrossAxisVal(
-                                                                MediaQuery.of(context).size.width,
-                                                                itemWidth: 460 / 4,
+                                                                MediaQuery.of(
+                                                                  context,
+                                                                ).size.width,
+                                                                itemWidth:
+                                                                    460 / 4,
                                                               ),
                                                       mainAxisExtent: 240,
                                                       crossAxisSpacing: 10,
                                                       mainAxisSpacing: 10,
                                                       childAspectRatio: 0.7,
                                                     ),
-                                                    itemCount: searchResults.length,
-                                                    itemBuilder: (context, index) {
-                                                      final anime = searchResults[index];
+                                                    itemCount:
+                                                        searchResults.length,
+                                                    itemBuilder: (
+                                                      context,
+                                                      index,
+                                                    ) {
+                                                      final anime =
+                                                          searchResults[index];
                                                       return AnimeCard2(
                                                         onTap: (title) async {
-                                                          final prefs = await SharedPreferences.getInstance();
+                                                          final prefs =
+                                                              await SharedPreferences.getInstance();
                                                           final key =
                                                               "anime_${widget.animeData["media"]["id"]}_extension_id";
 
                                                           setState(() {
-                                                            clossestAnime = anime;
+                                                            clossestAnime =
+                                                                anime;
                                                           });
 
-                                                          await prefs.setString(key, jsonEncode(anime));
+                                                          await prefs.setString(
+                                                            key,
+                                                            jsonEncode(anime),
+                                                          );
                                                           print(
                                                             "Updated matching anime: ${anime["title"]} for key: $key",
                                                           );
 
                                                           EpisodeList =
-                                                              await currentExtension?.getEpisodeList(
-                                                                clossestAnime["session"],
-                                                              ) ??
+                                                              await currentExtension
+                                                                  ?.getEpisodeList(
+                                                                    clossestAnime["session"],
+                                                                  ) ??
                                                               [];
-                                                          itemCount = EpisodeList.length;
+                                                          itemCount =
+                                                              EpisodeList
+                                                                  .length;
 
-                                                          int remaining = itemCount - firstTabCount;
-                                                          int otherTabs = (remaining / eachItemForTab).ceil();
-                                                          tabCount = 1 + (remaining > 0 ? otherTabs : 0);
+                                                          int remaining =
+                                                              itemCount -
+                                                              firstTabCount;
+                                                          int otherTabs =
+                                                              (remaining /
+                                                                      eachItemForTab)
+                                                                  .ceil();
+                                                          tabCount =
+                                                              1 +
+                                                              (remaining > 0
+                                                                  ? otherTabs
+                                                                  : 0);
 
                                                           tabItemCounts = [];
-                                                          if (itemCount <= firstTabCount) {
-                                                            tabItemCounts.add(itemCount);
+                                                          if (itemCount <=
+                                                              firstTabCount) {
+                                                            tabItemCounts.add(
+                                                              itemCount,
+                                                            );
                                                           } else {
-                                                            tabItemCounts.add(firstTabCount);
-                                                            for (int i = 0; i < otherTabs; i++) {
-                                                              int start = firstTabCount + i * eachItemForTab + 1;
-                                                              int end = start + eachItemForTab - 1;
-                                                              if (end > itemCount) end = itemCount;
-                                                              tabItemCounts.add(end - start + 1);
+                                                            tabItemCounts.add(
+                                                              firstTabCount,
+                                                            );
+                                                            for (
+                                                              int i = 0;
+                                                              i < otherTabs;
+                                                              i++
+                                                            ) {
+                                                              int start =
+                                                                  firstTabCount +
+                                                                  i *
+                                                                      eachItemForTab +
+                                                                  1;
+                                                              int end =
+                                                                  start +
+                                                                  eachItemForTab -
+                                                                  1;
+                                                              if (end >
+                                                                  itemCount)
+                                                                end = itemCount;
+                                                              tabItemCounts.add(
+                                                                end - start + 1,
+                                                              );
                                                             }
                                                           }
 
                                                           labels = [];
-                                                          if (itemCount <= firstTabCount) {
-                                                            labels.add("1 - $itemCount");
+                                                          if (itemCount <=
+                                                              firstTabCount) {
+                                                            labels.add(
+                                                              "1 - $itemCount",
+                                                            );
                                                           } else {
-                                                            labels.add("1 - $firstTabCount");
-                                                            for (int i = 0; i < otherTabs; i++) {
-                                                              int start = firstTabCount + i * eachItemForTab + 1;
-                                                              int end = start + eachItemForTab - 1;
-                                                              if (end > itemCount) end = itemCount;
-                                                              labels.add("$start - $end");
+                                                            labels.add(
+                                                              "1 - $firstTabCount",
+                                                            );
+                                                            for (
+                                                              int i = 0;
+                                                              i < otherTabs;
+                                                              i++
+                                                            ) {
+                                                              int start =
+                                                                  firstTabCount +
+                                                                  i *
+                                                                      eachItemForTab +
+                                                                  1;
+                                                              int end =
+                                                                  start +
+                                                                  eachItemForTab -
+                                                                  1;
+                                                              if (end >
+                                                                  itemCount)
+                                                                end = itemCount;
+                                                              labels.add(
+                                                                "$start - $end",
+                                                              );
                                                             }
                                                           }
 
-                                                          _scrollController.addListener(_scrollListener);
+                                                          _scrollController
+                                                              .addListener(
+                                                                _scrollListener,
+                                                              );
                                                           setState(() {});
 
-                                                          Navigator.pop(context); // Close the modal bottom sheet
+                                                          Navigator.pop(
+                                                            context,
+                                                          ); // Close the modal bottom sheet
                                                         },
                                                         index: index,
-                                                        title: anime["title"] ?? "Unknown Title",
-                                                        imageUrl: anime["poster"] ?? "",
+                                                        title:
+                                                            anime["title"] ??
+                                                            "Unknown Title",
+                                                        imageUrl:
+                                                            anime["poster"] ??
+                                                            "",
                                                       );
                                                     },
                                                   );
@@ -638,10 +831,17 @@ class _AnimePageState extends State<AnimePage> {
                             padding: const EdgeInsets.only(bottom: 12),
                             child: TextButton.icon(
                               style: TextButton.styleFrom(
-                                padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 16),
+                                padding: const EdgeInsets.only(
+                                  top: 16,
+                                  left: 16,
+                                  right: 16,
+                                  bottom: 16,
+                                ),
                                 foregroundColor: MyColors.coolGreen,
                                 shape: RoundedRectangleBorder(
-                                  side: const BorderSide(color: MyColors.coolGreen),
+                                  side: const BorderSide(
+                                    color: MyColors.coolGreen,
+                                  ),
                                   borderRadius: BorderRadius.circular(100),
                                 ),
                               ),
@@ -649,10 +849,16 @@ class _AnimePageState extends State<AnimePage> {
                                 widget.animeData["progress"] == 0
                                     ? "START WATCHING "
                                     : "CONTINUE EPISODE ${widget.animeData["progress"] + 1}",
-                                style: const TextStyle(color: MyColors.coolGreen, fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                  color: MyColors.coolGreen,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                               onPressed: () {},
-                              icon: const Icon(Icons.play_arrow_outlined, size: 20),
+                              icon: const Icon(
+                                Icons.play_arrow_outlined,
+                                size: 20,
+                              ),
                             ),
                           ),
                         ),
@@ -668,7 +874,9 @@ class _AnimePageState extends State<AnimePage> {
                 // TabBar
                 Builder(
                   builder: (context) {
-                    final TabController tabController = DefaultTabController.of(context);
+                    final TabController tabController = DefaultTabController.of(
+                      context,
+                    );
                     return StatefulBuilder(
                       builder: (context, setState) {
                         tabController.addListener(() {
@@ -685,17 +893,26 @@ class _AnimePageState extends State<AnimePage> {
                             final bool selected = tabController.index == i;
                             return Container(
                               margin: const EdgeInsets.symmetric(horizontal: 5),
-                              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 6,
+                                horizontal: 8,
+                              ),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(8),
-                                color: selected ? Colors.white : Colors.transparent,
+                                color:
+                                    selected
+                                        ? Colors.white
+                                        : Colors.transparent,
                                 border: Border.all(color: MyColors.coolPurple),
                               ),
                               child: Center(
                                 child: Text(
                                   labels[i],
                                   style: TextStyle(
-                                    color: selected ? MyColors.coolPurple : const Color(0xFF9A989B),
+                                    color:
+                                        selected
+                                            ? MyColors.coolPurple
+                                            : const Color(0xFF9A989B),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -714,65 +931,112 @@ class _AnimePageState extends State<AnimePage> {
                     child: TabBarView(
                       children: List.generate(tabCount, (tabIndex) {
                         int count = tabItemCounts[tabIndex];
-                        int startIndex = (tabIndex == 0) ? 0 : firstTabCount + (tabIndex - 1) * eachItemForTab;
+                        int startIndex =
+                            (tabIndex == 0)
+                                ? 0
+                                : firstTabCount +
+                                    (tabIndex - 1) * eachItemForTab;
                         return CustomScrollView(
                           slivers: [
                             SliverList(
-                              delegate: SliverChildBuilderDelegate((context, index) {
+                              delegate: SliverChildBuilderDelegate((
+                                context,
+                                index,
+                              ) {
                                 int episodeIndex = startIndex + index;
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 7),
                                   child: AnimeEpisode(
-                                    current: widget.animeData["progress"] == episodeIndex,
+                                    current:
+                                        widget.animeData["progress"] ==
+                                        episodeIndex,
                                     animeData: widget.animeData,
-                                    seen: widget.animeData["progress"] > episodeIndex,
+                                    seen:
+                                        widget.animeData["progress"] >
+                                        episodeIndex,
                                     index: episodeIndex,
                                     onClicked: (details) async {
                                       showModalBottomSheet(
-                                        backgroundColor: MyColors.backgroundColor,
+                                        backgroundColor:
+                                            MyColors.backgroundColor,
 
                                         context: context,
                                         builder: (context) {
                                           return Container(
                                             child: FutureBuilder(
-                                              future: currentExtension?.getStreamData(EpisodeList[index]["id"]),
+                                              future: currentExtension
+                                                  ?.getStreamData(
+                                                    EpisodeList[index]["id"],
+                                                  ),
                                               builder: (context, snapshot) {
                                                 return snapshot.hasData
                                                     ? Container(
-                                                      padding: const EdgeInsets.all(12),
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                            12,
+                                                          ),
                                                       child: ListView.separated(
-                                                        separatorBuilder: (context, index) {
-                                                          return const SizedBox(height: 12);
+                                                        separatorBuilder: (
+                                                          context,
+                                                          index,
+                                                        ) {
+                                                          return const SizedBox(
+                                                            height: 12,
+                                                          );
                                                         },
-                                                        itemCount: snapshot.data!.length,
-                                                        itemBuilder: (context, index) {
-                                                          return Container(
-                                                            decoration: BoxDecoration(
-                                                              color: MyColors.coolPurple2,
-                                                              borderRadius: BorderRadius.circular(12),
-                                                            ),
-                                                            width: double.infinity,
-                                                            height: 60,
-                                                            padding: const EdgeInsets.all(12),
-                                                            child: Center(
-                                                              child: GestureDetector(
-                                                                onTap: () {
-                                                                  Navigator.push(
-                                                                    context,
-                                                                    MaterialPageRoute(
-                                                                      builder:
-                                                                          (context) => PlayerPage(
-                                                                            StreamData: snapshot.data?[index],
-                                                                          ),
+                                                        itemCount:
+                                                            snapshot
+                                                                .data!
+                                                                .length,
+                                                        itemBuilder: (
+                                                          context,
+                                                          index,
+                                                        ) {
+                                                          return GestureDetector(
+                                                            onTap: () {
+                                                              Navigator.push(
+                                                                context,
+                                                                MaterialPageRoute(
+                                                                  builder:
+                                                                      (
+                                                                        context,
+                                                                      ) => PlayerPage(
+                                                                        StreamData:
+                                                                            snapshot.data?[index],
+                                                                      ),
+                                                                ),
+                                                              );
+                                                            },
+                                                            child: Container(
+                                                              decoration: BoxDecoration(
+                                                                color:
+                                                                    MyColors
+                                                                        .coolPurple2,
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      12,
                                                                     ),
-                                                                  );
-                                                                },
+                                                              ),
+                                                              width:
+                                                                  double
+                                                                      .infinity,
+                                                              height: 60,
+                                                              padding:
+                                                                  const EdgeInsets.all(
+                                                                    12,
+                                                                  ),
+                                                              child: Center(
                                                                 child: Text(
                                                                   "${snapshot.data?[index]["provider"]} - ${snapshot.data?[index]["sub"] ? "Sub" : "Dub"}",
                                                                   style: const TextStyle(
-                                                                    color: MyColors.appbarTextColor,
-                                                                    fontWeight: FontWeight.w600,
-                                                                    fontSize: 16.5,
+                                                                    color:
+                                                                        MyColors
+                                                                            .appbarTextColor,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                    fontSize:
+                                                                        16.5,
                                                                   ),
                                                                 ),
                                                               ),
@@ -785,7 +1049,12 @@ class _AnimePageState extends State<AnimePage> {
                                                       height: double.infinity,
                                                       width: double.infinity,
                                                       child: Center(
-                                                        child: CircularProgressIndicator(color: MyColors.coolPurple),
+                                                        child:
+                                                            CircularProgressIndicator(
+                                                              color:
+                                                                  MyColors
+                                                                      .coolPurple,
+                                                            ),
                                                       ),
                                                     );
                                               },
@@ -877,7 +1146,9 @@ class AnimeEpisode extends StatelessWidget {
                               return Container();
                             },
                             imageUrl: episodeData["episode"]["cover"],
-                            fit: BoxFit.cover, // This will crop and fill the width
+                            fit:
+                                BoxFit
+                                    .cover, // This will crop and fill the width
                           ),
                         ),
                       ),
@@ -916,7 +1187,8 @@ class AnimeEpisode extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  episodeData["episode"]["dub"] && episodeData["episode"]["sub"]
+                                  episodeData["episode"]["dub"] &&
+                                          episodeData["episode"]["sub"]
                                       ? "Sub | Dub"
                                       : episodeData["episode"]["sub"]
                                       ? "Sub"
@@ -942,7 +1214,10 @@ class AnimeEpisode extends StatelessWidget {
                 alignment: Alignment.bottomLeft,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: current ? const Color(0xFF3c3243) : MyColors.coolPurple2,
+                    color:
+                        current
+                            ? const Color(0xFF3c3243)
+                            : MyColors.coolPurple2,
                     borderRadius: const BorderRadius.only(
                       topRight: Radius.circular(12),
                       bottomLeft: Radius.circular(12),
@@ -1000,7 +1275,11 @@ class AnimeCover extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        CachedNetworkImage(imageUrl: imageUrl, fit: BoxFit.cover, alignment: Alignment.center),
+        CachedNetworkImage(
+          imageUrl: imageUrl,
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
+        ),
         Transform.translate(
           offset: const Offset(0, 4),
           child: Container(
@@ -1016,16 +1295,31 @@ class AnimeCover extends StatelessWidget {
         Align(
           alignment: Alignment.bottomLeft,
           child: Padding(
-            padding: const EdgeInsets.only(left: 16.0, bottom: 16.0, right: 16.0),
+            padding: const EdgeInsets.only(
+              left: 16.0,
+              bottom: 16.0,
+              right: 16.0,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w400)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 36,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   genres.join(' • '),
-                  style: const TextStyle(color: Color(0xFFA9A7A7), fontSize: 15, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    color: Color(0xFFA9A7A7),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Row(
@@ -1034,8 +1328,16 @@ class AnimeCover extends StatelessWidget {
                     Text(
                       animeData["media"]["averageScore"].toString() == "null"
                           ? "0.0"
-                          : Tools.insertAt(animeData["media"]["averageScore"].toString(), ".", 1),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange),
+                          : Tools.insertAt(
+                            animeData["media"]["averageScore"].toString(),
+                            ".",
+                            1,
+                          ),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.orange,
+                      ),
                     ),
                     const Icon(Icons.star, color: Colors.orange, size: 18),
                   ],
@@ -1043,7 +1345,11 @@ class AnimeCover extends StatelessWidget {
                 const SizedBox(height: 2),
                 const Text(
                   "Synopsis",
-                  style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
