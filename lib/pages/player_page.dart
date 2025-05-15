@@ -4,6 +4,7 @@ import 'package:media_kit/media_kit.dart'; // Provides [Player], [Media], [Playl
 import 'package:media_kit_video/media_kit_video.dart'; // Provides [VideoController] & [Video] etc.
 
 import 'package:flutter/services.dart';
+import 'package:metia/api/extension.dart';
 import 'dart:async';
 
 import 'package:metia/constants/Colors.dart';
@@ -15,18 +16,32 @@ class PlayerPage extends StatefulWidget {
     required this.anilistData,
     required this.episodeNumber,
     required this.extensionEpisodeData,
+    required this.episodeCount,
+    required this.currentExtension,
+    required this.episodeList,
   });
 
   final dynamic extensionStreamData;
   final dynamic anilistData;
   final int episodeNumber;
   final dynamic extensionEpisodeData;
+  final int episodeCount;
+  final Extension? currentExtension;
+  final List<dynamic> episodeList;
 
   @override
   State<PlayerPage> createState() => _PlayerPageState();
 }
 
 class _PlayerPageState extends State<PlayerPage> {
+  late dynamic extensionStreamData = widget.extensionStreamData;
+  late dynamic anilistData = widget.anilistData;
+  late int episodeNumber = widget.episodeNumber;
+  late dynamic extensionEpisodeData = widget.extensionEpisodeData;
+  late int episodeCount = widget.episodeCount;
+  late Extension? currentExtension = widget.currentExtension;
+  late List<dynamic> episodeList = widget.episodeList;
+
   // Create a [Player] to control playback.
   late final player = Player();
   // Create a [VideoController] to handle video output from [Player].
@@ -71,6 +86,72 @@ class _PlayerPageState extends State<PlayerPage> {
     });
   }
 
+  void nextEpisode() {
+    currentExtension?.getStreamData(episodeList[episodeNumber]["id"]).then((value) {
+      // Parse the stream data response
+
+      List<dynamic> providers = value;
+
+      // Sort providers by quality (assuming quality is in the provider name)
+      providers.sort((a, b) {
+        // Extract quality numbers (e.g. "720p" -> 720)
+        int qualityA =
+            int.tryParse(RegExp(r'(\d+)p').firstMatch(a["provider"])?.group(1) ?? "0") ?? 0;
+        int qualityB =
+            int.tryParse(RegExp(r'(\d+)p').firstMatch(b["provider"])?.group(1) ?? "0") ?? 0;
+        return qualityB.compareTo(qualityA); // Higher quality first
+      });
+
+      // First try to find highest quality dubbed version
+      var preferedProvider = providers.firstWhere(
+        (provider) => provider["dub"] == true,
+        orElse: () => providers.first, // If no dub found, take highest quality
+      );
+
+      extensionEpisodeData = episodeList[episodeNumber];
+      extensionStreamData = value;
+      anilistData;
+      episodeNumber++;
+
+      player.open(Media(preferedProvider["m3u8"])).then((value) {
+        _startHideTimer();
+      });
+    });
+  }
+
+  void pastEpisode() {
+    currentExtension?.getStreamData(episodeList[episodeNumber - 2]["id"]).then((value) {
+      // Parse the stream data response
+
+      List<dynamic> providers = value;
+
+      // Sort providers by quality (assuming quality is in the provider name)
+      providers.sort((a, b) {
+        // Extract quality numbers (e.g. "720p" -> 720)
+        int qualityA =
+            int.tryParse(RegExp(r'(\d+)p').firstMatch(a["provider"])?.group(1) ?? "0") ?? 0;
+        int qualityB =
+            int.tryParse(RegExp(r'(\d+)p').firstMatch(b["provider"])?.group(1) ?? "0") ?? 0;
+        return qualityB.compareTo(qualityA); // Higher quality first
+      });
+
+      // First try to find highest quality dubbed version
+      var preferedProvider = providers.firstWhere(
+        (provider) => provider["dub"] == true,
+        orElse: () => providers.first, // If no dub found, take highest quality
+      );
+
+      extensionEpisodeData = episodeList[episodeNumber - 2];
+      extensionStreamData = value;
+      anilistData;
+      episodeNumber--;
+
+      player.open(Media(preferedProvider["m3u8"])).then((value) {
+        _startHideTimer();
+      });
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -101,7 +182,7 @@ class _PlayerPageState extends State<PlayerPage> {
       }
     });
 
-    player.open(Media(widget.extensionStreamData["m3u8"])).then((value) {
+    player.open(Media(extensionStreamData["m3u8"])).then((value) {
       _startHideTimer();
     });
   }
@@ -126,7 +207,6 @@ class _PlayerPageState extends State<PlayerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        
         child: Center(
           child: Video(
             controller: controller,
@@ -138,10 +218,10 @@ class _PlayerPageState extends State<PlayerPage> {
                 },
                 onDoubleTap: () {
                   if (_lastTapPosition == null) return;
-        
+
                   final screenWidth = MediaQuery.of(context).size.width;
                   final isLeftSide = _lastTapPosition!.dx < screenWidth / 2;
-        
+
                   final now = DateTime.now();
                   if (_lastDoubleTapTime != null &&
                       now.difference(_lastDoubleTapTime!).inSeconds <= 1) {
@@ -154,21 +234,18 @@ class _PlayerPageState extends State<PlayerPage> {
                     });
                   }
                   _lastDoubleTapTime = now;
-        
-                  player.seek(
-                    player.state.position +
-                        Duration(seconds: isLeftSide ? -10 : 10),
-                  );
-        
+
+                  player.seek(player.state.position + Duration(seconds: isLeftSide ? -10 : 10));
+
                   setState(() {
                     _showSeekDisplay = true;
                   });
-        
+
                   // If controls are visible, reset the hide timer
                   if (_showControls) {
                     _startHideTimer();
                   }
-        
+
                   _seekDisplayTimer?.cancel();
                   _seekDisplayTimer = Timer(const Duration(seconds: 2), () {
                     if (mounted) {
@@ -219,10 +296,7 @@ class _PlayerPageState extends State<PlayerPage> {
                         opacity: _showSeekDisplay ? 1.0 : 0.0,
                         duration: const Duration(milliseconds: 300),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 10,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                           decoration: BoxDecoration(
                             color: Colors.black.withOpacity(0.6),
                             borderRadius: BorderRadius.circular(8),
@@ -240,10 +314,7 @@ class _PlayerPageState extends State<PlayerPage> {
                     ),
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
-                      transitionBuilder: (
-                        Widget child,
-                        Animation<double> animation,
-                      ) {
+                      transitionBuilder: (Widget child, Animation<double> animation) {
                         return FadeTransition(opacity: animation, child: child);
                       },
                       child:
@@ -252,7 +323,7 @@ class _PlayerPageState extends State<PlayerPage> {
                                 key: const ValueKey<String>('controls'),
                                 children: [
                                   Container(
-                                    color: Colors.black.withOpacity(0.2),
+                                    color: Colors.black.withOpacity(0.5),
                                     width: double.infinity,
                                     height: double.infinity,
                                   ),
@@ -262,9 +333,7 @@ class _PlayerPageState extends State<PlayerPage> {
                                       Container(
                                         padding: const EdgeInsets.only(left: 6),
                                         width: double.infinity,
-                                        height:
-                                            MediaQuery.of(context).size.height *
-                                            0.2,
+                                        height: MediaQuery.of(context).size.height * 0.3,
                                         child: Row(
                                           children: [
                                             IconButton(
@@ -276,7 +345,7 @@ class _PlayerPageState extends State<PlayerPage> {
                                             const SizedBox(width: 6),
                                             Center(
                                               child: Text(
-                                                widget.extensionEpisodeData["name"],
+                                                extensionEpisodeData["name"],
                                                 style: const TextStyle(
                                                   color: Colors.white,
                                                   fontSize: 20,
@@ -290,24 +359,29 @@ class _PlayerPageState extends State<PlayerPage> {
                                       //middle => play, pause, next episode, past episode. done
                                       SizedBox(
                                         width: double.infinity,
-                                        height:
-                                            MediaQuery.of(context).size.height *
-                                            0.6,
+                                        height: MediaQuery.of(context).size.height * 0.4,
                                         child: Center(
                                           child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
+                                            mainAxisAlignment: MainAxisAlignment.center,
                                             spacing: 40,
                                             children: [
                                               IconButton(
                                                 onPressed: () {
                                                   _startHideTimer();
+                                                  if (episodeNumber == 1) {
+                                                    return;
+                                                  }
+                                                  print("returned");
                                                   // Add your back episode logic here
+                                                  pastEpisode();
                                                 },
-                                                icon: const Icon(
+                                                icon: Icon(
                                                   Icons.arrow_back,
                                                   size: 40,
-                                                  color: Colors.white,
+                                                  color:
+                                                      episodeNumber == 1
+                                                          ? MyColors.unselectedColor
+                                                          : Colors.white,
                                                 ),
                                               ),
                                               IconButton(
@@ -327,13 +401,20 @@ class _PlayerPageState extends State<PlayerPage> {
                                               ),
                                               IconButton(
                                                 onPressed: () {
-                                                  _startHideTimer();
                                                   // Add your next episode logic here
+                                                  if (episodeNumber == episodeCount) {
+                                                    return;
+                                                  }
+                                                  nextEpisode();
+                                                  _startHideTimer();
                                                 },
-                                                icon: const Icon(
+                                                icon: Icon(
                                                   Icons.arrow_forward,
                                                   size: 40,
-                                                  color: Colors.white,
+                                                  color:
+                                                      episodeNumber == episodeCount
+                                                          ? MyColors.unselectedColor
+                                                          : Colors.white,
                                                 ),
                                               ),
                                             ],
@@ -344,16 +425,11 @@ class _PlayerPageState extends State<PlayerPage> {
                                       Container(
                                         alignment: Alignment.bottomCenter,
                                         width: double.infinity,
-                                        height:
-                                            MediaQuery.of(context).size.height *
-                                            0.2,
+                                        height: MediaQuery.of(context).size.height * 0.3,
                                         child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16.0,
-                                          ),
+                                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
                                           child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
+                                            mainAxisAlignment: MainAxisAlignment.center,
                                             children: [
                                               Text(
                                                 currentTime,
@@ -371,32 +447,22 @@ class _PlayerPageState extends State<PlayerPage> {
                                                     SliderTheme(
                                                       data: SliderThemeData(
                                                         trackHeight: 2.0,
-                                                        thumbShape:
-                                                            SliderComponentShape
-                                                                .noThumb,
+                                                        thumbShape: SliderComponentShape.noThumb,
                                                         overlayShape:
-                                                            SliderComponentShape
-                                                                .noOverlay,
-                                                        activeTrackColor: Colors
-                                                            .white
-                                                            .withOpacity(0.3),
-                                                        inactiveTrackColor: Colors
-                                                            .white
+                                                            SliderComponentShape.noOverlay,
+                                                        activeTrackColor: Colors.white.withOpacity(
+                                                          0.3,
+                                                        ),
+                                                        inactiveTrackColor: Colors.white
                                                             .withOpacity(0.1),
                                                       ),
                                                       child: Slider(
                                                         min: 0,
                                                         max:
-                                                            player
-                                                                .state
-                                                                .duration
-                                                                .inSeconds
+                                                            player.state.duration.inSeconds
                                                                 .toDouble(),
                                                         value:
-                                                            player
-                                                                .state
-                                                                .buffer
-                                                                .inSeconds
+                                                            player.state.buffer.inSeconds
                                                                 .toDouble(),
                                                         onChanged: null,
                                                       ),
@@ -405,35 +471,23 @@ class _PlayerPageState extends State<PlayerPage> {
                                                     SliderTheme(
                                                       data: const SliderThemeData(
                                                         trackHeight: 2.0,
-                                                        activeTrackColor:
-                                                            MyColors.coolPurple,
-                                                        inactiveTrackColor:
-                                                            MyColors.coolPurple2,
+                                                        activeTrackColor: MyColors.coolPurple,
+                                                        inactiveTrackColor: MyColors.coolPurple2,
                                                       ),
                                                       child: Slider(
                                                         min: 0,
                                                         max:
-                                                            player
-                                                                .state
-                                                                .duration
-                                                                .inSeconds
+                                                            player.state.duration.inSeconds
                                                                 .toDouble(),
                                                         value:
-                                                            player
-                                                                .state
-                                                                .position
-                                                                .inSeconds
+                                                            player.state.position.inSeconds
                                                                 .toDouble(),
                                                         onChanged: (value) {
                                                           _startHideTimer();
                                                           if (mounted) {
                                                             setState(() {
                                                               player.seek(
-                                                                Duration(
-                                                                  seconds:
-                                                                      value
-                                                                          .toInt(),
-                                                                ),
+                                                                Duration(seconds: value.toInt()),
                                                               );
                                                             });
                                                           }
