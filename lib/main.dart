@@ -11,7 +11,7 @@ import 'package:metia/conflict/register_custom_scheme_stub.dart'
 
 void main() {
   MediaKit.ensureInitialized();
-
+  
   if (Platform.isWindows) {
     registerCustomScheme('metia');
   }

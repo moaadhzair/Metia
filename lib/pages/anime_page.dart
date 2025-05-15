@@ -1001,8 +1001,12 @@ class _AnimePageState extends State<AnimePage> {
                                                                       (
                                                                         context,
                                                                       ) => PlayerPage(
-                                                                        StreamData:
+                                                                        extensionEpisodeData: EpisodeList[index],
+                                                                        episodeNumber: episodeIndex + 1,
+                                                                        extensionStreamData:
                                                                             snapshot.data?[index],
+                                                                        anilistData:
+                                                                            widget.animeData,
                                                                       ),
                                                                 ),
                                                               );

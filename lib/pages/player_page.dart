@@ -9,9 +9,18 @@ import 'dart:async';
 import 'package:metia/constants/Colors.dart';
 
 class PlayerPage extends StatefulWidget {
-  const PlayerPage({super.key, required this.StreamData});
+  const PlayerPage({
+    super.key,
+    required this.extensionStreamData,
+    required this.anilistData,
+    required this.episodeNumber,
+    required this.extensionEpisodeData,
+  });
 
-  final dynamic StreamData;
+  final dynamic extensionStreamData;
+  final dynamic anilistData;
+  final int episodeNumber;
+  final dynamic extensionEpisodeData;
 
   @override
   State<PlayerPage> createState() => _PlayerPageState();
@@ -65,6 +74,7 @@ class _PlayerPageState extends State<PlayerPage> {
   @override
   void initState() {
     super.initState();
+
     // Force landscape only when this page is visible
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
@@ -91,7 +101,7 @@ class _PlayerPageState extends State<PlayerPage> {
       }
     });
 
-    player.open(Media(widget.StreamData["m3u8"])).then((value) {
+    player.open(Media(widget.extensionStreamData["m3u8"])).then((value) {
       _startHideTimer();
     });
   }
@@ -115,309 +125,347 @@ class _PlayerPageState extends State<PlayerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Video(
-          controller: controller,
-          aspectRatio: 16.0 / 9.0,
-          controls: (state) {
-            return GestureDetector(
-              onDoubleTapDown: (details) {
-                _lastTapPosition = details.globalPosition;
-              },
-              onDoubleTap: () {
-                if (_lastTapPosition == null) return;
-                
-                final screenWidth = MediaQuery.of(context).size.width;
-                final isLeftSide = _lastTapPosition!.dx < screenWidth / 2;
-                
-                final now = DateTime.now();
-                if (_lastDoubleTapTime != null &&
-                    now.difference(_lastDoubleTapTime!).inSeconds <= 1) {
+      body: SafeArea(
+        
+        child: Center(
+          child: Video(
+            controller: controller,
+            aspectRatio: 16.0 / 9.0,
+            controls: (state) {
+              return GestureDetector(
+                onDoubleTapDown: (details) {
+                  _lastTapPosition = details.globalPosition;
+                },
+                onDoubleTap: () {
+                  if (_lastTapPosition == null) return;
+        
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  final isLeftSide = _lastTapPosition!.dx < screenWidth / 2;
+        
+                  final now = DateTime.now();
+                  if (_lastDoubleTapTime != null &&
+                      now.difference(_lastDoubleTapTime!).inSeconds <= 1) {
+                    setState(() {
+                      _seekSeconds += isLeftSide ? -10 : 10;
+                    });
+                  } else {
+                    setState(() {
+                      _seekSeconds = isLeftSide ? -10 : 10;
+                    });
+                  }
+                  _lastDoubleTapTime = now;
+        
+                  player.seek(
+                    player.state.position +
+                        Duration(seconds: isLeftSide ? -10 : 10),
+                  );
+        
                   setState(() {
-                    _seekSeconds += isLeftSide ? -10 : 10;
+                    _showSeekDisplay = true;
                   });
-                } else {
-                  setState(() {
-                    _seekSeconds = isLeftSide ? -10 : 10;
-                  });
-                }
-                _lastDoubleTapTime = now;
-                
-                player.seek(
-                  player.state.position +
-                      Duration(seconds: isLeftSide ? -10 : 10),
-                );
-                
-                setState(() {
-                  _showSeekDisplay = true;
-                });
-
-                // If controls are visible, reset the hide timer
-                if (_showControls) {
-                  _startHideTimer();
-                }
-                
-                _seekDisplayTimer?.cancel();
-                _seekDisplayTimer = Timer(
-                  const Duration(seconds: 2),
-                  () {
+        
+                  // If controls are visible, reset the hide timer
+                  if (_showControls) {
+                    _startHideTimer();
+                  }
+        
+                  _seekDisplayTimer?.cancel();
+                  _seekDisplayTimer = Timer(const Duration(seconds: 2), () {
                     if (mounted) {
                       setState(() {
                         _showSeekDisplay = false;
                       });
                       // Reset the seek seconds after the fade animation is complete
-                      Future.delayed(
-                        const Duration(milliseconds: 300),
-                        () {
-                          if (mounted) {
-                            setState(() {
-                              _seekSeconds = 0;
-                            });
-                          }
-                        },
-                      );
+                      Future.delayed(const Duration(milliseconds: 300), () {
+                        if (mounted) {
+                          setState(() {
+                            _seekSeconds = 0;
+                          });
+                        }
+                      });
                     }
-                  },
-                );
-              },
-              onTap: () {
-                setState(() {
-                  _showControls = !_showControls;
-                  if (_showControls) {
-                    _startHideTimer();
-                  } else {
-                    _hideTimer?.cancel();
-                  }
-                });
-              },
-              child: Stack(
-                children: [
-                  // This transparent container ensures the GestureDetector covers the full area
-                  Container(
-                    color: Colors.transparent,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
-                  // Seek indicator with fade animation
-                  Positioned(
-                    left: _seekSeconds < 0 
-                      ? MediaQuery.of(context).size.width * 0.25 - 50 // Subtract half of approximate container width
-                      : MediaQuery.of(context).size.width * 0.75 - 50, // Subtract half of approximate container width
-                    top: MediaQuery.of(context).size.height * 0.5 - 25, // Subtract half of approximate container height
-                    child: AnimatedOpacity(
-                      opacity: _showSeekDisplay ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 300),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '${_seekSeconds > 0 ? "+" : ""}${_seekSeconds}s',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                  });
+                },
+                onTap: () {
+                  setState(() {
+                    _showControls = !_showControls;
+                    if (_showControls) {
+                      _startHideTimer();
+                    } else {
+                      _hideTimer?.cancel();
+                    }
+                  });
+                },
+                child: Stack(
+                  children: [
+                    // This transparent container ensures the GestureDetector covers the full area
+                    Container(
+                      color: Colors.transparent,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                    // Seek indicator with fade animation
+                    Positioned(
+                      left:
+                          _seekSeconds < 0
+                              ? MediaQuery.of(context).size.width * 0.25 -
+                                  50 // Subtract half of approximate container width
+                              : MediaQuery.of(context).size.width * 0.75 -
+                                  50, // Subtract half of approximate container width
+                      top:
+                          MediaQuery.of(context).size.height * 0.5 -
+                          25, // Subtract half of approximate container height
+                      child: AnimatedOpacity(
+                        opacity: _showSeekDisplay ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 300),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${_seekSeconds > 0 ? "+" : ""}${_seekSeconds}s',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    transitionBuilder: (
-                      Widget child,
-                      Animation<double> animation,
-                    ) {
-                      return FadeTransition(opacity: animation, child: child);
-                    },
-                    child: _showControls
-                        ? Stack(
-                            key: const ValueKey<String>('controls'),
-                            children: [
-                              Container(
-                                color: Colors.black.withOpacity(0.2),
-                                width: double.infinity,
-                                height: double.infinity,
-                              ),
-                              Column(
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      transitionBuilder: (
+                        Widget child,
+                        Animation<double> animation,
+                      ) {
+                        return FadeTransition(opacity: animation, child: child);
+                      },
+                      child:
+                          _showControls
+                              ? Stack(
+                                key: const ValueKey<String>('controls'),
                                 children: [
-                                  //top  => back icon, title. done
                                   Container(
-                                    padding: const EdgeInsets.only(left: 6),
+                                    color: Colors.black.withOpacity(0.2),
                                     width: double.infinity,
-                                    height:
-                                        MediaQuery.of(context).size.height *
-                                        0.2,
-                                    child: Row(
-                                      children: [
-                                        IconButton(
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                          icon: const Icon(Icons.arrow_back),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        const Center(
-                                          child: Text(
-                                            "Episdoe 1",
-                                            style: TextStyle(
-                                              color: MyColors.appbarTextColor,
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    height: double.infinity,
                                   ),
-                                  //middle => play, pause, next episode, past episode. done
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height:
-                                        MediaQuery.of(context).size.height *
-                                        0.6,
-                                    child: Center(
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        spacing: 40,
-                                        children: [
-                                          IconButton(
-                                            onPressed: () {
-                                              _startHideTimer();
-                                              // Add your back episode logic here
-                                            },
-                                            icon: const Icon(
-                                              Icons.arrow_back,
-                                              size: 40,
-                                              color: MyColors.appbarTextColor,
+                                  Column(
+                                    children: [
+                                      //top  => back icon, title. done
+                                      Container(
+                                        padding: const EdgeInsets.only(left: 6),
+                                        width: double.infinity,
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                            0.2,
+                                        child: Row(
+                                          children: [
+                                            IconButton(
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                              icon: const Icon(Icons.arrow_back),
                                             ),
-                                          ),
-                                          IconButton(
-                                            onPressed: () {
-                                              _startHideTimer();
-                                              setState(() {
-                                                player.playOrPause();
-                                              });
-                                            },
-                                            icon: Icon(
-                                              player.state.playing
-                                                  ? Icons.pause
-                                                  : Icons.play_arrow,
-                                              size: 40,
-                                              color: MyColors.appbarTextColor,
-                                            ),
-                                          ),
-                                          IconButton(
-                                            onPressed: () {
-                                              _startHideTimer();
-                                              // Add your next episode logic here
-                                            },
-                                            icon: const Icon(
-                                              Icons.arrow_forward,
-                                              size: 40,
-                                              color: MyColors.appbarTextColor,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  //bottom => current time, seekbar, duration
-                                  Container(
-                                    alignment: Alignment.bottomCenter,
-                                    width: double.infinity,
-                                    height:
-                                        MediaQuery.of(context).size.height *
-                                        0.2,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16.0,
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            currentTime,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Stack(
-                                              alignment: Alignment.center,
-                                              children: [
-                                                // Buffering progress
-                                                SliderTheme(
-                                                  data: SliderThemeData(
-                                                    trackHeight: 2.0,
-                                                    thumbShape: SliderComponentShape.noThumb,
-                                                    overlayShape: SliderComponentShape.noOverlay,
-                                                    activeTrackColor: Colors.white.withOpacity(0.3),
-                                                    inactiveTrackColor: Colors.white.withOpacity(0.1),
-                                                  ),
-                                                  child: Slider(
-                                                    min: 0,
-                                                    max: player.state.duration.inSeconds.toDouble(),
-                                                    value: player.state.buffer.inSeconds.toDouble(),
-                                                    onChanged: null,
-                                                  ),
+                                            const SizedBox(width: 6),
+                                            Center(
+                                              child: Text(
+                                                widget.extensionEpisodeData["name"],
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.bold,
                                                 ),
-                                                // Playback progress
-                                                SliderTheme(
-                                                  data: const SliderThemeData(
-                                                    trackHeight: 2.0,
-                                                    activeTrackColor: MyColors.coolPurple,
-                                                    inactiveTrackColor: MyColors.coolPurple2,
-                                                  ),
-                                                  child: Slider(
-                                                    min: 0,
-                                                    max: player.state.duration.inSeconds.toDouble(),
-                                                    value: player.state.position.inSeconds.toDouble(),
-                                                    onChanged: (value) {
-                                                      _startHideTimer();
-                                                      if (mounted) {
-                                                        setState(() {
-                                                          player.seek(
-                                                            Duration(
-                                                              seconds: value.toInt(),
-                                                            ),
-                                                          );
-                                                        });
-                                                      }
-                                                    },
-                                                  ),
-                                                ),
-                                              ],
+                                              ),
                                             ),
-                                          ),
-                                          Text(
-                                            totalTime,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
-                                    ),
+                                      //middle => play, pause, next episode, past episode. done
+                                      SizedBox(
+                                        width: double.infinity,
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                            0.6,
+                                        child: Center(
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            spacing: 40,
+                                            children: [
+                                              IconButton(
+                                                onPressed: () {
+                                                  _startHideTimer();
+                                                  // Add your back episode logic here
+                                                },
+                                                icon: const Icon(
+                                                  Icons.arrow_back,
+                                                  size: 40,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              IconButton(
+                                                onPressed: () {
+                                                  _startHideTimer();
+                                                  setState(() {
+                                                    player.playOrPause();
+                                                  });
+                                                },
+                                                icon: Icon(
+                                                  player.state.playing
+                                                      ? Icons.pause
+                                                      : Icons.play_arrow,
+                                                  size: 40,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              IconButton(
+                                                onPressed: () {
+                                                  _startHideTimer();
+                                                  // Add your next episode logic here
+                                                },
+                                                icon: const Icon(
+                                                  Icons.arrow_forward,
+                                                  size: 40,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      //bottom => current time, seekbar, duration
+                                      Container(
+                                        alignment: Alignment.bottomCenter,
+                                        width: double.infinity,
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                            0.2,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16.0,
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                currentTime,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: Stack(
+                                                  alignment: Alignment.center,
+                                                  children: [
+                                                    // Buffering progress
+                                                    SliderTheme(
+                                                      data: SliderThemeData(
+                                                        trackHeight: 2.0,
+                                                        thumbShape:
+                                                            SliderComponentShape
+                                                                .noThumb,
+                                                        overlayShape:
+                                                            SliderComponentShape
+                                                                .noOverlay,
+                                                        activeTrackColor: Colors
+                                                            .white
+                                                            .withOpacity(0.3),
+                                                        inactiveTrackColor: Colors
+                                                            .white
+                                                            .withOpacity(0.1),
+                                                      ),
+                                                      child: Slider(
+                                                        min: 0,
+                                                        max:
+                                                            player
+                                                                .state
+                                                                .duration
+                                                                .inSeconds
+                                                                .toDouble(),
+                                                        value:
+                                                            player
+                                                                .state
+                                                                .buffer
+                                                                .inSeconds
+                                                                .toDouble(),
+                                                        onChanged: null,
+                                                      ),
+                                                    ),
+                                                    // Playback progress
+                                                    SliderTheme(
+                                                      data: const SliderThemeData(
+                                                        trackHeight: 2.0,
+                                                        activeTrackColor:
+                                                            MyColors.coolPurple,
+                                                        inactiveTrackColor:
+                                                            MyColors.coolPurple2,
+                                                      ),
+                                                      child: Slider(
+                                                        min: 0,
+                                                        max:
+                                                            player
+                                                                .state
+                                                                .duration
+                                                                .inSeconds
+                                                                .toDouble(),
+                                                        value:
+                                                            player
+                                                                .state
+                                                                .position
+                                                                .inSeconds
+                                                                .toDouble(),
+                                                        onChanged: (value) {
+                                                          _startHideTimer();
+                                                          if (mounted) {
+                                                            setState(() {
+                                                              player.seek(
+                                                                Duration(
+                                                                  seconds:
+                                                                      value
+                                                                          .toInt(),
+                                                                ),
+                                                              );
+                                                            });
+                                                          }
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Text(
+                                                totalTime,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
-                              ),
-                            ],
-                          )
-                        : const SizedBox(),
-                  ),
-                ],
-              ),
-            );
-          },
+                              )
+                              : const SizedBox(),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
