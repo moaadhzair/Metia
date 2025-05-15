@@ -206,128 +206,129 @@ class _PlayerPageState extends State<PlayerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Video(
-            controller: controller,
-            aspectRatio: 16.0 / 9.0,
-            controls: (state) {
-              return GestureDetector(
-                onDoubleTapDown: (details) {
-                  _lastTapPosition = details.globalPosition;
-                },
-                onDoubleTap: () {
-                  if (_lastTapPosition == null) return;
-
-                  final screenWidth = MediaQuery.of(context).size.width;
-                  final isLeftSide = _lastTapPosition!.dx < screenWidth / 2;
-
-                  final now = DateTime.now();
-                  if (_lastDoubleTapTime != null &&
-                      now.difference(_lastDoubleTapTime!).inSeconds <= 1) {
+      body: Center(
+        child: Video(
+          controller: controller,
+          aspectRatio: 16.0 / 9.0,
+          controls: (state) {
+            return GestureDetector(
+              onDoubleTapDown: (details) {
+                _lastTapPosition = details.globalPosition;
+              },
+              onDoubleTap: () {
+                if (_lastTapPosition == null) return;
+      
+                final screenWidth = MediaQuery.of(context).size.width;
+                final isLeftSide = _lastTapPosition!.dx < screenWidth / 2;
+      
+                final now = DateTime.now();
+                if (_lastDoubleTapTime != null &&
+                    now.difference(_lastDoubleTapTime!).inSeconds <= 1) {
+                  setState(() {
+                    _seekSeconds += isLeftSide ? -10 : 10;
+                  });
+                } else {
+                  setState(() {
+                    _seekSeconds = isLeftSide ? -10 : 10;
+                  });
+                }
+                _lastDoubleTapTime = now;
+      
+                player.seek(player.state.position + Duration(seconds: isLeftSide ? -10 : 10));
+      
+                setState(() {
+                  _showSeekDisplay = true;
+                });
+      
+                // If controls are visible, reset the hide timer
+                if (_showControls) {
+                  _startHideTimer();
+                }
+      
+                _seekDisplayTimer?.cancel();
+                _seekDisplayTimer = Timer(const Duration(seconds: 2), () {
+                  if (mounted) {
                     setState(() {
-                      _seekSeconds += isLeftSide ? -10 : 10;
+                      _showSeekDisplay = false;
                     });
-                  } else {
-                    setState(() {
-                      _seekSeconds = isLeftSide ? -10 : 10;
+                    // Reset the seek seconds after the fade animation is complete
+                    Future.delayed(const Duration(milliseconds: 300), () {
+                      if (mounted) {
+                        setState(() {
+                          _seekSeconds = 0;
+                        });
+                      }
                     });
                   }
-                  _lastDoubleTapTime = now;
-
-                  player.seek(player.state.position + Duration(seconds: isLeftSide ? -10 : 10));
-
-                  setState(() {
-                    _showSeekDisplay = true;
-                  });
-
-                  // If controls are visible, reset the hide timer
+                });
+              },
+              onTap: () {
+                setState(() {
+                  _showControls = !_showControls;
                   if (_showControls) {
                     _startHideTimer();
+                  } else {
+                    _hideTimer?.cancel();
                   }
-
-                  _seekDisplayTimer?.cancel();
-                  _seekDisplayTimer = Timer(const Duration(seconds: 2), () {
-                    if (mounted) {
-                      setState(() {
-                        _showSeekDisplay = false;
-                      });
-                      // Reset the seek seconds after the fade animation is complete
-                      Future.delayed(const Duration(milliseconds: 300), () {
-                        if (mounted) {
-                          setState(() {
-                            _seekSeconds = 0;
-                          });
-                        }
-                      });
-                    }
-                  });
-                },
-                onTap: () {
-                  setState(() {
-                    _showControls = !_showControls;
-                    if (_showControls) {
-                      _startHideTimer();
-                    } else {
-                      _hideTimer?.cancel();
-                    }
-                  });
-                },
-                child: Stack(
-                  children: [
-                    // This transparent container ensures the GestureDetector covers the full area
-                    Container(
-                      color: Colors.transparent,
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
-                    // Seek indicator with fade animation
-                    Positioned(
-                      left:
-                          _seekSeconds < 0
-                              ? MediaQuery.of(context).size.width * 0.25 -
-                                  50 // Subtract half of approximate container width
-                              : MediaQuery.of(context).size.width * 0.75 -
-                                  50, // Subtract half of approximate container width
-                      top:
-                          MediaQuery.of(context).size.height * 0.5 -
-                          25, // Subtract half of approximate container height
-                      child: AnimatedOpacity(
-                        opacity: _showSeekDisplay ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 300),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '${_seekSeconds > 0 ? "+" : ""}${_seekSeconds}s',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
+                });
+              },
+              child: Stack(
+                children: [
+                  // This transparent container ensures the GestureDetector covers the full area
+                  Container(
+                    color: Colors.transparent,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
+                  // Seek indicator with fade animation
+                  Positioned(
+                    left:
+                        _seekSeconds < 0
+                            ? MediaQuery.of(context).size.width * 0.25 -
+                                50 // Subtract half of approximate container width
+                            : MediaQuery.of(context).size.width * 0.75 -
+                                50, // Subtract half of approximate container width
+                    top:
+                        MediaQuery.of(context).size.height * 0.5 -
+                        25, // Subtract half of approximate container height
+                    child: AnimatedOpacity(
+                      opacity: _showSeekDisplay ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 300),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${_seekSeconds > 0 ? "+" : ""}${_seekSeconds}s',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      transitionBuilder: (Widget child, Animation<double> animation) {
-                        return FadeTransition(opacity: animation, child: child);
-                      },
-                      child:
-                          _showControls
-                              ? Stack(
-                                key: const ValueKey<String>('controls'),
-                                children: [
-                                  Container(
-                                    color: Colors.black.withOpacity(0.5),
-                                    width: double.infinity,
-                                    height: double.infinity,
-                                  ),
-                                  Column(
+                  ),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    transitionBuilder: (Widget child, Animation<double> animation) {
+                      return FadeTransition(opacity: animation, child: child);
+                    },
+                    child:
+                        _showControls
+                            ? Stack(
+                              key: const ValueKey<String>('controls'),
+                              children: [
+                                Container(
+                                  color: Colors.black.withOpacity(0.5),
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                                  child: Column(
                                     children: [
                                       //top  => back icon, title. done
                                       Container(
@@ -380,7 +381,7 @@ class _PlayerPageState extends State<PlayerPage> {
                                                   size: 40,
                                                   color:
                                                       episodeNumber == 1
-                                                          ? MyColors.unselectedColor
+                                                          ? const Color.fromARGB(255, 51, 50, 51)
                                                           : Colors.white,
                                                 ),
                                               ),
@@ -413,7 +414,7 @@ class _PlayerPageState extends State<PlayerPage> {
                                                   size: 40,
                                                   color:
                                                       episodeNumber == episodeCount
-                                                          ? MyColors.unselectedColor
+                                                          ? const Color.fromARGB(255, 51, 50, 51)
                                                           : Colors.white,
                                                 ),
                                               ),
@@ -511,15 +512,15 @@ class _PlayerPageState extends State<PlayerPage> {
                                       ),
                                     ],
                                   ),
-                                ],
-                              )
-                              : const SizedBox(),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                                ),
+                              ],
+                            )
+                            : const SizedBox(),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
