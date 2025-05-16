@@ -168,10 +168,15 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download Latest IPA from Release
+      - name: Get Version
+        id: get_version
         run: |
           VERSION=$(cat pubspec.yaml | grep "version:" | cut -d'+' -f1 | cut -d' ' -f2)
-          curl -L -o metia.ipa "https://github.com/moaadhzair/Metia/releases/download/v$VERSION/metia.ipa"
+          echo "version=$VERSION" >> $GITHUB_ENV
+
+      - name: Download Latest IPA from Release
+        run: |
+          curl -L -o metia.ipa "https://github.com/moaadhzair/Metia/releases/download/v${{ env.version }}/metia.ipa"
 
       - name: Get IPA File Size
         id: get_size
@@ -186,14 +191,17 @@ jobs:
           const path = "SyncingStuff/app.json";
           let data = JSON.parse(fs.readFileSync(path, "utf8"));
 
-          const newDate = new Date().toISOString(); // Get current date
-          //data.apps[0].version = "v${{ steps.get_version.outputs.version }}";
-          //data.apps[0].downloadURL = "https://github.com/moaadhzair/Metia/releases/download/v${{ steps.get_version.outputs.version }}/metia.ipa"; // Set new date
-          data.apps[0].size = parseInt(process.env.size); // Set file size
-          data.apps[0].versionDate = newDate; // Set new date
+          const newDate = new Date().toISOString();
+          data.apps[0].version = "v${process.env.version}";
+          data.apps[0].downloadURL = "https://github.com/moaadhzair/Metia/releases/download/v${process.env.version}/metia.ipa";
+          data.apps[0].size = parseInt(process.env.size);
+          data.apps[0].versionDate = newDate;
 
           fs.writeFileSync(path, JSON.stringify(data, null, 2));
           '
+        env:
+          version: ${{ env.version }}
+          size: ${{ env.size }}
 
       - name: Commit and Push Changes
         run: |
