@@ -192,8 +192,8 @@ jobs:
           let data = JSON.parse(fs.readFileSync(path, "utf8"));
 
           const newDate = new Date().toISOString();
-          data.apps[0].version = "v${process.env.version}";
-          data.apps[0].downloadURL = "https://github.com/moaadhzair/Metia/releases/download/v${process.env.version}/metia.ipa";
+          data.apps[0].version = "v" + process.env.version;
+          data.apps[0].downloadURL = "https://github.com/moaadhzair/Metia/releases/download/v" + process.env.version + "/metia.ipa";
           data.apps[0].size = parseInt(process.env.size);
           data.apps[0].versionDate = newDate;
 
