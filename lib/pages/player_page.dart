@@ -4,6 +4,7 @@ import 'package:media_kit/media_kit.dart'; // Provides [Player], [Media], [Playl
 import 'package:media_kit_video/media_kit_video.dart'; // Provides [VideoController] & [Video] etc.
 
 import 'package:flutter/services.dart';
+import 'package:metia/api/anilist_search.dart';
 import 'package:metia/api/extension.dart';
 import 'dart:async';
 
@@ -61,6 +62,8 @@ class _PlayerPageState extends State<PlayerPage> {
   DateTime? _lastDoubleTapTime;
   Offset? _lastTapPosition;
 
+  bool firstTime = true;
+
   String _formatDuration(Duration duration, {bool forceHours = false}) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     String twoDigitHours = twoDigits(duration.inHours);
@@ -76,7 +79,7 @@ class _PlayerPageState extends State<PlayerPage> {
 
   void _startHideTimer() {
     _hideTimer?.cancel();
-    _hideTimer = Timer(const Duration(milliseconds: 2700), () {
+    _hideTimer = Timer(const Duration(seconds: 5), () {
       // Change this line
       if (mounted) {
         setState(() {
@@ -108,12 +111,21 @@ class _PlayerPageState extends State<PlayerPage> {
         orElse: () => providers.first, // If no dub found, take highest quality
       );
 
+      AnilistApi.updateAnimeTracking(
+        mediaId: anilistData["media"]["id"],
+        progress: episodeNumber,
+        status: anilistData["media"]["episodes"] == episodeNumber ? "COMPLETED" : "CURRENT",
+      );
+
       extensionEpisodeData = episodeList[episodeNumber];
       extensionStreamData = value;
       anilistData;
       episodeNumber++;
 
+      
+
       player.open(Media(preferedProvider["m3u8"])).then((value) {
+        firstTime = true;
         _startHideTimer();
       });
     });
@@ -147,6 +159,7 @@ class _PlayerPageState extends State<PlayerPage> {
       episodeNumber--;
 
       player.open(Media(preferedProvider["m3u8"])).then((value) {
+        firstTime = true;
         _startHideTimer();
       });
     });
@@ -174,7 +187,23 @@ class _PlayerPageState extends State<PlayerPage> {
     });
 
     // Listen to position changes
+    firstTime = true;
     player.stream.position.listen((position) {
+      // Check if episode is near completion (2 minutes left)
+      if (player.state.duration.inSeconds != 0) {
+        if (position.inSeconds >= player.state.duration.inSeconds - 120) {
+          // Update Anilist tracking for next episode
+          if (firstTime) {
+            firstTime = false;
+            AnilistApi.updateAnimeTracking(
+              mediaId: anilistData["media"]["id"],
+              progress: episodeNumber,
+              status: anilistData["media"]["episodes"] == episodeNumber ? "COMPLETED" : "CURRENT",
+            );
+          }
+        }
+      }
+
       if (mounted) {
         setState(() {
           currentTime = _formatDuration(position, forceHours: hasHours);
@@ -217,10 +246,10 @@ class _PlayerPageState extends State<PlayerPage> {
               },
               onDoubleTap: () {
                 if (_lastTapPosition == null) return;
-      
+
                 final screenWidth = MediaQuery.of(context).size.width;
                 final isLeftSide = _lastTapPosition!.dx < screenWidth / 2;
-      
+
                 final now = DateTime.now();
                 if (_lastDoubleTapTime != null &&
                     now.difference(_lastDoubleTapTime!).inSeconds <= 1) {
@@ -233,18 +262,18 @@ class _PlayerPageState extends State<PlayerPage> {
                   });
                 }
                 _lastDoubleTapTime = now;
-      
+
                 player.seek(player.state.position + Duration(seconds: isLeftSide ? -10 : 10));
-      
+
                 setState(() {
                   _showSeekDisplay = true;
                 });
-      
+
                 // If controls are visible, reset the hide timer
                 if (_showControls) {
                   _startHideTimer();
                 }
-      
+
                 _seekDisplayTimer?.cancel();
                 _seekDisplayTimer = Timer(const Duration(seconds: 2), () {
                   if (mounted) {

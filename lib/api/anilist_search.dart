@@ -8,10 +8,57 @@ import 'package:metia/tools.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AnilistApi {
-  static Future<Map<String, dynamic>> fetchUserAnimeList(
-    int userId,
-    bool signedIn,
-  ) async {
+
+
+  static Future<void> updateAnimeTracking({
+    required int mediaId,
+    String? status, // e.g., "CURRENT", "COMPLETED"
+    int? progress, // e.g., number of episodes watched
+    double? score, // e.g., 8.5
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? accessToken = prefs.getString('auth_key');
+
+
+    const String url = 'https://graphql.anilist.co';
+
+    const String mutation = r'''
+    mutation($mediaId: Int, $status: MediaListStatus, $progress: Int, $score: Float) {
+      SaveMediaListEntry(mediaId: $mediaId, status: $status, progress: $progress, score: $score) {
+        id
+        status
+        progress
+        score
+      }
+    }
+  ''';
+
+    final Map<String, dynamic> variables = {
+      'mediaId': mediaId,
+      if (status != null) 'status': status,
+      if (progress != null) 'progress': progress,
+      if (score != null) 'score': score,
+    };
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $accessToken'},
+      body: jsonEncode({'query': mutation, 'variables': variables}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['errors'] != null) {
+        print('AniList API Error: ${data['errors']}');
+      } else {
+        print('Tracking updated: ${data['data']['SaveMediaListEntry']}');
+      }
+    } else {
+      print('HTTP Error ${response.statusCode}: ${response.body}');
+    }
+  }
+
+  static Future<Map<String, dynamic>> fetchUserAnimeList(int userId, bool signedIn) async {
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
 
@@ -74,11 +121,7 @@ query (\$type: MediaType!, \$userId: Int!) {
     });
 
     try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: headers,
-        body: body,
-      );
+      final response = await http.post(Uri.parse(url), headers: headers, body: body);
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -91,10 +134,7 @@ query (\$type: MediaType!, \$userId: Int!) {
     }
   }
 
-  static Future<List<AnimeState>> fetchAnimeListofID(
-    int userId,
-    bool signedIn,
-  ) async {
+  static Future<List<AnimeState>> fetchAnimeListofID(int userId, bool signedIn) async {
     //final defaultSearch = await Setting.getdefaultSearch();
     final result = await fetchUserAnimeList(userId, signedIn);
     //Tools.Toast(context, );
@@ -127,9 +167,7 @@ query (\$type: MediaType!, \$userId: Int!) {
       if (state.state == "WATCHING") {
         for (var data in state.data) {
           if (data["media"]["nextAiringEpisode"] != null) {
-            int episode = int.parse(
-              data["media"]["nextAiringEpisode"]["episode"].toString(),
-            );
+            int episode = int.parse(data["media"]["nextAiringEpisode"]["episode"].toString());
             int progress = int.parse(data["progress"].toString());
             if (episode - 1 > progress) {
               //animes.add(AnimeState("NEW EPISODE", [data]));
@@ -163,10 +201,7 @@ query (\$type: MediaType!, \$userId: Int!) {
 
   static Future<Map<String, dynamic>> searchAnime(String animeName) async {
     const url = 'https://graphql.anilist.co';
-    const headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    };
+    const headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
 
     final body = jsonEncode({
       "query": """
@@ -191,11 +226,7 @@ query (\$type: MediaType!, \$userId: Int!) {
       "variables": {"search": animeName},
     });
 
-    final response = await http.post(
-      Uri.parse(url),
-      headers: headers,
-      body: body,
-    );
+    final response = await http.post(Uri.parse(url), headers: headers, body: body);
     print("a request to the graphql has been made!!!!");
 
     if (response.statusCode == 200) {
