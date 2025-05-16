@@ -25,8 +25,10 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
   final AppLinks _appLinks = AppLinks();
+  final ScrollController _scrollController = ScrollController();
+  late TabController _tabController;
 
   bool _isPopupMenuOpen = false; // Track whether the popup menu is open
   double _blurOpacity = 0.0; // Track the opacity of the blur effect
@@ -44,6 +46,22 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _initDeepLinking();
     _fetchAnimeLibrary(false);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void _updateTabController() {
+    if (_animeLibrary != null) {
+      _tabController = TabController(length: _animeLibrary!.length, vsync: this);
+      _tabController.addListener(() {
+        setState(() {}); // Trigger rebuild when tab changes
+      });
+    }
   }
 
   Future<String> fetchAniListAccessToken(String authorizationCode) async {
@@ -146,6 +164,7 @@ class _HomePageState extends State<HomePage> {
           tabs[i] = "${tabs[i].split('(')[0]} (${itemCounts[i]})";
         }
         _loading = false;
+        _updateTabController();
       });
     } catch (e) {
       setState(() {
@@ -306,30 +325,44 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     tabs.isNotEmpty
                         ? TabBar(
-                          overlayColor: WidgetStateProperty.all(Colors.transparent),
-                          indicatorColor: MyColors.appbarTextColor,
-                          isScrollable: true,
-                          tabAlignment: TabAlignment.start,
-                          labelColor: MyColors.appbarTextColor,
-                          unselectedLabelColor: MyColors.unselectedColor,
-                          tabs:
-                              tabs.map((String tabName) {
-                                return Tab(
-                                  child: Text(
-                                    tabName,
-                                    style: TextStyle(
-                                      color:
-                                          tabName.startsWith("NEW EPISODE")
-                                              ? Colors
-                                                  .orange // Set color to orange for "NEW EPISODE"
-                                              : null,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
+                            controller: _tabController,
+                            overlayColor: WidgetStateProperty.all(Colors.transparent),
+                            indicator: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: _animeLibrary != null
+                                      ? (_animeLibrary![_tabController.index].state == "NEW EPISODE"
+                                          ? Colors.orange
+                                          : _animeLibrary![_tabController.index].state == "WATCHING"
+                                              ? Colors.green
+                                              : MyColors.appbarTextColor)
+                                      : MyColors.appbarTextColor,
+                                  width: 3,
+                                ),
+                              ),
+                            ),
+                            isScrollable: true,
+                            tabAlignment: TabAlignment.start,
+                            labelColor: MyColors.appbarTextColor,
+                            unselectedLabelColor: MyColors.unselectedColor,
+                            tabs:
+                                tabs.map((String tabName) {
+                                  return Tab(
+                                    child: Text(
+                                      tabName,
+                                      style: TextStyle(
+                                        color:
+                                            tabName.startsWith("NEW EPISODE")
+                                                ? Colors
+                                                    .orange // Set color to orange for "NEW EPISODE"
+                                                : tabName.startsWith("WATCHING") ? Colors.green : null,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  ),
-                                );
-                              }).toList(),
-                        )
+                                  );
+                                }).toList(),
+                          )
                         : const SizedBox(),
 
                     PreferredSize(
@@ -391,89 +424,91 @@ class _HomePageState extends State<HomePage> {
                     )
                     : _animeLibrary!.isNotEmpty
                     ? TabBarView(
-                      children:
-                          _animeLibrary!.map((AnimeState state) {
-                            return Platform.isIOS
-                                ? CupertinoTheme(
-                                  data: const CupertinoThemeData(
-                                    primaryColor: MyColors.appbarTextColor,
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
-                                    child: CustomScrollView(
-                                      //physics: AlwaysScrollableScrollPhysics(),
-                                      slivers: [
-                                        CupertinoSliverRefreshControl(
-                                          onRefresh: () async {
-                                            await _fetchAnimeLibrary(true);
-                                          },
-                                        ),
-                                        SliverGrid(
+                        controller: _tabController,
+                        children:
+                            _animeLibrary!.map((AnimeState state) {
+                              return Platform.isIOS
+                                  ? CupertinoTheme(
+                                    data: const CupertinoThemeData(
+                                      primaryColor: MyColors.appbarTextColor,
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
+                                      child: CustomScrollView(
+                                        //physics: AlwaysScrollableScrollPhysics(),
+                                        slivers: [
+                                          CupertinoSliverRefreshControl(
+                                            onRefresh: () async {
+                                              await _fetchAnimeLibrary(true);
+                                            },
+                                          ),
+                                          SliverGrid(
+                                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                              crossAxisCount: Tools.getResponsiveCrossAxisVal(
+                                                MediaQuery.of(context).size.width,
+                                                itemWidth: 460 / 4,
+                                              ),
+                                              mainAxisExtent: state.state == "NEW EPISODE" ? 260 : 245,
+                                              crossAxisSpacing: 10,
+                                              mainAxisSpacing: 10,
+                                              childAspectRatio: 0.7,
+                                            ),
+                                            delegate: SliverChildBuilderDelegate((context, index) {
+                                              return AnimeCard(
+                                                index: index,
+                                                tabName: state.state,
+                                                data: state.data[index],
+                                              );
+                                            }, childCount: state.data.length),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                  : RefreshIndicator.adaptive(
+                                    backgroundColor: MyColors.backgroundColor,
+                                    strokeWidth: 3,
+                                    color: MyColors.appbarTextColor,
+                                    onRefresh: () async {
+                                      print("object");
+                                      await _fetchAnimeLibrary(true);
+                                      print("object2");
+                                    },
+                                    child: ScrollConfiguration(
+                                      behavior: ScrollConfiguration.of(context).copyWith(
+                                        dragDevices: {
+                                          PointerDeviceKind.touch,
+                                          PointerDeviceKind.mouse,
+                                        },
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
+                                        child: GridView.builder(
+                                          controller: _scrollController,
+                                          cacheExtent: 500,
                                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                             crossAxisCount: Tools.getResponsiveCrossAxisVal(
                                               MediaQuery.of(context).size.width,
                                               itemWidth: 460 / 4,
                                             ),
-                                            mainAxisExtent: 270,
+                                            mainAxisExtent: state.state == "NEW EPISODE" ? 260 : 245,
                                             crossAxisSpacing: 10,
                                             mainAxisSpacing: 10,
                                             childAspectRatio: 0.7,
                                           ),
-                                          delegate: SliverChildBuilderDelegate((context, index) {
+                                          itemCount: state.data.length,
+                                          itemBuilder: (context, index) {
                                             return AnimeCard(
                                               index: index,
                                               tabName: state.state,
                                               data: state.data[index],
                                             );
-                                          }, childCount: state.data.length),
+                                          },
                                         ),
-                                      ],
-                                    ),
-                                  ),
-                                )
-                                : RefreshIndicator.adaptive(
-                                  backgroundColor: MyColors.backgroundColor,
-                                  strokeWidth: 3,
-                                  color: MyColors.appbarTextColor,
-                                  onRefresh: () async {
-                                    print("object");
-                                    await _fetchAnimeLibrary(true);
-                                    print("object2");
-                                  },
-                                  child: ScrollConfiguration(
-                                    behavior: ScrollConfiguration.of(context).copyWith(
-                                      dragDevices: {
-                                        PointerDeviceKind.touch,
-                                        PointerDeviceKind.mouse,
-                                      },
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
-                                      child: GridView.builder(
-                                        cacheExtent: 500,
-                                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: Tools.getResponsiveCrossAxisVal(
-                                            MediaQuery.of(context).size.width,
-                                            itemWidth: 460 / 4,
-                                          ),
-                                          mainAxisExtent: 270,
-                                          crossAxisSpacing: 10,
-                                          mainAxisSpacing: 10,
-                                          childAspectRatio: 0.7,
-                                        ),
-                                        itemCount: state.data.length,
-                                        itemBuilder: (context, index) {
-                                          return AnimeCard(
-                                            index: index,
-                                            tabName: state.state,
-                                            data: state.data[index],
-                                          );
-                                        },
                                       ),
                                     ),
-                                  ),
-                                );
-                          }).toList(),
+                                  );
+                            }).toList(),
                     )
                     : Center(
                       child: Text(

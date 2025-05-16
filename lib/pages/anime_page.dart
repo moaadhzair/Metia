@@ -454,18 +454,14 @@ class _AnimePageState extends State<AnimePage> {
                               ),
                               const SizedBox(width: 10),
                               Expanded(
-                                child: SizedBox(
-                                  height: 24, // Fixed height for the text
-                                  child: Marquee(
-                                    text: clossestAnime == null ? " " : clossestAnime["title"],
-                                    style: const TextStyle(
-                                      color: MyColors.appbarTextColor,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    scrollAxis: Axis.horizontal,
-                                    blankSpace: 50.0,
+                                child: Text(
+                                  clossestAnime == null ? " " : clossestAnime["title"],
+                                  style: const TextStyle(
+                                    color: MyColors.appbarTextColor,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
                                   ),
+                                  maxLines: 2,
                                 ),
                               ),
                               const SizedBox(width: 10),
@@ -705,29 +701,132 @@ class _AnimePageState extends State<AnimePage> {
                             padding: const EdgeInsets.only(bottom: 12),
                             child: TextButton.icon(
                               style: TextButton.styleFrom(
-                                padding: const EdgeInsets.only(
+                                /*padding: const EdgeInsets.only(
                                   top: 16,
                                   left: 16,
                                   right: 16,
                                   bottom: 16,
-                                ),
+                                ),*/
                                 foregroundColor: MyColors.coolGreen,
                                 shape: RoundedRectangleBorder(
                                   side: const BorderSide(color: MyColors.coolGreen),
-                                  borderRadius: BorderRadius.circular(100),
+                                  borderRadius: BorderRadius.circular(50),
                                 ),
                               ),
                               label: Text(
-                                widget.animeData["progress"] == 0
-                                    ? "START WATCHING "
-                                    : "CONTINUE EPISODE ${widget.animeData["progress"] + 1}",
+                                widget.animeData["media"]["episodes"] != null
+                                    ? widget.animeData["media"]["episodes"] ==
+                                            widget.animeData["progress"]
+                                        ? "FINISHED"
+                                        : "CONTINUE EPISODE ${widget.animeData["progress"] + 1}"
+                                    : "NULL",
                                 style: const TextStyle(
                                   color: MyColors.coolGreen,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              onPressed: () {},
-                              icon: const Icon(Icons.play_arrow_outlined, size: 20),
+                              icon:
+                                  widget.animeData["media"]["episodes"] != null &&
+                                          widget.animeData["media"]["episodes"] !=
+                                              widget.animeData["progress"]
+                                      ? const Icon(Icons.play_arrow_outlined, size: 20)
+                                      : const SizedBox(),
+                              onPressed: () async {
+                                showModalBottomSheet(
+                                  backgroundColor: MyColors.backgroundColor,
+
+                                  context: context,
+                                  builder: (context) {
+                                    return Container(
+                                      child: FutureBuilder(
+                                        future: currentExtension?.getStreamData(
+                                          EpisodeList[widget.animeData["progress"]]["id"],
+                                        ),
+                                        builder: (context, snapshot) {
+                                          return snapshot.hasData
+                                              ? Container(
+                                                padding: const EdgeInsets.all(12),
+                                                child: ListView.separated(
+                                                  separatorBuilder: (context, index) {
+                                                    return const SizedBox(height: 12);
+                                                  },
+                                                  itemCount: snapshot.data!.length,
+                                                  itemBuilder: (context, index) {
+                                                    return GestureDetector(
+                                                      onTap: () {
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder:
+                                                                (context) => PlayerPage(
+                                                                  episodeList: EpisodeList,
+                                                                  currentExtension:
+                                                                      currentExtension,
+                                                                  episodeCount: EpisodeList.length,
+                                                                  extensionEpisodeData:
+                                                                      EpisodeList[widget
+                                                                          .animeData["progress"]],
+                                                                  episodeNumber:
+                                                                      widget.animeData["progress"] +
+                                                                      1,
+                                                                  extensionStreamData:
+                                                                      snapshot.data?[index],
+                                                                  anilistData: widget.animeData,
+                                                                ),
+                                                          ),
+                                                        );
+                                                      },
+                                                      child: Container(
+                                                        decoration: BoxDecoration(
+                                                          color: MyColors.coolPurple2,
+                                                          borderRadius: BorderRadius.circular(12),
+                                                        ),
+                                                        width: double.infinity,
+                                                        height: 60,
+                                                        padding: const EdgeInsets.all(12),
+                                                        child: Center(
+                                                          child: Text(
+                                                            "${snapshot.data?[index]["provider"]} - ${snapshot.data?[index]["sub"] ? "Sub" : "Dub"}",
+                                                            style: const TextStyle(
+                                                              color: MyColors.appbarTextColor,
+                                                              fontWeight: FontWeight.w600,
+                                                              fontSize: 16.5,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              )
+                                              : const SizedBox(
+                                                height: double.infinity,
+                                                width: double.infinity,
+                                                child: Center(
+                                                  child: CircularProgressIndicator(
+                                                    color: MyColors.coolPurple,
+                                                  ),
+                                                ),
+                                              );
+                                        },
+                                      ),
+                                    );
+                                  },
+                                );
+
+                                /*currentExtension?.getStreamData(
+                                        EpisodeList[index]["id"],
+                                      ).then((value) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => PlayerPage(
+                                              StreamData: value,
+                                            ),
+                                          ),
+                                        );
+                                      });*/
+                              },
                             ),
                           ),
                         ),
@@ -952,11 +1051,11 @@ class AnimeEpisode extends StatelessWidget {
           color: current ? const Color(0xFF3c3243) : MyColors.coolPurple2,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Opacity(
-          opacity: seen ? 0.5 : 1,
-          child: Stack(
-            children: [
-              Padding(
+        child: Stack(
+          children: [
+            Opacity(
+              opacity: seen ? 0.45 : 1,
+              child: Padding(
                 padding: const EdgeInsets.all(4),
                 child: Row(
                   children: [
@@ -971,7 +1070,7 @@ class AnimeEpisode extends StatelessWidget {
                               return Container();
                             },
                             imageUrl: episodeData["episode"]["cover"],
-                            fit: BoxFit.cover, // This will crop and fill the width
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
@@ -1032,30 +1131,39 @@ class AnimeEpisode extends StatelessWidget {
                   ],
                 ),
               ),
-              Align(
-                alignment: Alignment.bottomLeft,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: current ? const Color(0xFF3c3243) : MyColors.coolPurple2,
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(12),
-                      bottomLeft: Radius.circular(12),
-                    ),
+            ),
+            if (seen)
+              const Positioned(
+                left: 4,
+                child: SizedBox(
+                  height: 100,
+                  width: 177.78, // This is 100 * (16/9) to match the AspectRatio
+                  child: Center(child: Icon(Icons.check, size: 60, color: Colors.white)),
+                ),
+              ),
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: current ? const Color(0xFF3c3243) : MyColors.coolPurple2,
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
                   ),
-                  padding: const EdgeInsets.only(left: 15, right: 15),
-                  child: Text(
-                    "${index + 1}",
-                    style: const TextStyle(
-                      letterSpacing: 2,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                      fontSize: 18,
-                    ),
+                ),
+                padding: const EdgeInsets.only(left: 15, right: 15),
+                child: Text(
+                  "${index + 1}",
+                  style: const TextStyle(
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                    fontSize: 18,
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

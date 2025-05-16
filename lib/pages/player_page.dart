@@ -64,6 +64,8 @@ class _PlayerPageState extends State<PlayerPage> {
 
   bool firstTime = true;
 
+  bool _isPlaying = true;
+
   String _formatDuration(Duration duration, {bool forceHours = false}) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     String twoDigitHours = twoDigits(duration.inHours);
@@ -121,8 +123,6 @@ class _PlayerPageState extends State<PlayerPage> {
       extensionStreamData = value;
       anilistData;
       episodeNumber++;
-
-      
 
       player.open(Media(preferedProvider["m3u8"])).then((value) {
         firstTime = true;
@@ -186,6 +186,15 @@ class _PlayerPageState extends State<PlayerPage> {
       }
     });
 
+    // Listen to player state changes for play/pause
+    player.stream.playing.listen((playing) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = playing;
+        });
+      }
+    });
+
     // Listen to position changes
     firstTime = true;
     player.stream.position.listen((position) {
@@ -211,9 +220,15 @@ class _PlayerPageState extends State<PlayerPage> {
       }
     });
 
-    player.open(Media(extensionStreamData["m3u8"])).then((value) {
+    initPlayer();
+  }
+
+  Future<void> initPlayer() async {
+    player.open(Media(extensionStreamData["m3u8"]), play: true).then((value) {
       _startHideTimer();
     });
+
+    await player.seek(Duration.zero);
   }
 
   @override
@@ -416,10 +431,11 @@ class _PlayerPageState extends State<PlayerPage> {
                                               ),
                                               IconButton(
                                                 onPressed: () {
-                                                  _startHideTimer();
-                                                  setState(() {
-                                                    player.playOrPause();
-                                                  });
+                                                  if (player.state.playing) {
+                                                    player.pause();
+                                                  } else {
+                                                    player.play();
+                                                  }
                                                 },
                                                 icon: Icon(
                                                   player.state.playing
