@@ -248,30 +248,6 @@ class _HomePageState extends State<HomePage> {
                           ),
                           const PopupMenuDivider(height: 10),
                           PopupMenuItem<String>(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => SettingsPage()),
-                              );
-                            },
-                            height: 35,
-                            child: const Row(
-                              children: [
-                                Icon(Icons.settings, size: 30, color: MyColors.unselectedColor),
-                                SizedBox(width: 10),
-                                Text(
-                                  "Settings",
-                                  style: TextStyle(
-                                    color: MyColors.unselectedColor,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const PopupMenuDivider(height: 10),
-                          PopupMenuItem<String>(
                             onTap: () async {
                               final prefs = await SharedPreferences.getInstance();
                               final authCode = prefs.getString('auth_key');
