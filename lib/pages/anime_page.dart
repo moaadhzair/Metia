@@ -911,7 +911,7 @@ class _AnimePageState extends State<AnimePage> {
                                           return Container(
                                             child: FutureBuilder(
                                               future: currentExtension?.getStreamData(
-                                                EpisodeList[index]["id"],
+                                                EpisodeList[episodeIndex]["id"],
                                               ),
                                               builder: (context, snapshot) {
                                                 return snapshot.hasData
@@ -1001,7 +1001,7 @@ class _AnimePageState extends State<AnimePage> {
                                       });*/
                                     },
                                     episodeData: {
-                                      "episode": EpisodeList[index],
+                                      "episode": EpisodeList[episodeIndex],
                                     }, // make it a map of neccesary data that the each extension paases in
                                   ),
                                 );
