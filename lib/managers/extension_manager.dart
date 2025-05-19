@@ -45,6 +45,7 @@ class ExtensionManager {
       for (var extension in decoded) {
         extensions.add(
           Extension(
+            anilistPreferedTitle: extension["anilistPreferedTitle"],
             streamDataApi: extension["streamDataApi"],
             searchApi: extension["searchApi"],
             episodeListApi: extension["episodeListApi"],
@@ -133,6 +134,7 @@ class ExtensionManager {
     try {
       final Map<String, dynamic> decoded = jsonDecode(currentExtensionJson);
       return Extension(
+        anilistPreferedTitle: decoded["anilistPreferedTitle"],
         streamDataApi: decoded["streamDataApi"],
         searchApi: decoded["searchApi"],
         episodeListApi: decoded["episodeListApi"],

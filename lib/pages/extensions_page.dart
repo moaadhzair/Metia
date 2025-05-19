@@ -42,6 +42,7 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
         padding: const EdgeInsets.only(bottom: 12),
         child: ExtensionTile(
           extension: Extension(
+            anilistPreferedTitle: removedItem.anilistPreferedTitle,
             streamDataApi: removedItem.streamDataApi,
             searchApi: removedItem.searchApi,
             episodeListApi: removedItem.episodeListApi,
@@ -121,6 +122,7 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
                         padding: const EdgeInsets.only(bottom: 12),
                         child: ExtensionTile(
                           extension: Extension(
+                            anilistPreferedTitle: ext.anilistPreferedTitle,
                             streamDataApi: ext.streamDataApi,
                             searchApi: ext.searchApi,
                             episodeListApi: ext.episodeListApi,
@@ -243,6 +245,7 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
                           // Add the extension
                           await _extensionManager.addExtension(
                             Extension(
+                              anilistPreferedTitle: jsonData["anilistPreferedTitle"],
                               streamDataApi: jsonData["streamDataApi"],
                               searchApi: jsonData["searchApi"],
                               episodeListApi: jsonData["episodeListApi"],
@@ -306,6 +309,7 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
     if (!json.containsKey('streamDataApi')) return false;
     if (!json.containsKey('searchApi')) return false;
     if (!json.containsKey('episodeListApi')) return false;
+    if (!json.containsKey('anilistPreferedTitle')) return false;
 
     return true;
   }
@@ -401,6 +405,7 @@ class ExtensionTile extends StatelessWidget {
                   child:
                       ExtensionManager().isMainExtension(
                             Extension(
+                              anilistPreferedTitle: extension.anilistPreferedTitle,
                               streamDataApi: extension.streamDataApi,
                               searchApi: extension.searchApi,
                               episodeListApi: extension.episodeListApi,

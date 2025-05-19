@@ -468,10 +468,13 @@ class _AnimePageState extends State<AnimePage> {
                               GestureDetector(
                                 onTap: () {
                                   final title =
-                                      widget.animeData["media"]["title"]["english"] ??
-                                      widget.animeData["media"]["title"]["romaji"] ??
-                                      widget.animeData["media"]["title"]["native"] ??
-                                      "";
+                                      currentExtension?.anilistPreferedTitle.toLowerCase() ==
+                                              "english"
+                                          ? widget.animeData["media"]["title"]["english"]
+                                          : currentExtension?.anilistPreferedTitle.toLowerCase() ==
+                                              "romaji"
+                                          ? widget.animeData["media"]["title"]["romaji"]
+                                          : "";
 
                                   _searchController.text = title;
                                   setState(() {

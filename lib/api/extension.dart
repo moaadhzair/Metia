@@ -13,6 +13,7 @@ class Extension {
   final String episodeListApi;
   final String searchApi;
   final String streamDataApi;
+  final String anilistPreferedTitle;
 
   Extension({
     required this.streamDataApi,
@@ -24,10 +25,12 @@ class Extension {
     required this.id,
     required this.episodeListApi,
     required this.searchApi,
+    required this.anilistPreferedTitle,
   });
 
   Map<String, dynamic> toMap() {
     return {
+      'anilistPreferedTitle' : anilistPreferedTitle,
       'streamDataApi': streamDataApi,
       'searchApi': searchApi,
       'episodeListApi': episodeListApi,
