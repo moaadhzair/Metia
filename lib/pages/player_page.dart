@@ -224,7 +224,7 @@ class _PlayerPageState extends State<PlayerPage> {
   }
 
   Future<void> initPlayer() async {
-    player.open(Media(extensionStreamData["m3u8"]), play: true).then((value) {
+    player.open(Media(extensionStreamData["m3u8"] ?? extensionStreamData["link"],  httpHeaders: {"referer" : extensionStreamData["referer"] ?? ""}), play: true).then((value) {
       _startHideTimer();
     });
 
