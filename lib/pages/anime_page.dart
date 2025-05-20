@@ -30,6 +30,9 @@ class _AnimePageState extends State<AnimePage> {
 
   dynamic clossestAnime;
 
+
+  String extensionAnimeTitle = "";
+
   bool _isCollapsed = false;
   int itemCount = 0;
   int firstTabCount = 99;
@@ -76,6 +79,7 @@ class _AnimePageState extends State<AnimePage> {
     try {
       final searchResults = await currentExtension!.search(title);
       if (searchResults.isEmpty) return;
+      extensionAnimeTitle = searchResults[0]["title"] ?? "";
 
       // Find the best match
       Map<dynamic, dynamic>? bestMatch;
@@ -520,6 +524,7 @@ class _AnimePageState extends State<AnimePage> {
                                                     setState(() {
                                                       _searchQuery = _searchController.text;
                                                     });
+                                                    FocusScope.of(context).unfocus();
                                                   },
                                                   icon: const Icon(
                                                     Icons.search,
@@ -615,6 +620,10 @@ class _AnimePageState extends State<AnimePage> {
                                                           print(
                                                             "Updated matching anime: ${anime["title"]} for key: $key",
                                                           );
+
+                                                          
+                                                            extensionAnimeTitle = anime["title"] ?? "";
+                                                        
 
                                                           EpisodeList =
                                                               await currentExtension
@@ -901,6 +910,7 @@ class _AnimePageState extends State<AnimePage> {
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 7),
                                   child: AnimeEpisode(
+                                    title: extensionAnimeTitle,
                                     current: widget.animeData["progress"] == episodeIndex,
                                     animeData: widget.animeData,
                                     seen: widget.animeData["progress"] > episodeIndex,
@@ -1034,6 +1044,7 @@ class AnimeEpisode extends StatelessWidget {
     required this.index,
     required this.animeData,
     required this.current,
+    required this.title,
   });
 
   final void Function(TapUpDetails)? onClicked;
@@ -1042,6 +1053,7 @@ class AnimeEpisode extends StatelessWidget {
   final int index;
   final dynamic animeData;
   final bool current;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
@@ -1090,10 +1102,7 @@ class AnimeEpisode extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  animeData["media"]["title"]["english"] ??
-                                      animeData["media"]["title"]["romaji"] ??
-                                      animeData["media"]["title"]["native"] ??
-                                      "Unknown Title",
+                                  title,
                                   style: const TextStyle(
                                     color: MyColors.unselectedColor,
                                     fontSize: 14,
