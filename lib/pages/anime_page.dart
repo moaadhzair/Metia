@@ -48,6 +48,7 @@ class _AnimePageState extends State<AnimePage> {
   String currentAnime = "";
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
+  bool _isTitleTwoLines = false;
 
   Future<void> _findAndSaveMatchingAnime() async {
     if (currentExtension == null) return;
@@ -270,6 +271,8 @@ class _AnimePageState extends State<AnimePage> {
         widget.animeData["media"]["title"]["native"] ??
         "Unknown Title";
 
+    final double dynamicHeight = _isTitleTwoLines ? 210 : 190;
+
     return Scaffold(
       floatingActionButton:
           _isCollapsed
@@ -305,19 +308,21 @@ class _AnimePageState extends State<AnimePage> {
                   handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
                   sliver: SliverSafeArea(
                     sliver: SliverAppBar(
+                      toolbarHeight: kToolbarHeight,
                       floating: false,
                       backgroundColor: MyColors.backgroundColor,
                       foregroundColor: MyColors.appbarTextColor,
-                      stretch: true,
                       pinned: true,
+                      forceElevated: true,
+                      elevation: 0,
                       title: AnimatedOpacity(
                         opacity: _isCollapsed ? 1.0 : 0.0,
                         duration: const Duration(milliseconds: 150),
                         child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
                       ),
-                      expandedHeight: (MediaQuery.of(context).size.height) * 0.8,
+                      expandedHeight: (MediaQuery.of(context).size.height) * 0.8 + dynamicHeight,
                       bottom: PreferredSize(
-                        preferredSize: const Size.fromHeight(210),
+                        preferredSize: Size.fromHeight(dynamicHeight),
                         child: Container(
                           color: MyColors.backgroundColor,
                           child: Padding(
@@ -454,14 +459,22 @@ class _AnimePageState extends State<AnimePage> {
                                     ),
                                     const SizedBox(width: 10),
                                     Expanded(
-                                      child: Text(
-                                        clossestAnime == null ? " " : clossestAnime["title"],
+                                      child: TwoLineDetectingText(
+                                        maxLines: 2,
+                                        text: clossestAnime == null ? " " : clossestAnime["title"],
                                         style: const TextStyle(
                                           color: MyColors.appbarTextColor,
                                           fontSize: 16,
                                           fontWeight: FontWeight.w500,
                                         ),
-                                        maxLines: 2,
+                                        onOverflowChanged: (isTwoLines) {
+                                          if (_isTitleTwoLines != isTwoLines) {
+                                            setState(() {
+                                              print("changed");
+                                              _isTitleTwoLines = isTwoLines;
+                                            });
+                                          }
+                                        },
                                       ),
                                     ),
                                     const SizedBox(width: 10),
@@ -733,12 +746,6 @@ class _AnimePageState extends State<AnimePage> {
                                 Center(
                                   child: TextButton.icon(
                                     style: TextButton.styleFrom(
-                                      /*padding: const EdgeInsets.only(
-                                        top: 16,
-                                        left: 16,
-                                        right: 16,
-                                        bottom: 16,
-                                      ),*/
                                       foregroundColor: MyColors.coolGreen,
                                       shape: RoundedRectangleBorder(
                                         side: const BorderSide(color: MyColors.coolGreen),
@@ -908,12 +915,11 @@ class _AnimePageState extends State<AnimePage> {
                         ),
                       ),
                       flexibleSpace: FlexibleSpaceBar(
-                        collapseMode: CollapseMode.parallax,
-                        stretchModes: const [
-                          StretchMode.zoomBackground,
-                          StretchMode.blurBackground,
-                        ],
-                        background: AnimeCover(animeData: widget.animeData),
+                        collapseMode: CollapseMode.pin,
+                        background: Padding(
+                          padding: const EdgeInsets.only(bottom: 210),
+                          child: AnimeCover(animeData: widget.animeData),
+                        ),
                       ),
                     ),
                   ),
@@ -1025,20 +1031,7 @@ class _AnimePageState extends State<AnimePage> {
                                       );
                                     },
                                   );
-
-                                  /*currentExtension?.getStreamData(
-                                  EpisodeList[index]["id"],
-                                ).then((value) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => PlayerPage(
-                                        StreamData: value,
-                                      ),
-                                    ),
-                                  );
-                                });*/
-                                },
+                                  },
                                 episodeData: {
                                   "episode": EpisodeList[episodeIndex],
                                 }, // make it a map of neccesary data that the each extension paases in
@@ -1315,6 +1308,68 @@ class AnimeCover extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class TwoLineDetectingText extends StatefulWidget {
+  final String text;
+  final TextStyle style;
+  final int maxLines;
+  final void Function(bool)? onOverflowChanged;
+
+  const TwoLineDetectingText({
+    super.key,
+    required this.text,
+    required this.style,
+    this.maxLines = 2,
+    this.onOverflowChanged,
+  });
+
+  @override
+  State<TwoLineDetectingText> createState() => _TwoLineDetectingTextState();
+}
+
+class _TwoLineDetectingTextState extends State<TwoLineDetectingText> {
+  bool? _lastIsTwoLines;
+
+  void _checkLines(double maxWidth) {
+    final TextPainter textPainter = TextPainter(
+      text: TextSpan(text: widget.text, style: widget.style),
+      maxLines: widget.maxLines,
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: maxWidth);
+
+    final bool isTwoLines = textPainter.computeLineMetrics().length > 1;
+    if (_lastIsTwoLines != isTwoLines) {
+      _lastIsTwoLines = isTwoLines;
+      if (widget.onOverflowChanged != null) {
+        widget.onOverflowChanged!(isTwoLines);
+        
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Use the actual available width for the text
+        final double maxWidth = constraints.maxWidth;
+        WidgetsBinding.instance.addPostFrameCallback((_) => _checkLines(maxWidth));
+        return Row(
+          children: [
+            Expanded(
+              child: Text(
+                widget.text,
+                style: widget.style,
+                maxLines: widget.maxLines,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
