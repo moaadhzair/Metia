@@ -23,7 +23,7 @@ class AnimePage extends StatefulWidget {
   State<AnimePage> createState() => _AnimePageState();
 }
 
-class _AnimePageState extends State<AnimePage> {
+class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   late ExtensionManager _localExtensionManager;
   Extension? currentExtension;
@@ -31,6 +31,8 @@ class _AnimePageState extends State<AnimePage> {
   dynamic clossestAnime;
 
   String extensionAnimeTitle = "";
+
+  late TabController _tabController;
 
   bool _isCollapsed = false;
   int itemCount = 0;
@@ -43,14 +45,15 @@ class _AnimePageState extends State<AnimePage> {
   bool _isLoadingExtesnion = true;
   String? _selectedExtension;
   List<dynamic> EpisodeList = [];
-
-  final List<Map<String, dynamic>> _searchResults = [];
+  String foundTitle = "";
 
   String currentAnime = "";
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
 
   Future<void> _findAndSaveMatchingAnime() async {
+    foundTitle = "";
+
     if (currentExtension == null) return;
 
     final prefs = await SharedPreferences.getInstance();
@@ -62,7 +65,9 @@ class _AnimePageState extends State<AnimePage> {
     if (existingMatch != null) {
       try {
         clossestAnime = jsonDecode(existingMatch);
-        setState(() {});
+        setState(() {
+          foundTitle = clossestAnime == null ? " " : clossestAnime["title"];
+        });
         return;
       } catch (e) {
         print("Error parsing existing match: $e");
@@ -70,10 +75,11 @@ class _AnimePageState extends State<AnimePage> {
     }
 
     final title =
-        widget.animeData["media"]["title"]["english"] ??
-        widget.animeData["media"]["title"]["romaji"] ??
-        widget.animeData["media"]["title"]["native"] ??
-        "";
+        currentExtension?.anilistPreferedTitle.toLowerCase() == "english"
+            ? widget.animeData["media"]["title"]["english"]
+            : currentExtension?.anilistPreferedTitle.toLowerCase() == "romaji"
+            ? widget.animeData["media"]["title"]["romaji"]
+            : "";
 
     if (title.isEmpty) return;
 
@@ -181,9 +187,9 @@ class _AnimePageState extends State<AnimePage> {
       }
       print("done?");
 
-      _scrollController.addListener(_scrollListener);
-
-      setState(() {});
+      setState(() {
+        foundTitle = clossestAnime == null ? " " : clossestAnime["title"];
+      });
     } catch (e) {
       print("Error finding matching anime: $e");
     }
@@ -191,9 +197,12 @@ class _AnimePageState extends State<AnimePage> {
 
   @override
   void initState() {
+    _tabController = TabController(length: 0, vsync: this);
+
     super.initState();
     _isLoading = true;
     _localExtensionManager = ExtensionManager();
+    _scrollController.addListener(_scrollListener);
     _localExtensionManager.init().then((value) async {
       await _initializeData();
       currentExtension = _localExtensionManager.getCurrentExtension();
@@ -216,7 +225,6 @@ class _AnimePageState extends State<AnimePage> {
 
     prepareTabBarAndListView();
 
-    _scrollController.addListener(_scrollListener);
     setState(() {
       _isLoading = false;
     });
@@ -254,6 +262,7 @@ class _AnimePageState extends State<AnimePage> {
         labels.add("$start - $end");
       }
     }
+    _tabController = TabController(length: tabCount, vsync: this);
   }
 
   Future<void> _initializeData() async {
@@ -267,7 +276,7 @@ class _AnimePageState extends State<AnimePage> {
 
   void _scrollListener() {
     // Use the expandedHeight of your cover sliver appbar
-    final double expandedHeight = MediaQuery.of(context).size.height * 0.8;
+    final double expandedHeight = MediaQuery.of(context).size.height * 0.5;
     if (_scrollController.hasClients) {
       final shouldBeCollapsed =
           _scrollController.offset > (expandedHeight - kToolbarHeight);
@@ -283,6 +292,7 @@ class _AnimePageState extends State<AnimePage> {
   void dispose() {
     _scrollController.dispose();
     _searchController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -300,555 +310,591 @@ class _AnimePageState extends State<AnimePage> {
               ? _buildFloatingActionButton(scrollController: _scrollController)
               : null,
       backgroundColor: MyColors.backgroundColor,
-      body: DefaultTabController(
-        length: tabCount,
-        child: NestedScrollView(
-          controller: _scrollController,
-          headerSliverBuilder:
-              (context, innerBoxIsScrolled) => [
-                _buildAnimeCoverSliverAppBar(
-                  isCollapsed: _isCollapsed,
-                  title: title,
-                  widget: widget,
+      body: NestedScrollView(
+        controller: _scrollController,
+        headerSliverBuilder:
+            (context, innerBoxIsScrolled) => [
+              _buildAnimeCoverSliverAppBar(
+                isCollapsed: _isCollapsed,
+                title: title,
+                widget: widget,
+              ),
+              SliverOverlapAbsorber(
+                handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                  context,
                 ),
-                SliverOverlapAbsorber(
-                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
-                    context,
-                  ),
-                  sliver: SliverAppBar(
-                    toolbarHeight: 210,
-                    expandedHeight: 210,
-                    collapsedHeight: 210,
-                    pinned: true,
-                    leading: const SizedBox(),
-                    flexibleSpace: FlexibleSpaceBar(
-                      background: Container(
+                sliver: SliverAppBar(
+                  toolbarHeight: 163,
+                  expandedHeight: 163,
+                  collapsedHeight: 163,
+                  pinned: true,
+                  leading: const SizedBox(),
+                  backgroundColor: MyColors.backgroundColor,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: SingleChildScrollView(
+                      child: Container(
                         color: MyColors.backgroundColor,
                         child: Padding(
                           padding: const EdgeInsets.only(
                             top: 12,
                             left: 12,
                             right: 12,
+                            bottom: 12,
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            spacing: 12,
+                            //spacing: 5,
                             children: [
-                              // DropdownMenu (extension picker)
-                              _isLoadingExtesnion
-                                  ? const CircularProgressIndicator()
-                                  : DropdownMenu(
-                                    width: 600,
-                                    enableSearch: false,
-                                    menuStyle: MenuStyle(
-                                      backgroundColor: WidgetStateProperty.all(
-                                        MyColors.backgroundColor,
-                                      ),
-                                    ),
-                                    initialSelection: _selectedExtension,
-                                    onSelected: (value) async {
-                                      if (value != null) {
-                                        setState(() {
-                                          _isLoading = true;
-                                          EpisodeList = [];
-                                          prepareTabBarAndListView();
-                                          _selectedExtension = value;
-                                        });
-                                        _localExtensionManager
-                                            .setCurrentExtension(
-                                              int.parse(value),
-                                            );
-                                        currentExtension =
-                                            _localExtensionManager
-                                                .getCurrentExtension();
-                                        await initEpisodeList();
-                                      }
-                                    },
-                                    label: const Text("Extensions"),
-                                    inputDecorationTheme: InputDecorationTheme(
-                                      labelStyle: const TextStyle(
-                                        color: MyColors.coolPurple,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                      suffixIconColor: MyColors.coolPurple,
-                                      border: OutlineInputBorder(
-                                        borderSide: const BorderSide(
-                                          color: MyColors.coolPurple,
-                                          width: 2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(7),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(
-                                          color: MyColors.coolPurple,
-                                          width: 2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(7),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(
-                                          color: MyColors.coolPurple,
-                                          width: 2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(7),
-                                      ),
-                                      disabledBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(
-                                          color: MyColors.coolPurple,
-                                          width: 2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(7),
-                                      ),
-                                    ),
-                                    textStyle: const TextStyle(
-                                      color: MyColors.unselectedColor,
-                                    ),
-                                    dropdownMenuEntries:
-                                        _localExtensionManager
-                                            .getExtensions()
-                                            .map(
-                                              (extension) => DropdownMenuEntry(
-                                                value: extension.id.toString(),
-                                                label: extension.title,
-                                                trailingIcon:
+                              //extension picker, found title, title picker
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                spacing: 10,
+                                children: [
+                                  // DropdownMenu image (extension picker)
+                                  _isLoadingExtesnion
+                                      ? const CircularProgressIndicator()
+                                      : Row(
+                                        children: [
+                                          PopupMenuButton<String>(
+                                            tooltip: "Select Extension",
+                                            onSelected: (value) async {
+                                              setState(() {
+                                                _isLoading = true;
+                                                EpisodeList = [];
+                                                prepareTabBarAndListView();
+                                                _selectedExtension = value;
+                                              });
+                                              _localExtensionManager
+                                                  .setCurrentExtension(
+                                                    int.parse(value),
+                                                  );
+                                              currentExtension =
+                                                  _localExtensionManager
+                                                      .getCurrentExtension();
+                                              await initEpisodeList();
+                                            },
+                                            itemBuilder:
+                                                (context) =>
                                                     _localExtensionManager
-                                                            .isMainExtension(
-                                                              extension,
-                                                            )
-                                                        ? const Icon(
-                                                          Icons.check,
-                                                          color:
-                                                              MyColors
-                                                                  .coolPurple,
-                                                          size: 20,
+                                                        .getExtensions()
+                                                        .map(
+                                                          (
+                                                            extension,
+                                                          ) => PopupMenuItem<
+                                                            String
+                                                          >(
+                                                            value:
+                                                                extension.id
+                                                                    .toString(),
+                                                            child: Row(
+                                                              children: [
+                                                                SizedBox(
+                                                                  width: 24,
+                                                                  height: 24,
+                                                                  child: ClipRRect(
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                          4,
+                                                                        ),
+                                                                    child: CachedNetworkImage(
+                                                                      imageUrl:
+                                                                          extension
+                                                                              .iconUrl,
+                                                                      fit:
+                                                                          BoxFit
+                                                                              .contain,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(
+                                                                  width: 8,
+                                                                ),
+                                                                Text(
+                                                                  extension
+                                                                      .title,
+                                                                  style: const TextStyle(
+                                                                    color:
+                                                                        MyColors
+                                                                            .unselectedColor,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                  ),
+                                                                ),
+                                                                if (_localExtensionManager
+                                                                    .isMainExtension(
+                                                                      extension,
+                                                                    ))
+                                                                  const Padding(
+                                                                    padding:
+                                                                        EdgeInsets.only(
+                                                                          left:
+                                                                              8.0,
+                                                                        ),
+                                                                    child: Icon(
+                                                                      Icons
+                                                                          .check,
+                                                                      color:
+                                                                          MyColors
+                                                                              .coolPurple,
+                                                                      size: 20,
+                                                                    ),
+                                                                  ),
+                                                              ],
+                                                            ),
+                                                          ),
                                                         )
-                                                        : null,
-                                                leadingIcon: SizedBox(
-                                                  width: 24,
-                                                  height: 24,
+                                                        .toList(),
+                                            child: Column(
+                                              children: [
+                                                SizedBox(
+                                                  width: 32,
+                                                  height: 32,
                                                   child: ClipRRect(
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                           4,
                                                         ),
-                                                    child: CachedNetworkImage(
-                                                      imageUrl:
-                                                          extension.iconUrl,
-                                                      fit: BoxFit.contain,
-                                                    ),
+                                                    child:
+                                                        currentExtension
+                                                                    ?.iconUrl ==
+                                                                null
+                                                            ? const Icon(
+                                                              Icons.extension,
+                                                              color:
+                                                                  MyColors
+                                                                      .coolPurple,
+                                                            )
+                                                            : CachedNetworkImage(
+                                                              imageUrl:
+                                                                  currentExtension
+                                                                      ?.iconUrl ??
+                                                                  "",
+                                                              fit:
+                                                                  BoxFit
+                                                                      .contain,
+                                                            ),
                                                   ),
                                                 ),
-                                                style: ButtonStyle(
-                                                  foregroundColor:
-                                                      WidgetStateProperty.all(
-                                                        MyColors
-                                                            .unselectedColor,
-                                                      ),
+                                                const Icon(
+                                                  Icons.arrow_drop_down,
+                                                  color: MyColors.coolPurple,
                                                 ),
-                                              ),
-                                            )
-                                            .toList(),
-                                  ),
-                              Row(
-                                children: [
-                                  SizedBox(
-                                    height: 24,
-                                    child: AspectRatio(
-                                      aspectRatio: 1,
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(4),
-                                        child: CachedNetworkImage(
-                                          errorWidget: (context, url, error) {
-                                            return Container();
-                                          },
-                                          imageUrl:
-                                              currentExtension?.iconUrl ?? "",
-                                        ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  const Text(
-                                    "Found:",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
+                                  // static "Found:" text
+                                  const Padding(
+                                    padding: EdgeInsets.only(top: 4.0),
                                     child: Text(
-                                      clossestAnime == null
-                                          ? " "
-                                          : clossestAnime["title"],
-                                      maxLines: 2,
-                                      style: const TextStyle(
-                                        color: MyColors.appbarTextColor,
+                                      "Found:",
+                                      style: TextStyle(
+                                        color: Colors.white,
                                         fontSize: 16,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 10),
-                                  GestureDetector(
-                                    onTap: () {
-                                      final title =
-                                          currentExtension?.anilistPreferedTitle
-                                                      .toLowerCase() ==
-                                                  "english"
-                                              ? widget
-                                                  .animeData["media"]["title"]["english"]
-                                              : currentExtension
-                                                      ?.anilistPreferedTitle
-                                                      .toLowerCase() ==
-                                                  "romaji"
-                                              ? widget
-                                                  .animeData["media"]["title"]["romaji"]
-                                              : "";
+                                  //found title
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 4.0),
+                                      child: Text(
+                                        foundTitle,
+                                        maxLines: 2,
+                                        style: const TextStyle(
+                                          color: MyColors.appbarTextColor,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  //wrong anime bottom sheet picker
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4.0),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        final title =
+                                            currentExtension
+                                                        ?.anilistPreferedTitle
+                                                        .toLowerCase() ==
+                                                    "english"
+                                                ? widget
+                                                    .animeData["media"]["title"]["english"]
+                                                : currentExtension
+                                                        ?.anilistPreferedTitle
+                                                        .toLowerCase() ==
+                                                    "romaji"
+                                                ? widget
+                                                    .animeData["media"]["title"]["romaji"]
+                                                : "";
 
-                                      _searchController.text = title;
-                                      setState(() {
-                                        _searchQuery = title;
-                                      });
+                                        _searchController.text = title;
+                                        setState(() {
+                                          _searchQuery = title;
+                                        });
 
-                                      showModalBottomSheet(
-                                        context: context,
-                                        backgroundColor:
-                                            MyColors.backgroundColor,
-                                        builder: (context) {
-                                          return Padding(
-                                            padding: const EdgeInsets.all(16.0),
-                                            child: Column(
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: TextField(
-                                                        controller:
-                                                            _searchController,
-                                                        style: const TextStyle(
-                                                          color: Colors.white,
-                                                        ),
-                                                        onChanged: (value) {
-                                                          setState(() {
-                                                            _searchQuery =
-                                                                value;
-                                                          });
-                                                        },
-                                                        decoration: InputDecoration(
-                                                          hintText: 'Search...',
-                                                          hintStyle:
+                                        showModalBottomSheet(
+                                          context: context,
+                                          backgroundColor:
+                                              MyColors.backgroundColor,
+                                          builder: (context) {
+                                            return Padding(
+                                              padding: const EdgeInsets.all(
+                                                16.0,
+                                              ),
+                                              child: Column(
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: TextField(
+                                                          controller:
+                                                              _searchController,
+                                                          style:
                                                               const TextStyle(
                                                                 color:
-                                                                    Colors.grey,
+                                                                    Colors
+                                                                        .white,
                                                               ),
-                                                          filled: true,
-                                                          fillColor:
-                                                              MyColors
-                                                                  .appbarColor,
-                                                          border: OutlineInputBorder(
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  8,
-                                                                ),
-                                                            borderSide:
-                                                                BorderSide.none,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    IconButton(
-                                                      onPressed: () {
-                                                        setState(() {
-                                                          _searchQuery =
-                                                              _searchController
-                                                                  .text;
-                                                        });
-                                                        FocusScope.of(
-                                                          context,
-                                                        ).unfocus();
-                                                      },
-                                                      icon: const Icon(
-                                                        Icons.search,
-                                                        color: Colors.white,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                const SizedBox(height: 16),
-                                                Expanded(
-                                                  child: FutureBuilder<
-                                                    List<dynamic>
-                                                  >(
-                                                    future:
-                                                        _searchQuery.isEmpty
-                                                            ? null
-                                                            : currentExtension
-                                                                ?.search(
-                                                                  _searchQuery,
-                                                                ),
-                                                    builder: (
-                                                      context,
-                                                      snapshot,
-                                                    ) {
-                                                      if (_searchQuery
-                                                          .isEmpty) {
-                                                        return const Center(
-                                                          child: Text(
-                                                            'Enter a search term',
-                                                            style: TextStyle(
-                                                              color:
-                                                                  Colors.white,
-                                                            ),
-                                                          ),
-                                                        );
-                                                      }
-
-                                                      if (snapshot
-                                                              .connectionState ==
-                                                          ConnectionState
-                                                              .waiting) {
-                                                        return const Center(
-                                                          child: CircularProgressIndicator(
-                                                            color:
-                                                                MyColors
-                                                                    .coolPurple,
-                                                          ),
-                                                        );
-                                                      }
-
-                                                      if (snapshot.hasError) {
-                                                        return Center(
-                                                          child: Text(
-                                                            'Error: ${snapshot.error}',
-                                                            style:
+                                                          onChanged: (value) {
+                                                            setState(() {
+                                                              _searchQuery =
+                                                                  value;
+                                                            });
+                                                          },
+                                                          decoration: InputDecoration(
+                                                            hintText:
+                                                                'Search...',
+                                                            hintStyle:
                                                                 const TextStyle(
                                                                   color:
                                                                       Colors
-                                                                          .white,
+                                                                          .grey,
                                                                 ),
-                                                          ),
-                                                        );
-                                                      }
-
-                                                      final searchResults =
-                                                          snapshot.data
-                                                              ?.map(
-                                                                (item) =>
-                                                                    item
-                                                                        as Map<
-                                                                          String,
-                                                                          dynamic
-                                                                        >,
-                                                              )
-                                                              .toList() ??
-                                                          [];
-
-                                                      return GridView.builder(
-                                                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                                          crossAxisCount:
-                                                              Tools.getResponsiveCrossAxisVal(
-                                                                        MediaQuery.of(
-                                                                          context,
-                                                                        ).size.width,
-                                                                        itemWidth:
-                                                                            460 /
-                                                                            4,
-                                                                      ) >
-                                                                      5
-                                                                  ? 5
-                                                                  : Tools.getResponsiveCrossAxisVal(
-                                                                    MediaQuery.of(
-                                                                      context,
-                                                                    ).size.width,
-                                                                    itemWidth:
-                                                                        460 / 4,
+                                                            filled: true,
+                                                            fillColor:
+                                                                MyColors
+                                                                    .appbarColor,
+                                                            border: OutlineInputBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    8,
                                                                   ),
-                                                          mainAxisExtent: 240,
-                                                          crossAxisSpacing: 10,
-                                                          mainAxisSpacing: 10,
-                                                          childAspectRatio: 0.7,
+                                                              borderSide:
+                                                                  BorderSide
+                                                                      .none,
+                                                            ),
+                                                          ),
                                                         ),
-                                                        itemCount:
-                                                            searchResults
-                                                                .length,
-                                                        itemBuilder: (
-                                                          context,
-                                                          index,
-                                                        ) {
-                                                          final anime =
-                                                              searchResults[index];
-                                                          return AnimeCard2(
-                                                            onTap: (
-                                                              title,
-                                                            ) async {
-                                                              final prefs =
-                                                                  await SharedPreferences.getInstance();
-                                                              final key =
-                                                                  "anime_${widget.animeData["media"]["id"]}_extension_${currentExtension?.id}";
-                                                              // Set loading before closing the sheet
-                                                              setState(() {
-                                                                _isLoading =
-                                                                    true;
-                                                              });
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      IconButton(
+                                                        onPressed: () {
+                                                          setState(() {
+                                                            _searchQuery =
+                                                                _searchController
+                                                                    .text;
+                                                          });
+                                                          FocusScope.of(
+                                                            context,
+                                                          ).unfocus();
+                                                        },
+                                                        icon: const Icon(
+                                                          Icons.search,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 16),
+                                                  Expanded(
+                                                    child: FutureBuilder<
+                                                      List<dynamic>
+                                                    >(
+                                                      future:
+                                                          _searchQuery.isEmpty
+                                                              ? null
+                                                              : currentExtension
+                                                                  ?.search(
+                                                                    _searchQuery,
+                                                                  ),
+                                                      builder: (
+                                                        context,
+                                                        snapshot,
+                                                      ) {
+                                                        if (_searchQuery
+                                                            .isEmpty) {
+                                                          return const Center(
+                                                            child: Text(
+                                                              'Enter a search term',
+                                                              style: TextStyle(
+                                                                color:
+                                                                    Colors
+                                                                        .white,
+                                                              ),
+                                                            ),
+                                                          );
+                                                        }
 
-                                                              // Save the selected anime
-                                                              clossestAnime =
-                                                                  anime;
-                                                              await prefs
-                                                                  .setString(
-                                                                    key,
-                                                                    jsonEncode(
-                                                                      anime,
+                                                        if (snapshot
+                                                                .connectionState ==
+                                                            ConnectionState
+                                                                .waiting) {
+                                                          return const Center(
+                                                            child: CircularProgressIndicator(
+                                                              color:
+                                                                  MyColors
+                                                                      .coolPurple,
+                                                            ),
+                                                          );
+                                                        }
+
+                                                        if (snapshot.hasError) {
+                                                          return Center(
+                                                            child: Text(
+                                                              'Error: ${snapshot.error}',
+                                                              style: const TextStyle(
+                                                                color:
+                                                                    Colors
+                                                                        .white,
+                                                              ),
+                                                            ),
+                                                          );
+                                                        }
+
+                                                        final searchResults =
+                                                            snapshot.data
+                                                                ?.map(
+                                                                  (item) =>
+                                                                      item
+                                                                          as Map<
+                                                                            String,
+                                                                            dynamic
+                                                                          >,
+                                                                )
+                                                                .toList() ??
+                                                            [];
+
+                                                        return GridView.builder(
+                                                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                            crossAxisCount:
+                                                                Tools.getResponsiveCrossAxisVal(
+                                                                          MediaQuery.of(
+                                                                            context,
+                                                                          ).size.width,
+                                                                          itemWidth:
+                                                                              460 /
+                                                                              4,
+                                                                        ) >
+                                                                        5
+                                                                    ? 5
+                                                                    : Tools.getResponsiveCrossAxisVal(
+                                                                      MediaQuery.of(
+                                                                        context,
+                                                                      ).size.width,
+                                                                      itemWidth:
+                                                                          460 /
+                                                                          4,
                                                                     ),
-                                                                  );
-                                                              extensionAnimeTitle =
-                                                                  anime["title"] ??
-                                                                  "";
+                                                            mainAxisExtent: 240,
+                                                            crossAxisSpacing:
+                                                                10,
+                                                            mainAxisSpacing: 10,
+                                                            childAspectRatio:
+                                                                0.7,
+                                                          ),
+                                                          itemCount:
+                                                              searchResults
+                                                                  .length,
+                                                          itemBuilder: (
+                                                            context,
+                                                            index,
+                                                          ) {
+                                                            final anime =
+                                                                searchResults[index];
+                                                            return AnimeCard2(
+                                                              onTap: (
+                                                                title,
+                                                              ) async {
+                                                                final prefs =
+                                                                    await SharedPreferences.getInstance();
+                                                                final key =
+                                                                    "anime_${widget.animeData["media"]["id"]}_extension_${currentExtension?.id}";
+                                                                // Set loading before closing the sheet
+                                                                setState(() {
+                                                                  _isLoading =
+                                                                      true;
+                                                                });
 
-                                                              // Close the bottom sheet
-                                                              Navigator.pop(
-                                                                context,
-                                                              );
-
-                                                              // Fetch episodes after closing the sheet
-                                                              EpisodeList =
-                                                                  await currentExtension
-                                                                      ?.getEpisodeList(
-                                                                        clossestAnime["session"],
-                                                                      ) ??
-                                                                  [];
-                                                              itemCount =
-                                                                  EpisodeList
-                                                                      .length;
-
-                                                              int remaining =
-                                                                  itemCount -
-                                                                  firstTabCount;
-                                                              int otherTabs =
-                                                                  (remaining /
-                                                                          eachItemForTab)
-                                                                      .ceil();
-                                                              tabCount =
-                                                                  1 +
-                                                                  (remaining > 0
-                                                                      ? otherTabs
-                                                                      : 0);
-
-                                                              tabItemCounts =
-                                                                  [];
-                                                              if (itemCount <=
-                                                                  firstTabCount) {
-                                                                tabItemCounts
-                                                                    .add(
-                                                                      itemCount,
+                                                                // Save the selected anime
+                                                                clossestAnime =
+                                                                    anime;
+                                                                await prefs
+                                                                    .setString(
+                                                                      key,
+                                                                      jsonEncode(
+                                                                        anime,
+                                                                      ),
                                                                     );
-                                                              } else {
-                                                                tabItemCounts.add(
-                                                                  firstTabCount,
+                                                                extensionAnimeTitle =
+                                                                    anime["title"] ??
+                                                                    "";
+
+                                                                setState(() {
+                                                                  foundTitle =
+                                                                      clossestAnime ==
+                                                                              null
+                                                                          ? " "
+                                                                          : clossestAnime["title"];
+                                                                });
+
+                                                                // Close the bottom sheet
+                                                                Navigator.pop(
+                                                                  context,
                                                                 );
-                                                                for (
-                                                                  int i = 0;
-                                                                  i < otherTabs;
-                                                                  i++
-                                                                ) {
-                                                                  int start =
-                                                                      firstTabCount +
-                                                                      i *
-                                                                          eachItemForTab +
-                                                                      1;
-                                                                  int end =
-                                                                      start +
-                                                                      eachItemForTab -
-                                                                      1;
-                                                                  if (end >
-                                                                      itemCount)
-                                                                    end =
-                                                                        itemCount;
+
+                                                                // Fetch episodes after closing the sheet
+                                                                EpisodeList =
+                                                                    await currentExtension
+                                                                        ?.getEpisodeList(
+                                                                          clossestAnime["session"],
+                                                                        ) ??
+                                                                    [];
+                                                                itemCount =
+                                                                    EpisodeList
+                                                                        .length;
+
+                                                                int remaining =
+                                                                    itemCount -
+                                                                    firstTabCount;
+                                                                int otherTabs =
+                                                                    (remaining /
+                                                                            eachItemForTab)
+                                                                        .ceil();
+                                                                tabCount =
+                                                                    1 +
+                                                                    (remaining >
+                                                                            0
+                                                                        ? otherTabs
+                                                                        : 0);
+
+                                                                tabItemCounts =
+                                                                    [];
+                                                                if (itemCount <=
+                                                                    firstTabCount) {
                                                                   tabItemCounts
                                                                       .add(
-                                                                        end -
-                                                                            start +
-                                                                            1,
+                                                                        itemCount,
                                                                       );
-                                                                }
-                                                              }
-
-                                                              labels = [];
-                                                              if (itemCount <=
-                                                                  firstTabCount) {
-                                                                labels.add(
-                                                                  "1 - $itemCount",
-                                                                );
-                                                              } else {
-                                                                labels.add(
-                                                                  "1 - $firstTabCount",
-                                                                );
-                                                                for (
-                                                                  int i = 0;
-                                                                  i < otherTabs;
-                                                                  i++
-                                                                ) {
-                                                                  int start =
-                                                                      firstTabCount +
-                                                                      i *
-                                                                          eachItemForTab +
-                                                                      1;
-                                                                  int end =
-                                                                      start +
-                                                                      eachItemForTab -
-                                                                      1;
-                                                                  if (end >
-                                                                      itemCount)
-                                                                    end =
-                                                                        itemCount;
-                                                                  labels.add(
-                                                                    "$start - $end",
+                                                                } else {
+                                                                  tabItemCounts.add(
+                                                                    firstTabCount,
                                                                   );
+                                                                  for (
+                                                                    int i = 0;
+                                                                    i < otherTabs;
+                                                                    i++
+                                                                  ) {
+                                                                    int start =
+                                                                        firstTabCount +
+                                                                        i *
+                                                                            eachItemForTab +
+                                                                        1;
+                                                                    int end =
+                                                                        start +
+                                                                        eachItemForTab -
+                                                                        1;
+                                                                    if (end >
+                                                                        itemCount)
+                                                                      end =
+                                                                          itemCount;
+                                                                    tabItemCounts
+                                                                        .add(
+                                                                          end -
+                                                                              start +
+                                                                              1,
+                                                                        );
+                                                                  }
                                                                 }
-                                                              }
-                                                              print(
-                                                                "finished loading",
-                                                              );
-                                                              // Remove loading and update UI
-                                                              setState(() {
-                                                                _isLoading =
-                                                                    false;
-                                                              });
-                                                            },
-                                                            index: index,
-                                                            title:
-                                                                anime["title"] ??
-                                                                "Unknown Title",
-                                                            imageUrl:
-                                                                anime["poster"] ??
-                                                                "",
-                                                          );
-                                                        },
-                                                      );
-                                                    },
+
+                                                                labels = [];
+                                                                if (itemCount <=
+                                                                    firstTabCount) {
+                                                                  labels.add(
+                                                                    "1 - $itemCount",
+                                                                  );
+                                                                } else {
+                                                                  labels.add(
+                                                                    "1 - $firstTabCount",
+                                                                  );
+                                                                  for (
+                                                                    int i = 0;
+                                                                    i < otherTabs;
+                                                                    i++
+                                                                  ) {
+                                                                    int start =
+                                                                        firstTabCount +
+                                                                        i *
+                                                                            eachItemForTab +
+                                                                        1;
+                                                                    int end =
+                                                                        start +
+                                                                        eachItemForTab -
+                                                                        1;
+                                                                    if (end >
+                                                                        itemCount)
+                                                                      end =
+                                                                          itemCount;
+                                                                    labels.add(
+                                                                      "$start - $end",
+                                                                    );
+                                                                  }
+                                                                }
+                                                                print(
+                                                                  "finished loading",
+                                                                );
+                                                                // Remove loading and update UI
+                                                                setState(() {
+                                                                  _isLoading =
+                                                                      false;
+                                                                });
+                                                              },
+                                                              index: index,
+                                                              title:
+                                                                  anime["title"] ??
+                                                                  "Unknown Title",
+                                                              imageUrl:
+                                                                  anime["poster"] ??
+                                                                  "",
+                                                            );
+                                                          },
+                                                        );
+                                                      },
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    },
-                                    child: const Text(
-                                      "Wrong Anime?",
-                                      style: TextStyle(
-                                        color: MyColors.coolPurple,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        );
+                                      },
+                                      child: const Text(
+                                        "Wrong Anime?",
+                                        style: TextStyle(
+                                          color: MyColors.coolPurple,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
+                              const SizedBox(height: 5),
                               // Start Watching Button
                               Center(
                                 child: TextButton.icon(
@@ -1008,10 +1054,13 @@ class _AnimePageState extends State<AnimePage> {
                                   },
                                 ),
                               ),
+                              const SizedBox(height: 10),
+
+                              //Tab bar builder
                               Builder(
                                 builder: (context) {
                                   final TabController tabController =
-                                      DefaultTabController.of(context);
+                                      _tabController;
                                   return StatefulBuilder(
                                     builder: (context, setState) {
                                       tabController.addListener(() {
@@ -1019,6 +1068,7 @@ class _AnimePageState extends State<AnimePage> {
                                       });
 
                                       return TabBar(
+                                        controller: _tabController,
                                         tabAlignment: TabAlignment.start,
                                         labelPadding: EdgeInsets.zero,
                                         isScrollable: true,
@@ -1074,50 +1124,63 @@ class _AnimePageState extends State<AnimePage> {
                     ),
                   ),
                 ),
-              ],
-          body:
-              _isLoading
-                  ? const Center(
-                    child: CircularProgressIndicator(
-                      color: MyColors.coolPurple,
-                    ),
-                  )
-                  : TabBarView(
-                    children: List.generate(tabCount, (tabIndex) {
-                      int count = tabItemCounts[tabIndex];
-                      int startIndex =
-                          (tabIndex == 0)
-                              ? 0
-                              : firstTabCount + (tabIndex - 1) * eachItemForTab;
-                      return count == 0
-                          ? const Center(
-                            child: Text(
-                              "No Anime Was Found!.",
-                              style: TextStyle(
-                                color: MyColors.appbarTextColor,
-                                fontSize: 30,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          )
-                          : Padding(
-                            padding: const EdgeInsets.only(
-                              left: 12,
-                              right: 12,
-                              top: 12,
-                            ),
-                            child: _buildAnimeEpisodeList(
-                              count: count,
-                              startIndex: startIndex,
-                              extensionAnimeTitle: extensionAnimeTitle,
-                              widget: widget,
-                              currentExtension: currentExtension,
-                              EpisodeList: EpisodeList,
-                            ),
-                          );
-                    }),
+              ),
+            ],
+        body:
+            _isLoading
+                ? const Center(
+                  child: Column(
+                    spacing: 20,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Loading the Anime...",
+                        style: TextStyle(
+                          color: MyColors.appbarTextColor,
+                          fontSize: 30,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      CircularProgressIndicator(color: MyColors.coolPurple),
+                    ],
                   ),
-        ),
+                )
+                : TabBarView(
+                  controller: _tabController,
+                  children: List.generate(tabCount, (tabIndex) {
+                    int count = tabItemCounts[tabIndex];
+                    int startIndex =
+                        (tabIndex == 0)
+                            ? 0
+                            : firstTabCount + (tabIndex - 1) * eachItemForTab;
+                    return count == 0
+                        ? const Center(
+                          child: Text(
+                            "No Anime Was Found!.",
+                            style: TextStyle(
+                              color: MyColors.appbarTextColor,
+                              fontSize: 30,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        )
+                        : Padding(
+                          padding: const EdgeInsets.only(
+                            left: 12,
+                            right: 12,
+                            top: 12,
+                          ),
+                          child: _buildAnimeEpisodeList(
+                            count: count,
+                            startIndex: startIndex,
+                            extensionAnimeTitle: extensionAnimeTitle,
+                            widget: widget,
+                            currentExtension: currentExtension,
+                            EpisodeList: EpisodeList,
+                          ),
+                        );
+                  }),
+                ),
       ),
     );
   }
@@ -1278,7 +1341,7 @@ class _buildAnimeCoverSliverAppBar extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
       ),
-      expandedHeight: (MediaQuery.of(context).size.height) * 0.8,
+      expandedHeight: (MediaQuery.of(context).size.height) * 0.5,
       flexibleSpace: FlexibleSpaceBar(
         collapseMode: CollapseMode.pin,
         background: AnimeCover(animeData: widget.animeData),
@@ -1502,21 +1565,24 @@ class AnimeCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final imageUrl = animeData["media"]["coverImage"]["extraLarge"];
+    final description = processHtml(animeData["media"]["description"]);
+    final List<dynamic> genres = animeData["media"]["genres"];
     final title =
         animeData["media"]["title"]["english"] ??
         animeData["media"]["title"]["romaji"] ??
         animeData["media"]["title"]["native"] ??
         "Unknown Title";
-    final description = processHtml(animeData["media"]["description"]);
-    final List<dynamic> genres = animeData["media"]["genres"];
 
     return Stack(
       fit: StackFit.expand,
       children: [
-        CachedNetworkImage(
-          imageUrl: imageUrl,
-          fit: BoxFit.cover,
-          alignment: Alignment.center,
+        Hero(
+          tag: '${animeData["media"]["id"]}',
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
+          ),
         ),
         Transform.translate(
           offset: const Offset(0, 4),

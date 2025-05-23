@@ -49,13 +49,16 @@ class AnimeCard extends StatelessWidget {
                 clipBehavior: Clip.hardEdge,
                 child: AspectRatio(
                   aspectRatio: 16 / 9,
-                  child: CachedNetworkImage(
-                    imageUrl: data["media"]["coverImage"]["extraLarge"],
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                  child: Hero(
+                    tag: '${data["media"]["id"]}',
+                    child: CachedNetworkImage(
+                      imageUrl: data["media"]["coverImage"]["extraLarge"],
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      errorWidget: (context, url, error) => const Icon(Icons.error),
                     ),
-                    errorWidget: (context, url, error) => const Icon(Icons.error),
                   ),
                 ),
               ),
