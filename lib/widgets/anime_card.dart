@@ -9,7 +9,7 @@ import 'package:metia/tools.dart';
 import 'dart:io';
 import 'package:pasteboard/pasteboard.dart';
 
-class AnimeCard extends StatelessWidget {
+class AnimeCard extends StatefulWidget {
   final String tabName;
   final int index;
   final Map<String, dynamic> data;
@@ -22,17 +22,24 @@ class AnimeCard extends StatelessWidget {
   });
 
   @override
+  State<AnimeCard> createState() => _AnimeCardState();
+}
+
+class _AnimeCardState extends State<AnimeCard> {
+  final double _opacity = 0.0;
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         Tools.Toast(
           context,
-          "${data["media"]["title"]["english"]} in ($tabName)",
+          "${widget.data["media"]["title"]["english"]} in (${widget.tabName})",
         );
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => AnimePage(animeData: data),
+            builder: (context) => AnimePage(animeData: widget.data),
           ),
         );
       },
@@ -50,14 +57,57 @@ class AnimeCard extends StatelessWidget {
                 child: AspectRatio(
                   aspectRatio: 16 / 9,
                   child: Hero(
-                    tag: '${data["media"]["id"]}',
+                    flightShuttleBuilder: (
+                      flightContext,
+                      animation,
+                      flightDirection,
+                      fromHeroContext,
+                      toHeroContext,
+                    ) {
+                      return Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          CachedNetworkImage(
+                            imageUrl:
+                                widget
+                                    .data["media"]["coverImage"]["extraLarge"],
+                            fit: BoxFit.fitWidth,
+                            placeholder:
+                                (context, url) => const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                            errorWidget:
+                                (context, url, error) =>
+                                    const Icon(Icons.error),
+                          ),
+                          Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  MyColors.backgroundColor,
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                    tag: '${widget.data["media"]["id"]}',
                     child: CachedNetworkImage(
-                      imageUrl: data["media"]["coverImage"]["extraLarge"],
+                      imageUrl:
+                          widget.data["media"]["coverImage"]["extraLarge"],
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                      errorWidget: (context, url, error) => const Icon(Icons.error),
+                      placeholder:
+                          (context, url) => const Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                      errorWidget:
+                          (context, url, error) => const Icon(Icons.error),
                     ),
                   ),
                 ),
@@ -67,9 +117,9 @@ class AnimeCard extends StatelessWidget {
             Expanded(
               child: Center(
                 child: Text(
-                  data["media"]["title"]["english"] ??
-                      data["media"]["title"]["romaji"] ??
-                      data["media"]["title"]["native"] ??
+                  widget.data["media"]["title"]["english"] ??
+                      widget.data["media"]["title"]["romaji"] ??
+                      widget.data["media"]["title"]["native"] ??
                       "Unknown Title",
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
@@ -91,22 +141,26 @@ class AnimeCard extends StatelessWidget {
                   text: TextSpan(
                     children: [
                       TextSpan(
-                        text: "${data["progress"]}/${data["media"]["episodes"]?? "??"}",
+                        text:
+                            "${widget.data["progress"]}/${widget.data["media"]["episodes"] ?? "??"}",
                         style: const TextStyle(
                           color: MyColors.appbarTextColor,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      data["media"]["nextAiringEpisode"].toString() != "null" && tabName.startsWith("NEW EPISODE")
+                      widget.data["media"]["nextAiringEpisode"].toString() !=
+                                  "null" &&
+                              widget.tabName.startsWith("NEW EPISODE")
                           ? TextSpan(
-                              text: "\n${data["media"]["nextAiringEpisode"]["episode"]}",
-                              style: const TextStyle(
-                                color: Colors.orange,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            )
+                            text:
+                                "\n${widget.data["media"]["nextAiringEpisode"]["episode"]}",
+                            style: const TextStyle(
+                              color: Colors.orange,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
                           : const TextSpan(),
                     ],
                   ),
@@ -114,13 +168,13 @@ class AnimeCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      data["media"]["averageScore"].toString() == "null"
+                      widget.data["media"]["averageScore"].toString() == "null"
                           ? "0.0"
                           : Tools.insertAt(
-                              data["media"]["averageScore"].toString(),
-                              ".",
-                              1,
-                            ),
+                            widget.data["media"]["averageScore"].toString(),
+                            ".",
+                            1,
+                          ),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,

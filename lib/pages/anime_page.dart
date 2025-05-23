@@ -1544,44 +1544,58 @@ class AnimeEpisode extends StatelessWidget {
   }
 }
 
-class AnimeCover extends StatelessWidget {
+class AnimeCover extends StatefulWidget {
   const AnimeCover({super.key, required this.animeData});
   final dynamic animeData;
+
+  @override
+  State<AnimeCover> createState() => _AnimeCoverState();
+}
+
+class _AnimeCoverState extends State<AnimeCover> {
+  double _opacity = 0.0;
+
   String processHtml(String htmlContent) {
-    // Replace <br> with newlines
     htmlContent = htmlContent.replaceAll(RegExp(r'<br\s*/?>'), '\n');
-
-    // Parse the HTML
     html_dom.Document document = html_parser.parse(htmlContent);
-
-    // Extract and return plain text
     String plainText = document.body?.text.trim() ?? '';
-
-    // Replace multiple newlines with a single newline
     plainText = plainText.replaceAll(RegExp(r'(\n\s*){2,}'), '\n\n');
     return plainText;
   }
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = animeData["media"]["coverImage"]["extraLarge"];
-    final description = processHtml(animeData["media"]["description"]);
-    final List<dynamic> genres = animeData["media"]["genres"];
+    final imageUrl = widget.animeData["media"]["coverImage"]["extraLarge"];
+    final description = processHtml(widget.animeData["media"]["description"]);
+    final List<dynamic> genres = widget.animeData["media"]["genres"];
     final title =
-        animeData["media"]["title"]["english"] ??
-        animeData["media"]["title"]["romaji"] ??
-        animeData["media"]["title"]["native"] ??
+        widget.animeData["media"]["title"]["english"] ??
+        widget.animeData["media"]["title"]["romaji"] ??
+        widget.animeData["media"]["title"]["native"] ??
         "Unknown Title";
 
     return Stack(
       fit: StackFit.expand,
       children: [
         Hero(
-          tag: '${animeData["media"]["id"]}',
+          tag: '${widget.animeData["media"]["id"]}',
           child: CachedNetworkImage(
             imageUrl: imageUrl,
             fit: BoxFit.cover,
             alignment: Alignment.center,
+            // When the image loads, fade in
+            imageBuilder: (context, imageProvider) {
+              if (_opacity == 0.0) {
+                Future.microtask(() {
+                  if (mounted) setState(() => _opacity = 1.0);
+                });
+              }
+              return Image(
+                image: imageProvider,
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
+              );
+            },
           ),
         ),
         Transform.translate(
@@ -1596,78 +1610,86 @@ class AnimeCover extends StatelessWidget {
             ),
           ),
         ),
-        Align(
-          alignment: Alignment.bottomLeft,
-          child: Padding(
-            padding: const EdgeInsets.only(
-              left: 16.0,
-              bottom: 16.0,
-              right: 16.0,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 36,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  genres.join(' • '),
-                  style: const TextStyle(
-                    color: Color(0xFFA9A7A7),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      animeData["media"]["averageScore"].toString() == "null"
-                          ? "0.0"
-                          : Tools.insertAt(
-                            animeData["media"]["averageScore"].toString(),
-                            ".",
-                            1,
-                          ),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.orange,
-                      ),
+        AnimatedOpacity(
+          opacity: _opacity,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeIn,
+
+          child: Align(
+            alignment: Alignment.bottomLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: 16.0,
+                bottom: 16.0,
+                right: 16.0,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w400,
                     ),
-                    const Icon(Icons.star, color: Colors.orange, size: 18),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                const Text(
-                  "Synopsis",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  maxLines: 10,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    height: 1.1,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFFA9A7A7),
+                  const SizedBox(height: 4),
+                  Text(
+                    genres.join(' • '),
+                    style: const TextStyle(
+                      color: Color(0xFFA9A7A7),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.animeData["media"]["averageScore"].toString() ==
+                                "null"
+                            ? "0.0"
+                            : Tools.insertAt(
+                              widget.animeData["media"]["averageScore"]
+                                  .toString(),
+                              ".",
+                              1,
+                            ),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.orange,
+                        ),
+                      ),
+                      const Icon(Icons.star, color: Colors.orange, size: 18),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    "Synopsis",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    maxLines: 10,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      height: 1.1,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFFA9A7A7),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
