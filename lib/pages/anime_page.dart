@@ -40,21 +40,22 @@ class _AnimePageState extends State<AnimePage> {
   List<String> labels = [];
   List<int> tabItemCounts = [];
   bool _isLoading = true;
+  bool _isLoadingExtesnion = true;
   String? _selectedExtension;
   List<dynamic> EpisodeList = [];
-  final bool _isSearchLoading = false;
+
   final List<Map<String, dynamic>> _searchResults = [];
 
   String currentAnime = "";
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
-  bool _isTitleTwoLines = false;
 
   Future<void> _findAndSaveMatchingAnime() async {
     if (currentExtension == null) return;
 
     final prefs = await SharedPreferences.getInstance();
-    final key = "anime_${widget.animeData["media"]["id"]}_extension_id";
+    final key =
+        "anime_${widget.animeData["media"]["id"]}_extension_${currentExtension?.id}";
 
     // Check if we already have a saved match
     final String? existingMatch = prefs.getString(key);
@@ -144,7 +145,9 @@ class _AnimePageState extends State<AnimePage> {
       await prefs.setString(key, jsonEncode(bestMatch));
 
       //here is where we get the episode list
-      EpisodeList = await currentExtension?.getEpisodeList(clossestAnime["session"]) ?? [];
+      EpisodeList =
+          await currentExtension?.getEpisodeList(clossestAnime["session"]) ??
+          [];
       itemCount = EpisodeList.length;
 
       int remaining = itemCount - firstTabCount;
@@ -189,65 +192,85 @@ class _AnimePageState extends State<AnimePage> {
   @override
   void initState() {
     super.initState();
+    _isLoading = true;
     _localExtensionManager = ExtensionManager();
     _localExtensionManager.init().then((value) async {
       await _initializeData();
       currentExtension = _localExtensionManager.getCurrentExtension();
-      if (currentExtension != null) {
-        await _findAndSaveMatchingAnime();
-      }
-
-      EpisodeList = await currentExtension?.getEpisodeList(clossestAnime["session"]) ?? [];
-      itemCount = EpisodeList.length;
-
-      int remaining = itemCount - firstTabCount;
-      int otherTabs = (remaining / eachItemForTab).ceil();
-      tabCount = 1 + (remaining > 0 ? otherTabs : 0);
-
-      tabItemCounts = [];
-      if (itemCount <= firstTabCount) {
-        tabItemCounts.add(itemCount);
-      } else {
-        tabItemCounts.add(firstTabCount);
-        for (int i = 0; i < otherTabs; i++) {
-          int start = firstTabCount + i * eachItemForTab + 1;
-          int end = start + eachItemForTab - 1;
-          if (end > itemCount) end = itemCount;
-          tabItemCounts.add(end - start + 1);
-        }
-      }
-
-      labels = [];
-      if (itemCount <= firstTabCount) {
-        labels.add("1 - $itemCount");
-      } else {
-        labels.add("1 - $firstTabCount");
-        for (int i = 0; i < otherTabs; i++) {
-          int start = firstTabCount + i * eachItemForTab + 1;
-          int end = start + eachItemForTab - 1;
-          if (end > itemCount) end = itemCount;
-          labels.add("$start - $end");
-        }
-      }
-
-      _scrollController.addListener(_scrollListener);
-      setState(() {});
+      await initEpisodeList();
     });
+  }
+
+  Future<void> initEpisodeList() async {
+    if (currentExtension != null) {
+      await _findAndSaveMatchingAnime();
+    }
+
+    if (clossestAnime != null) {
+      EpisodeList = await currentExtension!.getEpisodeList(
+        clossestAnime["session"],
+      );
+    } else {
+      EpisodeList = [];
+    }
+
+    prepareTabBarAndListView();
+
+    _scrollController.addListener(_scrollListener);
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  void prepareTabBarAndListView() {
+    itemCount = EpisodeList.length;
+
+    int remaining = itemCount - firstTabCount;
+    int otherTabs = (remaining / eachItemForTab).ceil();
+    tabCount = 1 + (remaining > 0 ? otherTabs : 0);
+
+    tabItemCounts = [];
+    if (itemCount <= firstTabCount) {
+      tabItemCounts.add(itemCount);
+    } else {
+      tabItemCounts.add(firstTabCount);
+      for (int i = 0; i < otherTabs; i++) {
+        int start = firstTabCount + i * eachItemForTab + 1;
+        int end = start + eachItemForTab - 1;
+        if (end > itemCount) end = itemCount;
+        tabItemCounts.add(end - start + 1);
+      }
+    }
+
+    labels = [];
+    if (itemCount <= firstTabCount) {
+      labels.add("1 - $itemCount");
+    } else {
+      labels.add("1 - $firstTabCount");
+      for (int i = 0; i < otherTabs; i++) {
+        int start = firstTabCount + i * eachItemForTab + 1;
+        int end = start + eachItemForTab - 1;
+        if (end > itemCount) end = itemCount;
+        labels.add("$start - $end");
+      }
+    }
   }
 
   Future<void> _initializeData() async {
     await _localExtensionManager.init();
     final currentExtension = _localExtensionManager.getCurrentExtension();
     setState(() {
-      _isLoading = false;
+      _isLoadingExtesnion = false;
       _selectedExtension = currentExtension?.id.toString();
     });
   }
 
   void _scrollListener() {
-    final collapseOffset = (MediaQuery.of(context).size.height) * 0.9 - kToolbarHeight - 10;
+    // Use the expandedHeight of your cover sliver appbar
+    final double expandedHeight = MediaQuery.of(context).size.height * 0.8;
     if (_scrollController.hasClients) {
-      final shouldBeCollapsed = _scrollController.offset > collapseOffset;
+      final shouldBeCollapsed =
+          _scrollController.offset > (expandedHeight - kToolbarHeight);
       if (_isCollapsed != shouldBeCollapsed) {
         setState(() {
           _isCollapsed = shouldBeCollapsed;
@@ -271,31 +294,10 @@ class _AnimePageState extends State<AnimePage> {
         widget.animeData["media"]["title"]["native"] ??
         "Unknown Title";
 
-    final double dynamicHeight = _isTitleTwoLines ? 210 : 190;
-
     return Scaffold(
       floatingActionButton:
           _isCollapsed
-              ? FloatingActionButton(
-                onPressed: () {
-                  // Example: Scroll to top when pressed
-                  final double sliverAppBarHeight = MediaQuery.of(context).size.height * 0.8;
-                  const double extensionPickerHeight = 56; // Approximate DropdownMenu height
-                  const double buttonHeight = 56; // Approximate button height
-                  const double verticalPadding = 12 + 12 + 12; // top + between + below
-
-                  final double scrollTarget =
-                      sliverAppBarHeight + extensionPickerHeight + buttonHeight + verticalPadding;
-
-                  _scrollController.animateTo(
-                    scrollTarget - 90,
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeOut,
-                  );
-                },
-                backgroundColor: MyColors.coolPurple,
-                child: const Icon(Icons.arrow_upward, size: 30, color: MyColors.coolPurple2),
-              )
+              ? _buildFloatingActionButton(scrollController: _scrollController)
               : null,
       backgroundColor: MyColors.backgroundColor,
       body: DefaultTabController(
@@ -304,749 +306,1024 @@ class _AnimePageState extends State<AnimePage> {
           controller: _scrollController,
           headerSliverBuilder:
               (context, innerBoxIsScrolled) => [
+                _buildAnimeCoverSliverAppBar(
+                  isCollapsed: _isCollapsed,
+                  title: title,
+                  widget: widget,
+                ),
                 SliverOverlapAbsorber(
-                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-                  sliver: SliverSafeArea(
-                    sliver: SliverAppBar(
-                      toolbarHeight: kToolbarHeight,
-                      floating: false,
-                      backgroundColor: MyColors.backgroundColor,
-                      foregroundColor: MyColors.appbarTextColor,
-                      pinned: true,
-                      forceElevated: true,
-                      elevation: 0,
-                      title: AnimatedOpacity(
-                        opacity: _isCollapsed ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 150),
-                        child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      ),
-                      expandedHeight: (MediaQuery.of(context).size.height) * 0.8 + dynamicHeight,
-                      bottom: PreferredSize(
-                        preferredSize: Size.fromHeight(dynamicHeight),
-                        child: Container(
-                          color: MyColors.backgroundColor,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 12, left: 12, right: 12),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              spacing: 12,
-                              children: [
-                                // DropdownMenu (extension picker)
-                                _isLoading
-                                    ? const CircularProgressIndicator()
-                                    : DropdownMenu(
-                                      width: 600,
-                                      enableSearch: false,
-                                      menuStyle: MenuStyle(
-                                        backgroundColor: WidgetStateProperty.all(
-                                          MyColors.backgroundColor,
-                                        ),
+                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                    context,
+                  ),
+                  sliver: SliverAppBar(
+                    toolbarHeight: 210,
+                    expandedHeight: 210,
+                    collapsedHeight: 210,
+                    pinned: true,
+                    leading: const SizedBox(),
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: Container(
+                        color: MyColors.backgroundColor,
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                            top: 12,
+                            left: 12,
+                            right: 12,
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            spacing: 12,
+                            children: [
+                              // DropdownMenu (extension picker)
+                              _isLoadingExtesnion
+                                  ? const CircularProgressIndicator()
+                                  : DropdownMenu(
+                                    width: 600,
+                                    enableSearch: false,
+                                    menuStyle: MenuStyle(
+                                      backgroundColor: WidgetStateProperty.all(
+                                        MyColors.backgroundColor,
                                       ),
-                                      initialSelection: _selectedExtension,
-                                      onSelected: (value) async {
-                                        if (value != null) {
-                                          setState(() {
-                                            _selectedExtension = value;
-                                          });
-                                          _localExtensionManager.setCurrentExtension(
-                                            int.parse(value),
-                                          );
-                                          currentExtension =
-                                              _localExtensionManager.getCurrentExtension();
-                                          await _findAndSaveMatchingAnime();
-                                        }
-                                      },
-                                      label: const Text("Extensions"),
-                                      inputDecorationTheme: InputDecorationTheme(
-                                        labelStyle: const TextStyle(
+                                    ),
+                                    initialSelection: _selectedExtension,
+                                    onSelected: (value) async {
+                                      if (value != null) {
+                                        setState(() {
+                                          _isLoading = true;
+                                          EpisodeList = [];
+                                          prepareTabBarAndListView();
+                                          _selectedExtension = value;
+                                        });
+                                        _localExtensionManager
+                                            .setCurrentExtension(
+                                              int.parse(value),
+                                            );
+                                        currentExtension =
+                                            _localExtensionManager
+                                                .getCurrentExtension();
+                                        await initEpisodeList();
+                                      }
+                                    },
+                                    label: const Text("Extensions"),
+                                    inputDecorationTheme: InputDecorationTheme(
+                                      labelStyle: const TextStyle(
+                                        color: MyColors.coolPurple,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      suffixIconColor: MyColors.coolPurple,
+                                      border: OutlineInputBorder(
+                                        borderSide: const BorderSide(
                                           color: MyColors.coolPurple,
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
+                                          width: 2,
                                         ),
-                                        suffixIconColor: MyColors.coolPurple,
-                                        border: OutlineInputBorder(
-                                          borderSide: const BorderSide(
-                                            color: MyColors.coolPurple,
-                                            width: 2,
-                                          ),
-                                          borderRadius: BorderRadius.circular(7),
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderSide: const BorderSide(
-                                            color: MyColors.coolPurple,
-                                            width: 2,
-                                          ),
-                                          borderRadius: BorderRadius.circular(7),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderSide: const BorderSide(
-                                            color: MyColors.coolPurple,
-                                            width: 2,
-                                          ),
-                                          borderRadius: BorderRadius.circular(7),
-                                        ),
-                                        disabledBorder: OutlineInputBorder(
-                                          borderSide: const BorderSide(
-                                            color: MyColors.coolPurple,
-                                            width: 2,
-                                          ),
-                                          borderRadius: BorderRadius.circular(7),
-                                        ),
+                                        borderRadius: BorderRadius.circular(7),
                                       ),
-                                      textStyle: const TextStyle(color: MyColors.unselectedColor),
-                                      dropdownMenuEntries:
-                                          _localExtensionManager
-                                              .getExtensions()
-                                              .map(
-                                                (extension) => DropdownMenuEntry(
-                                                  value: extension.id.toString(),
-                                                  label: extension.title,
-                                                  trailingIcon:
-                                                      _localExtensionManager.isMainExtension(
-                                                            extension,
-                                                          )
-                                                          ? const Icon(
-                                                            Icons.check,
-                                                            color: MyColors.coolPurple,
-                                                            size: 20,
-                                                          )
-                                                          : null,
-                                                  leadingIcon: SizedBox(
-                                                    width: 24,
-                                                    height: 24,
-                                                    child: ClipRRect(
-                                                      borderRadius: BorderRadius.circular(4),
-                                                      child: CachedNetworkImage(
-                                                        imageUrl: extension.iconUrl,
-                                                        fit: BoxFit.contain,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  style: ButtonStyle(
-                                                    foregroundColor: WidgetStateProperty.all(
-                                                      MyColors.unselectedColor,
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: const BorderSide(
+                                          color: MyColors.coolPurple,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(7),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: const BorderSide(
+                                          color: MyColors.coolPurple,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(7),
+                                      ),
+                                      disabledBorder: OutlineInputBorder(
+                                        borderSide: const BorderSide(
+                                          color: MyColors.coolPurple,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(7),
+                                      ),
+                                    ),
+                                    textStyle: const TextStyle(
+                                      color: MyColors.unselectedColor,
+                                    ),
+                                    dropdownMenuEntries:
+                                        _localExtensionManager
+                                            .getExtensions()
+                                            .map(
+                                              (extension) => DropdownMenuEntry(
+                                                value: extension.id.toString(),
+                                                label: extension.title,
+                                                trailingIcon:
+                                                    _localExtensionManager
+                                                            .isMainExtension(
+                                                              extension,
+                                                            )
+                                                        ? const Icon(
+                                                          Icons.check,
+                                                          color:
+                                                              MyColors
+                                                                  .coolPurple,
+                                                          size: 20,
+                                                        )
+                                                        : null,
+                                                leadingIcon: SizedBox(
+                                                  width: 24,
+                                                  height: 24,
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
+                                                    child: CachedNetworkImage(
+                                                      imageUrl:
+                                                          extension.iconUrl,
+                                                      fit: BoxFit.contain,
                                                     ),
                                                   ),
                                                 ),
-                                              )
-                                              .toList(),
-                                    ),
-                                Row(
-                                  children: [
-                                    SizedBox(
-                                      height: 24,
-                                      child: AspectRatio(
-                                        aspectRatio: 1,
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(4),
-                                          child: CachedNetworkImage(
-                                            errorWidget: (context, url, error) {
-                                              return Container();
-                                            },
-                                            imageUrl: currentExtension?.iconUrl ?? "",
-                                          ),
+                                                style: ButtonStyle(
+                                                  foregroundColor:
+                                                      WidgetStateProperty.all(
+                                                        MyColors
+                                                            .unselectedColor,
+                                                      ),
+                                                ),
+                                              ),
+                                            )
+                                            .toList(),
+                                  ),
+                              Row(
+                                children: [
+                                  SizedBox(
+                                    height: 24,
+                                    child: AspectRatio(
+                                      aspectRatio: 1,
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: CachedNetworkImage(
+                                          errorWidget: (context, url, error) {
+                                            return Container();
+                                          },
+                                          imageUrl:
+                                              currentExtension?.iconUrl ?? "",
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: 10),
-                                    const Text(
-                                      "Found:",
-                                      style: TextStyle(
-                                        color: Colors.white,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Text(
+                                    "Found:",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      clossestAnime == null
+                                          ? " "
+                                          : clossestAnime["title"],
+                                      maxLines: 2,
+                                      style: const TextStyle(
+                                        color: MyColors.appbarTextColor,
                                         fontSize: 16,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: TwoLineDetectingText(
-                                        maxLines: 2,
-                                        text: clossestAnime == null ? " " : clossestAnime["title"],
-                                        style: const TextStyle(
-                                          color: MyColors.appbarTextColor,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                        onOverflowChanged: (isTwoLines) {
-                                          if (_isTitleTwoLines != isTwoLines) {
-                                            setState(() {
-                                              print("changed");
-                                              _isTitleTwoLines = isTwoLines;
-                                            });
-                                          }
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    GestureDetector(
-                                      onTap: () {
-                                        final title =
-                                            currentExtension?.anilistPreferedTitle.toLowerCase() ==
-                                                    "english"
-                                                ? widget.animeData["media"]["title"]["english"]
-                                                : currentExtension?.anilistPreferedTitle
-                                                        .toLowerCase() ==
-                                                    "romaji"
-                                                ? widget.animeData["media"]["title"]["romaji"]
-                                                : "";
+                                  ),
+                                  const SizedBox(width: 10),
+                                  GestureDetector(
+                                    onTap: () {
+                                      final title =
+                                          currentExtension?.anilistPreferedTitle
+                                                      .toLowerCase() ==
+                                                  "english"
+                                              ? widget
+                                                  .animeData["media"]["title"]["english"]
+                                              : currentExtension
+                                                      ?.anilistPreferedTitle
+                                                      .toLowerCase() ==
+                                                  "romaji"
+                                              ? widget
+                                                  .animeData["media"]["title"]["romaji"]
+                                              : "";
 
-                                        _searchController.text = title;
-                                        setState(() {
-                                          _searchQuery = title;
-                                        });
+                                      _searchController.text = title;
+                                      setState(() {
+                                        _searchQuery = title;
+                                      });
 
-                                        showModalBottomSheet(
-                                          context: context,
-                                          backgroundColor: MyColors.backgroundColor,
-                                          builder: (context) {
-                                            return Padding(
-                                              padding: const EdgeInsets.all(16.0),
-                                              child: Column(
-                                                children: [
-                                                  Row(
-                                                    children: [
-                                                      Expanded(
-                                                        child: TextField(
-                                                          controller: _searchController,
-                                                          style: const TextStyle(
-                                                            color: Colors.white,
-                                                          ),
-                                                          onChanged: (value) {
-                                                            setState(() {
-                                                              _searchQuery = value;
-                                                            });
-                                                          },
-                                                          decoration: InputDecoration(
-                                                            hintText: 'Search...',
-                                                            hintStyle: const TextStyle(
-                                                              color: Colors.grey,
-                                                            ),
-                                                            filled: true,
-                                                            fillColor: MyColors.appbarColor,
-                                                            border: OutlineInputBorder(
-                                                              borderRadius: BorderRadius.circular(
-                                                                8,
-                                                              ),
-                                                              borderSide: BorderSide.none,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 8),
-                                                      IconButton(
-                                                        onPressed: () {
-                                                          setState(() {
-                                                            _searchQuery = _searchController.text;
-                                                          });
-                                                          FocusScope.of(context).unfocus();
-                                                        },
-                                                        icon: const Icon(
-                                                          Icons.search,
+                                      showModalBottomSheet(
+                                        context: context,
+                                        backgroundColor:
+                                            MyColors.backgroundColor,
+                                        builder: (context) {
+                                          return Padding(
+                                            padding: const EdgeInsets.all(16.0),
+                                            child: Column(
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: TextField(
+                                                        controller:
+                                                            _searchController,
+                                                        style: const TextStyle(
                                                           color: Colors.white,
                                                         ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 16),
-                                                  Expanded(
-                                                    child: FutureBuilder<List<dynamic>>(
-                                                      future:
-                                                          _searchQuery.isEmpty
-                                                              ? null
-                                                              : currentExtension?.search(
-                                                                _searchQuery,
-                                                              ),
-                                                      builder: (context, snapshot) {
-                                                        if (_searchQuery.isEmpty) {
-                                                          return const Center(
-                                                            child: Text(
-                                                              'Enter a search term',
-                                                              style: TextStyle(color: Colors.white),
-                                                            ),
-                                                          );
-                                                        }
-
-                                                        if (snapshot.connectionState ==
-                                                            ConnectionState.waiting) {
-                                                          return const Center(
-                                                            child: CircularProgressIndicator(
-                                                              color: MyColors.coolPurple,
-                                                            ),
-                                                          );
-                                                        }
-
-                                                        if (snapshot.hasError) {
-                                                          return Center(
-                                                            child: Text(
-                                                              'Error: ${snapshot.error}',
-                                                              style: const TextStyle(
-                                                                color: Colors.white,
-                                                              ),
-                                                            ),
-                                                          );
-                                                        }
-
-                                                        final searchResults =
-                                                            snapshot.data
-                                                                ?.map(
-                                                                  (item) =>
-                                                                      item as Map<String, dynamic>,
-                                                                )
-                                                                .toList() ??
-                                                            [];
-
-                                                        return GridView.builder(
-                                                          gridDelegate:
-                                                              SliverGridDelegateWithFixedCrossAxisCount(
-                                                                crossAxisCount:
-                                                                    Tools.getResponsiveCrossAxisVal(
-                                                                              MediaQuery.of(
-                                                                                context,
-                                                                              ).size.width,
-                                                                              itemWidth: 460 / 4,
-                                                                            ) >
-                                                                            5
-                                                                        ? 5
-                                                                        : Tools.getResponsiveCrossAxisVal(
-                                                                          MediaQuery.of(
-                                                                            context,
-                                                                          ).size.width,
-                                                                          itemWidth: 460 / 4,
-                                                                        ),
-                                                                mainAxisExtent: 240,
-                                                                crossAxisSpacing: 10,
-                                                                mainAxisSpacing: 10,
-                                                                childAspectRatio: 0.7,
-                                                              ),
-                                                          itemCount: searchResults.length,
-                                                          itemBuilder: (context, index) {
-                                                            final anime = searchResults[index];
-                                                            return AnimeCard2(
-                                                              onTap: (title) async {
-                                                                final prefs =
-                                                                    await SharedPreferences.getInstance();
-                                                                final key =
-                                                                    "anime_${widget.animeData["media"]["id"]}_extension_id";
-
-                                                                setState(() {
-                                                                  clossestAnime = anime;
-                                                                });
-
-                                                                await prefs.setString(
-                                                                  key,
-                                                                  jsonEncode(anime),
-                                                                );
-                                                                print(
-                                                                  "Updated matching anime: ${anime["title"]} for key: $key",
-                                                                );
-
-                                                                extensionAnimeTitle =
-                                                                    anime["title"] ?? "";
-
-                                                                EpisodeList =
-                                                                    await currentExtension
-                                                                        ?.getEpisodeList(
-                                                                          clossestAnime["session"],
-                                                                        ) ??
-                                                                    [];
-                                                                itemCount = EpisodeList.length;
-
-                                                                int remaining =
-                                                                    itemCount - firstTabCount;
-                                                                int otherTabs =
-                                                                    (remaining / eachItemForTab)
-                                                                        .ceil();
-                                                                tabCount =
-                                                                    1 +
-                                                                    (remaining > 0 ? otherTabs : 0);
-
-                                                                tabItemCounts = [];
-                                                                if (itemCount <= firstTabCount) {
-                                                                  tabItemCounts.add(itemCount);
-                                                                } else {
-                                                                  tabItemCounts.add(firstTabCount);
-                                                                  for (
-                                                                    int i = 0;
-                                                                    i < otherTabs;
-                                                                    i++
-                                                                  ) {
-                                                                    int start =
-                                                                        firstTabCount +
-                                                                        i * eachItemForTab +
-                                                                        1;
-                                                                    int end =
-                                                                        start + eachItemForTab - 1;
-                                                                    if (end > itemCount)
-                                                                      end = itemCount;
-                                                                    tabItemCounts.add(
-                                                                      end - start + 1,
-                                                                    );
-                                                                  }
-                                                                }
-
-                                                                labels = [];
-                                                                if (itemCount <= firstTabCount) {
-                                                                  labels.add("1 - $itemCount");
-                                                                } else {
-                                                                  labels.add("1 - $firstTabCount");
-                                                                  for (
-                                                                    int i = 0;
-                                                                    i < otherTabs;
-                                                                    i++
-                                                                  ) {
-                                                                    int start =
-                                                                        firstTabCount +
-                                                                        i * eachItemForTab +
-                                                                        1;
-                                                                    int end =
-                                                                        start + eachItemForTab - 1;
-                                                                    if (end > itemCount)
-                                                                      end = itemCount;
-                                                                    labels.add("$start - $end");
-                                                                  }
-                                                                }
-
-                                                                _scrollController.addListener(
-                                                                  _scrollListener,
-                                                                );
-                                                                setState(() {});
-
-                                                                Navigator.pop(
-                                                                  context,
-                                                                ); // Close the modal bottom sheet
-                                                              },
-                                                              index: index,
-                                                              title:
-                                                                  anime["title"] ?? "Unknown Title",
-                                                              imageUrl: anime["poster"] ?? "",
-                                                            );
-                                                          },
-                                                        );
-                                                      },
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                        );
-                                      },
-                                      child: const Text(
-                                        "Wrong Anime?",
-                                        style: TextStyle(
-                                          color: MyColors.coolPurple,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                // Start Watching Button
-                                Center(
-                                  child: TextButton.icon(
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: MyColors.coolGreen,
-                                      shape: RoundedRectangleBorder(
-                                        side: const BorderSide(color: MyColors.coolGreen),
-                                        borderRadius: BorderRadius.circular(50),
-                                      ),
-                                    ),
-                                    label: Text(
-                                      widget.animeData["media"]["episodes"] != null
-                                          ? widget.animeData["media"]["episodes"] ==
-                                                  widget.animeData["progress"]
-                                              ? "FINISHED"
-                                              : "CONTINUE EPISODE ${widget.animeData["progress"] + 1}"
-                                          : "NULL",
-                                      style: const TextStyle(
-                                        color: MyColors.coolGreen,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    icon:
-                                        widget.animeData["media"]["episodes"] != null &&
-                                                widget.animeData["media"]["episodes"] !=
-                                                    widget.animeData["progress"]
-                                            ? const Icon(Icons.play_arrow_outlined, size: 20)
-                                            : const SizedBox(),
-                                    onPressed: () async {
-                                      showModalBottomSheet(
-                                        backgroundColor: MyColors.backgroundColor,
-
-                                        context: context,
-                                        builder: (context) {
-                                          return Container(
-                                            child: FutureBuilder(
-                                              future: currentExtension?.getStreamData(
-                                                EpisodeList[widget.animeData["progress"]]["id"],
-                                              ),
-                                              builder: (context, snapshot) {
-                                                return snapshot.hasData
-                                                    ? Container(
-                                                      padding: const EdgeInsets.all(12),
-                                                      child: ListView.separated(
-                                                        separatorBuilder: (context, index) {
-                                                          return const SizedBox(height: 12);
+                                                        onChanged: (value) {
+                                                          setState(() {
+                                                            _searchQuery =
+                                                                value;
+                                                          });
                                                         },
-                                                        itemCount: snapshot.data!.length,
-                                                        itemBuilder: (context, index) {
-                                                          return GestureDetector(
-                                                            onTap: () {
-                                                              Navigator.push(
-                                                                context,
-                                                                MaterialPageRoute(
-                                                                  builder:
-                                                                      (context) => PlayerPage(
-                                                                        episodeList: EpisodeList,
-                                                                        currentExtension:
-                                                                            currentExtension,
-                                                                        episodeCount:
-                                                                            EpisodeList.length,
-                                                                        extensionEpisodeData:
-                                                                            EpisodeList[widget
-                                                                                .animeData["progress"]],
-                                                                        episodeNumber:
-                                                                            widget
-                                                                                .animeData["progress"] +
-                                                                            1,
-                                                                        extensionStreamData:
-                                                                            snapshot.data?[index],
-                                                                        anilistData:
-                                                                            widget.animeData,
-                                                                      ),
-                                                                ),
-                                                              );
-                                                            },
-                                                            child: Container(
-                                                              decoration: BoxDecoration(
-                                                                color: MyColors.coolPurple2,
-                                                                borderRadius: BorderRadius.circular(
-                                                                  12,
-                                                                ),
+                                                        decoration: InputDecoration(
+                                                          hintText: 'Search...',
+                                                          hintStyle:
+                                                              const TextStyle(
+                                                                color:
+                                                                    Colors.grey,
                                                               ),
-                                                              width: double.infinity,
-                                                              height: 60,
-                                                              padding: const EdgeInsets.all(12),
-                                                              child: Center(
-                                                                child: Text(
-                                                                  "${snapshot.data?[index]["provider"]} - ${snapshot.data?[index]["sub"] ? "Sub" : "Dub"}",
-                                                                  style: const TextStyle(
-                                                                    color: MyColors.appbarTextColor,
-                                                                    fontWeight: FontWeight.w600,
-                                                                    fontSize: 16.5,
-                                                                  ),
+                                                          filled: true,
+                                                          fillColor:
+                                                              MyColors
+                                                                  .appbarColor,
+                                                          border: OutlineInputBorder(
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  8,
                                                                 ),
-                                                              ),
-                                                            ),
-                                                          );
-                                                        },
-                                                      ),
-                                                    )
-                                                    : const SizedBox(
-                                                      height: double.infinity,
-                                                      width: double.infinity,
-                                                      child: Center(
-                                                        child: CircularProgressIndicator(
-                                                          color: MyColors.coolPurple,
+                                                            borderSide:
+                                                                BorderSide.none,
+                                                          ),
                                                         ),
                                                       ),
-                                                    );
-                                              },
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    IconButton(
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          _searchQuery =
+                                                              _searchController
+                                                                  .text;
+                                                        });
+                                                        FocusScope.of(
+                                                          context,
+                                                        ).unfocus();
+                                                      },
+                                                      icon: const Icon(
+                                                        Icons.search,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 16),
+                                                Expanded(
+                                                  child: FutureBuilder<
+                                                    List<dynamic>
+                                                  >(
+                                                    future:
+                                                        _searchQuery.isEmpty
+                                                            ? null
+                                                            : currentExtension
+                                                                ?.search(
+                                                                  _searchQuery,
+                                                                ),
+                                                    builder: (
+                                                      context,
+                                                      snapshot,
+                                                    ) {
+                                                      if (_searchQuery
+                                                          .isEmpty) {
+                                                        return const Center(
+                                                          child: Text(
+                                                            'Enter a search term',
+                                                            style: TextStyle(
+                                                              color:
+                                                                  Colors.white,
+                                                            ),
+                                                          ),
+                                                        );
+                                                      }
+
+                                                      if (snapshot
+                                                              .connectionState ==
+                                                          ConnectionState
+                                                              .waiting) {
+                                                        return const Center(
+                                                          child: CircularProgressIndicator(
+                                                            color:
+                                                                MyColors
+                                                                    .coolPurple,
+                                                          ),
+                                                        );
+                                                      }
+
+                                                      if (snapshot.hasError) {
+                                                        return Center(
+                                                          child: Text(
+                                                            'Error: ${snapshot.error}',
+                                                            style:
+                                                                const TextStyle(
+                                                                  color:
+                                                                      Colors
+                                                                          .white,
+                                                                ),
+                                                          ),
+                                                        );
+                                                      }
+
+                                                      final searchResults =
+                                                          snapshot.data
+                                                              ?.map(
+                                                                (item) =>
+                                                                    item
+                                                                        as Map<
+                                                                          String,
+                                                                          dynamic
+                                                                        >,
+                                                              )
+                                                              .toList() ??
+                                                          [];
+
+                                                      return GridView.builder(
+                                                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                          crossAxisCount:
+                                                              Tools.getResponsiveCrossAxisVal(
+                                                                        MediaQuery.of(
+                                                                          context,
+                                                                        ).size.width,
+                                                                        itemWidth:
+                                                                            460 /
+                                                                            4,
+                                                                      ) >
+                                                                      5
+                                                                  ? 5
+                                                                  : Tools.getResponsiveCrossAxisVal(
+                                                                    MediaQuery.of(
+                                                                      context,
+                                                                    ).size.width,
+                                                                    itemWidth:
+                                                                        460 / 4,
+                                                                  ),
+                                                          mainAxisExtent: 240,
+                                                          crossAxisSpacing: 10,
+                                                          mainAxisSpacing: 10,
+                                                          childAspectRatio: 0.7,
+                                                        ),
+                                                        itemCount:
+                                                            searchResults
+                                                                .length,
+                                                        itemBuilder: (
+                                                          context,
+                                                          index,
+                                                        ) {
+                                                          final anime =
+                                                              searchResults[index];
+                                                          return AnimeCard2(
+                                                            onTap: (
+                                                              title,
+                                                            ) async {
+                                                              final prefs =
+                                                                  await SharedPreferences.getInstance();
+                                                              final key =
+                                                                  "anime_${widget.animeData["media"]["id"]}_extension_${currentExtension?.id}";
+                                                              // Set loading before closing the sheet
+                                                              setState(() {
+                                                                _isLoading =
+                                                                    true;
+                                                              });
+
+                                                              // Save the selected anime
+                                                              clossestAnime =
+                                                                  anime;
+                                                              await prefs
+                                                                  .setString(
+                                                                    key,
+                                                                    jsonEncode(
+                                                                      anime,
+                                                                    ),
+                                                                  );
+                                                              extensionAnimeTitle =
+                                                                  anime["title"] ??
+                                                                  "";
+
+                                                              // Close the bottom sheet
+                                                              Navigator.pop(
+                                                                context,
+                                                              );
+
+                                                              // Fetch episodes after closing the sheet
+                                                              EpisodeList =
+                                                                  await currentExtension
+                                                                      ?.getEpisodeList(
+                                                                        clossestAnime["session"],
+                                                                      ) ??
+                                                                  [];
+                                                              itemCount =
+                                                                  EpisodeList
+                                                                      .length;
+
+                                                              int remaining =
+                                                                  itemCount -
+                                                                  firstTabCount;
+                                                              int otherTabs =
+                                                                  (remaining /
+                                                                          eachItemForTab)
+                                                                      .ceil();
+                                                              tabCount =
+                                                                  1 +
+                                                                  (remaining > 0
+                                                                      ? otherTabs
+                                                                      : 0);
+
+                                                              tabItemCounts =
+                                                                  [];
+                                                              if (itemCount <=
+                                                                  firstTabCount) {
+                                                                tabItemCounts
+                                                                    .add(
+                                                                      itemCount,
+                                                                    );
+                                                              } else {
+                                                                tabItemCounts.add(
+                                                                  firstTabCount,
+                                                                );
+                                                                for (
+                                                                  int i = 0;
+                                                                  i < otherTabs;
+                                                                  i++
+                                                                ) {
+                                                                  int start =
+                                                                      firstTabCount +
+                                                                      i *
+                                                                          eachItemForTab +
+                                                                      1;
+                                                                  int end =
+                                                                      start +
+                                                                      eachItemForTab -
+                                                                      1;
+                                                                  if (end >
+                                                                      itemCount)
+                                                                    end =
+                                                                        itemCount;
+                                                                  tabItemCounts
+                                                                      .add(
+                                                                        end -
+                                                                            start +
+                                                                            1,
+                                                                      );
+                                                                }
+                                                              }
+
+                                                              labels = [];
+                                                              if (itemCount <=
+                                                                  firstTabCount) {
+                                                                labels.add(
+                                                                  "1 - $itemCount",
+                                                                );
+                                                              } else {
+                                                                labels.add(
+                                                                  "1 - $firstTabCount",
+                                                                );
+                                                                for (
+                                                                  int i = 0;
+                                                                  i < otherTabs;
+                                                                  i++
+                                                                ) {
+                                                                  int start =
+                                                                      firstTabCount +
+                                                                      i *
+                                                                          eachItemForTab +
+                                                                      1;
+                                                                  int end =
+                                                                      start +
+                                                                      eachItemForTab -
+                                                                      1;
+                                                                  if (end >
+                                                                      itemCount)
+                                                                    end =
+                                                                        itemCount;
+                                                                  labels.add(
+                                                                    "$start - $end",
+                                                                  );
+                                                                }
+                                                              }
+                                                              print(
+                                                                "finished loading",
+                                                              );
+                                                              // Remove loading and update UI
+                                                              setState(() {
+                                                                _isLoading =
+                                                                    false;
+                                                              });
+                                                            },
+                                                            index: index,
+                                                            title:
+                                                                anime["title"] ??
+                                                                "Unknown Title",
+                                                            imageUrl:
+                                                                anime["poster"] ??
+                                                                "",
+                                                          );
+                                                        },
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           );
                                         },
                                       );
                                     },
+                                    child: const Text(
+                                      "Wrong Anime?",
+                                      style: TextStyle(
+                                        color: MyColors.coolPurple,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                                Builder(
-                                  builder: (context) {
-                                    final TabController tabController = DefaultTabController.of(
-                                      context,
-                                    );
-                                    return StatefulBuilder(
-                                      builder: (context, setState) {
-                                        tabController.addListener(() {
-                                          setState(() {});
-                                        });
+                                ],
+                              ),
+                              // Start Watching Button
+                              Center(
+                                child: TextButton.icon(
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: MyColors.coolGreen,
+                                    shape: RoundedRectangleBorder(
+                                      side: const BorderSide(
+                                        color: MyColors.coolGreen,
+                                      ),
+                                      borderRadius: BorderRadius.circular(50),
+                                    ),
+                                  ),
+                                  label: Text(
+                                    widget.animeData["media"]["episodes"] !=
+                                            null
+                                        ? widget.animeData["media"]["episodes"] ==
+                                                widget.animeData["progress"]
+                                            ? "FINISHED"
+                                            : "CONTINUE EPISODE ${widget.animeData["progress"] + 1}"
+                                        : "NULL",
+                                    style: const TextStyle(
+                                      color: MyColors.coolGreen,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  icon:
+                                      widget.animeData["media"]["episodes"] !=
+                                                  null &&
+                                              widget.animeData["media"]["episodes"] !=
+                                                  widget.animeData["progress"]
+                                          ? const Icon(
+                                            Icons.play_arrow_outlined,
+                                            size: 20,
+                                          )
+                                          : const SizedBox(),
+                                  onPressed: () async {
+                                    showModalBottomSheet(
+                                      backgroundColor: MyColors.backgroundColor,
 
-                                        return TabBar(
-                                          tabAlignment: TabAlignment.start,
-                                          labelPadding: EdgeInsets.zero,
-                                          isScrollable: true,
-                                          indicatorColor: Colors.transparent,
-                                          dividerColor: Colors.transparent,
-                                          tabs: List.generate(labels.length, (i) {
-                                            final bool selected = tabController.index == i;
-                                            return Container(
-                                              margin: const EdgeInsets.symmetric(horizontal: 5),
-                                              padding: const EdgeInsets.symmetric(
-                                                vertical: 6,
-                                                horizontal: 8,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(8),
-                                                color: selected ? Colors.white : Colors.transparent,
-                                                border: Border.all(color: MyColors.coolPurple),
-                                              ),
-                                              child: Center(
-                                                child: Text(
-                                                  labels[i],
-                                                  style: TextStyle(
-                                                    color:
-                                                        selected
-                                                            ? MyColors.coolPurple
-                                                            : const Color(0xFF9A989B),
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          }),
+                                      context: context,
+                                      builder: (context) {
+                                        return Container(
+                                          child: FutureBuilder(
+                                            future: currentExtension?.getStreamData(
+                                              EpisodeList[widget
+                                                  .animeData["progress"]]["id"],
+                                            ),
+                                            builder: (context, snapshot) {
+                                              return snapshot.hasData
+                                                  ? Container(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                          12,
+                                                        ),
+                                                    child: ListView.separated(
+                                                      separatorBuilder: (
+                                                        context,
+                                                        index,
+                                                      ) {
+                                                        return const SizedBox(
+                                                          height: 12,
+                                                        );
+                                                      },
+                                                      itemCount:
+                                                          snapshot.data!.length,
+                                                      itemBuilder: (
+                                                        context,
+                                                        index,
+                                                      ) {
+                                                        return GestureDetector(
+                                                          onTap: () {
+                                                            Navigator.push(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                builder:
+                                                                    (
+                                                                      context,
+                                                                    ) => PlayerPage(
+                                                                      episodeList:
+                                                                          EpisodeList,
+                                                                      currentExtension:
+                                                                          currentExtension,
+                                                                      episodeCount:
+                                                                          EpisodeList
+                                                                              .length,
+                                                                      extensionEpisodeData:
+                                                                          EpisodeList[widget
+                                                                              .animeData["progress"]],
+                                                                      episodeNumber:
+                                                                          widget
+                                                                              .animeData["progress"] +
+                                                                          1,
+                                                                      extensionStreamData:
+                                                                          snapshot
+                                                                              .data?[index],
+                                                                      anilistData:
+                                                                          widget
+                                                                              .animeData,
+                                                                    ),
+                                                              ),
+                                                            );
+                                                          },
+                                                          child: Container(
+                                                            decoration: BoxDecoration(
+                                                              color:
+                                                                  MyColors
+                                                                      .coolPurple2,
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    12,
+                                                                  ),
+                                                            ),
+                                                            width:
+                                                                double.infinity,
+                                                            height: 60,
+                                                            padding:
+                                                                const EdgeInsets.all(
+                                                                  12,
+                                                                ),
+                                                            child: Center(
+                                                              child: Text(
+                                                                "${snapshot.data?[index]["provider"]} - ${snapshot.data?[index]["sub"] ? "Sub" : "Dub"}",
+                                                                style: const TextStyle(
+                                                                  color:
+                                                                      MyColors
+                                                                          .appbarTextColor,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  fontSize:
+                                                                      16.5,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                  )
+                                                  : const SizedBox(
+                                                    height: double.infinity,
+                                                    width: double.infinity,
+                                                    child: Center(
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                            color:
+                                                                MyColors
+                                                                    .coolPurple,
+                                                          ),
+                                                    ),
+                                                  );
+                                            },
+                                          ),
                                         );
                                       },
                                     );
                                   },
                                 ),
-                              ],
-                            ),
+                              ),
+                              Builder(
+                                builder: (context) {
+                                  final TabController tabController =
+                                      DefaultTabController.of(context);
+                                  return StatefulBuilder(
+                                    builder: (context, setState) {
+                                      tabController.addListener(() {
+                                        setState(() {});
+                                      });
+
+                                      return TabBar(
+                                        tabAlignment: TabAlignment.start,
+                                        labelPadding: EdgeInsets.zero,
+                                        isScrollable: true,
+                                        indicatorColor: Colors.transparent,
+                                        dividerColor: Colors.transparent,
+                                        tabs: List.generate(labels.length, (i) {
+                                          final bool selected =
+                                              tabController.index == i;
+                                          return Container(
+                                            margin: const EdgeInsets.symmetric(
+                                              horizontal: 5,
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 6,
+                                              horizontal: 8,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              color:
+                                                  selected
+                                                      ? Colors.white
+                                                      : Colors.transparent,
+                                              border: Border.all(
+                                                color: MyColors.coolPurple,
+                                              ),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                labels[i],
+                                                style: TextStyle(
+                                                  color:
+                                                      selected
+                                                          ? MyColors.coolPurple
+                                                          : const Color(
+                                                            0xFF9A989B,
+                                                          ),
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        }),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
-                      flexibleSpace: FlexibleSpaceBar(
-                        collapseMode: CollapseMode.pin,
-                        background: Padding(
-                          padding: const EdgeInsets.only(bottom: 210),
-                          child: AnimeCover(animeData: widget.animeData),
                         ),
                       ),
                     ),
                   ),
                 ),
               ],
-          body: TabBarView(
-            children: List.generate(tabCount, (tabIndex) {
-              int count = tabItemCounts[tabIndex];
-              int startIndex =
-                  (tabIndex == 0) ? 0 : firstTabCount + (tabIndex - 1) * eachItemForTab;
-              return Padding(
-                padding: const EdgeInsets.only(left: 12, right: 12, top: 12),
-                child: Builder(
-                  builder: (BuildContext context) {
-                    return CustomScrollView(
-                      key: PageStorageKey(tabIndex), // keep scroll position per tab
-                      slivers: [
-                        SliverOverlapInjector(
-                          handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-                        ),
-                        SliverList(
-                          delegate: SliverChildBuilderDelegate((context, index) {
-                            int episodeIndex = startIndex + index;
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 7),
-                              child: AnimeEpisode(
-                                title: extensionAnimeTitle,
-                                current: widget.animeData["progress"] == episodeIndex,
-                                animeData: widget.animeData,
-                                seen: widget.animeData["progress"] > episodeIndex,
-                                index: episodeIndex,
-                                onClicked: (details) async {
-                                  showModalBottomSheet(
-                                    backgroundColor: MyColors.backgroundColor,
+          body:
+              _isLoading
+                  ? const Center(
+                    child: CircularProgressIndicator(
+                      color: MyColors.coolPurple,
+                    ),
+                  )
+                  : TabBarView(
+                    children: List.generate(tabCount, (tabIndex) {
+                      int count = tabItemCounts[tabIndex];
+                      int startIndex =
+                          (tabIndex == 0)
+                              ? 0
+                              : firstTabCount + (tabIndex - 1) * eachItemForTab;
+                      return count == 0
+                          ? const Center(
+                            child: Text(
+                              "No Anime Was Found!.",
+                              style: TextStyle(
+                                color: MyColors.appbarTextColor,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          )
+                          : Padding(
+                            padding: const EdgeInsets.only(
+                              left: 12,
+                              right: 12,
+                              top: 12,
+                            ),
+                            child: _buildAnimeEpisodeList(
+                              count: count,
+                              startIndex: startIndex,
+                              extensionAnimeTitle: extensionAnimeTitle,
+                              widget: widget,
+                              currentExtension: currentExtension,
+                              EpisodeList: EpisodeList,
+                            ),
+                          );
+                    }),
+                  ),
+        ),
+      ),
+    );
+  }
+}
 
-                                    context: context,
-                                    builder: (context) {
-                                      return Container(
-                                        child: FutureBuilder(
-                                          future: currentExtension?.getStreamData(
-                                            EpisodeList[episodeIndex]["id"],
+class _buildAnimeEpisodeList extends StatelessWidget {
+  const _buildAnimeEpisodeList({
+    super.key,
+    required this.count,
+    required this.startIndex,
+    required this.extensionAnimeTitle,
+    required this.widget,
+    required this.currentExtension,
+    required this.EpisodeList,
+  });
+
+  final int count;
+  final int startIndex;
+  final String extensionAnimeTitle;
+  final AnimePage widget;
+  final Extension? currentExtension;
+  final List EpisodeList;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(
+      key: PageStorageKey<String>('anime-episode-list-$startIndex'),
+      slivers: [
+        SliverOverlapInjector(
+          handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            int episodeIndex = startIndex + index;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 7),
+              child: AnimeEpisode(
+                title: extensionAnimeTitle,
+                current: widget.animeData["progress"] == episodeIndex,
+                animeData: widget.animeData,
+                seen: widget.animeData["progress"] > episodeIndex,
+                index: episodeIndex,
+                onClicked: (details) async {
+                  showModalBottomSheet(
+                    backgroundColor: MyColors.backgroundColor,
+
+                    context: context,
+                    builder: (context) {
+                      return Container(
+                        child: FutureBuilder(
+                          future: currentExtension?.getStreamData(
+                            EpisodeList[episodeIndex]["id"],
+                          ),
+                          builder: (context, snapshot) {
+                            return snapshot.hasData
+                                ? Container(
+                                  padding: const EdgeInsets.all(12),
+                                  child: ListView.separated(
+                                    separatorBuilder: (context, index) {
+                                      return const SizedBox(height: 12);
+                                    },
+                                    itemCount: snapshot.data!.length,
+                                    itemBuilder: (context, index) {
+                                      return GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) => PlayerPage(
+                                                    episodeList: EpisodeList,
+                                                    currentExtension:
+                                                        currentExtension,
+                                                    episodeCount:
+                                                        EpisodeList.length,
+                                                    extensionEpisodeData:
+                                                        EpisodeList[episodeIndex],
+                                                    episodeNumber:
+                                                        episodeIndex + 1,
+                                                    extensionStreamData:
+                                                        snapshot.data?[index],
+                                                    anilistData:
+                                                        widget.animeData,
+                                                  ),
+                                            ),
+                                          );
+                                        },
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: MyColors.coolPurple2,
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                           ),
-                                          builder: (context, snapshot) {
-                                            return snapshot.hasData
-                                                ? Container(
-                                                  padding: const EdgeInsets.all(12),
-                                                  child: ListView.separated(
-                                                    separatorBuilder: (context, index) {
-                                                      return const SizedBox(height: 12);
-                                                    },
-                                                    itemCount: snapshot.data!.length,
-                                                    itemBuilder: (context, index) {
-                                                      return GestureDetector(
-                                                        onTap: () {
-                                                          Navigator.push(
-                                                            context,
-                                                            MaterialPageRoute(
-                                                              builder:
-                                                                  (context) => PlayerPage(
-                                                                    episodeList: EpisodeList,
-                                                                    currentExtension:
-                                                                        currentExtension,
-                                                                    episodeCount:
-                                                                        EpisodeList.length,
-                                                                    extensionEpisodeData:
-                                                                        EpisodeList[episodeIndex],
-                                                                    episodeNumber: episodeIndex + 1,
-                                                                    extensionStreamData:
-                                                                        snapshot.data?[index],
-                                                                    anilistData: widget.animeData,
-                                                                  ),
-                                                            ),
-                                                          );
-                                                        },
-                                                        child: Container(
-                                                          decoration: BoxDecoration(
-                                                            color: MyColors.coolPurple2,
-                                                            borderRadius: BorderRadius.circular(12),
-                                                          ),
-                                                          width: double.infinity,
-                                                          height: 60,
-                                                          padding: const EdgeInsets.all(12),
-                                                          child: Center(
-                                                            child: Text(
-                                                              "${snapshot.data?[index]["provider"]} - ${snapshot.data?[index]["sub"] ? "Sub" : "Dub"}",
-                                                              style: const TextStyle(
-                                                                color: MyColors.appbarTextColor,
-                                                                fontWeight: FontWeight.w600,
-                                                                fontSize: 16.5,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      );
-                                                    },
-                                                  ),
-                                                )
-                                                : const SizedBox(
-                                                  height: double.infinity,
-                                                  width: double.infinity,
-                                                  child: Center(
-                                                    child: CircularProgressIndicator(
-                                                      color: MyColors.coolPurple,
-                                                    ),
-                                                  ),
-                                                );
-                                          },
+                                          width: double.infinity,
+                                          height: 60,
+                                          padding: const EdgeInsets.all(12),
+                                          child: Center(
+                                            child: Text(
+                                              "${snapshot.data?[index]["provider"]} - ${snapshot.data?[index]["sub"] ? "Sub" : "Dub"}",
+                                              style: const TextStyle(
+                                                color: MyColors.appbarTextColor,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 16.5,
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       );
                                     },
-                                  );
-                                  },
-                                episodeData: {
-                                  "episode": EpisodeList[episodeIndex],
-                                }, // make it a map of neccesary data that the each extension paases in
-                              ),
-                            );
-                          }, childCount: count),
+                                  ),
+                                )
+                                : const SizedBox(
+                                  height: double.infinity,
+                                  width: double.infinity,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: MyColors.coolPurple,
+                                    ),
+                                  ),
+                                );
+                          },
                         ),
-                      ],
-                    );
-                  },
-                ),
-              );
-            }),
-          ),
+                      );
+                    },
+                  );
+                },
+                episodeData: {"episode": EpisodeList[episodeIndex]},
+              ),
+            );
+          }, childCount: count),
         ),
+      ],
+    );
+  }
+}
+
+class _buildAnimeCoverSliverAppBar extends StatelessWidget {
+  const _buildAnimeCoverSliverAppBar({
+    super.key,
+    required bool isCollapsed,
+    required this.title,
+    required this.widget,
+  }) : _isCollapsed = isCollapsed;
+
+  final bool _isCollapsed;
+  final dynamic title;
+  final AnimePage widget;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverAppBar(
+      backgroundColor: MyColors.backgroundColor,
+      foregroundColor: MyColors.appbarTextColor,
+      pinned: true,
+      title: AnimatedOpacity(
+        opacity: _isCollapsed ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 150),
+        child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+      ),
+      expandedHeight: (MediaQuery.of(context).size.height) * 0.8,
+      flexibleSpace: FlexibleSpaceBar(
+        collapseMode: CollapseMode.pin,
+        background: AnimeCover(animeData: widget.animeData),
+      ),
+    );
+  }
+}
+
+class _buildFloatingActionButton extends StatelessWidget {
+  const _buildFloatingActionButton({
+    super.key,
+    required ScrollController scrollController,
+  }) : _scrollController = scrollController;
+
+  final ScrollController _scrollController;
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton(
+      onPressed: () {
+        // Example: Scroll to top when pressed
+        final double sliverAppBarHeight =
+            MediaQuery.of(context).size.height * 0.8;
+        const double extensionPickerHeight =
+            56; // Approximate DropdownMenu height
+        const double buttonHeight = 56; // Approximate button height
+        const double verticalPadding = 12 + 12 + 12; // top + between + below
+
+        final double scrollTarget =
+            sliverAppBarHeight +
+            extensionPickerHeight +
+            buttonHeight +
+            verticalPadding;
+
+        _scrollController.animateTo(
+          scrollTarget - 90,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOut,
+        );
+      },
+      backgroundColor: MyColors.coolPurple,
+      child: const Icon(
+        Icons.arrow_upward,
+        size: 30,
+        color: MyColors.coolPurple2,
       ),
     );
   }
@@ -1138,7 +1415,8 @@ class AnimeEpisode extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  episodeData["episode"]["dub"] && episodeData["episode"]["sub"]
+                                  episodeData["episode"]["dub"] &&
+                                          episodeData["episode"]["sub"]
                                       ? "Sub | Dub"
                                       : episodeData["episode"]["sub"]
                                       ? "Sub"
@@ -1166,15 +1444,19 @@ class AnimeEpisode extends StatelessWidget {
                 left: 4,
                 child: SizedBox(
                   height: 100,
-                  width: 177.78, // This is 100 * (16/9) to match the AspectRatio
-                  child: Center(child: Icon(Icons.check, size: 60, color: Colors.white)),
+                  width:
+                      177.78, // This is 100 * (16/9) to match the AspectRatio
+                  child: Center(
+                    child: Icon(Icons.check, size: 60, color: Colors.white),
+                  ),
                 ),
               ),
             Align(
               alignment: Alignment.bottomLeft,
               child: Container(
                 decoration: BoxDecoration(
-                  color: current ? const Color(0xFF3c3243) : MyColors.coolPurple2,
+                  color:
+                      current ? const Color(0xFF3c3243) : MyColors.coolPurple2,
                   borderRadius: const BorderRadius.only(
                     topRight: Radius.circular(12),
                     bottomLeft: Radius.circular(12),
@@ -1231,7 +1513,11 @@ class AnimeCover extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        CachedNetworkImage(imageUrl: imageUrl, fit: BoxFit.cover, alignment: Alignment.center),
+        CachedNetworkImage(
+          imageUrl: imageUrl,
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
+        ),
         Transform.translate(
           offset: const Offset(0, 4),
           child: Container(
@@ -1247,7 +1533,11 @@ class AnimeCover extends StatelessWidget {
         Align(
           alignment: Alignment.bottomLeft,
           child: Padding(
-            padding: const EdgeInsets.only(left: 16.0, bottom: 16.0, right: 16.0),
+            padding: const EdgeInsets.only(
+              left: 16.0,
+              bottom: 16.0,
+              right: 16.0,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1276,7 +1566,11 @@ class AnimeCover extends StatelessWidget {
                     Text(
                       animeData["media"]["averageScore"].toString() == "null"
                           ? "0.0"
-                          : Tools.insertAt(animeData["media"]["averageScore"].toString(), ".", 1),
+                          : Tools.insertAt(
+                            animeData["media"]["averageScore"].toString(),
+                            ".",
+                            1,
+                          ),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -1289,7 +1583,11 @@ class AnimeCover extends StatelessWidget {
                 const SizedBox(height: 2),
                 const Text(
                   "Synopsis",
-                  style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -1308,68 +1606,6 @@ class AnimeCover extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class TwoLineDetectingText extends StatefulWidget {
-  final String text;
-  final TextStyle style;
-  final int maxLines;
-  final void Function(bool)? onOverflowChanged;
-
-  const TwoLineDetectingText({
-    super.key,
-    required this.text,
-    required this.style,
-    this.maxLines = 2,
-    this.onOverflowChanged,
-  });
-
-  @override
-  State<TwoLineDetectingText> createState() => _TwoLineDetectingTextState();
-}
-
-class _TwoLineDetectingTextState extends State<TwoLineDetectingText> {
-  bool? _lastIsTwoLines;
-
-  void _checkLines(double maxWidth) {
-    final TextPainter textPainter = TextPainter(
-      text: TextSpan(text: widget.text, style: widget.style),
-      maxLines: widget.maxLines,
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: maxWidth);
-
-    final bool isTwoLines = textPainter.computeLineMetrics().length > 1;
-    if (_lastIsTwoLines != isTwoLines) {
-      _lastIsTwoLines = isTwoLines;
-      if (widget.onOverflowChanged != null) {
-        widget.onOverflowChanged!(isTwoLines);
-        
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Use the actual available width for the text
-        final double maxWidth = constraints.maxWidth;
-        WidgetsBinding.instance.addPostFrameCallback((_) => _checkLines(maxWidth));
-        return Row(
-          children: [
-            Expanded(
-              child: Text(
-                widget.text,
-                style: widget.style,
-                maxLines: widget.maxLines,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }
