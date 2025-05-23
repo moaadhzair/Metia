@@ -64,28 +64,38 @@ class _AnimeCardState extends State<AnimeCard> {
                       fromHeroContext,
                       toHeroContext,
                     ) {
-                      // Calculate opacity based on direction and animation value
-                      final double gradientOpacity = flightDirection == HeroFlightDirection.push
-                          ? animation.value // fade in
-                          : 1.0 - animation.value; // fade out
-
                       return Stack(
                         fit: StackFit.expand,
                         children: [
                           CachedNetworkImage(
-                            imageUrl: widget.data["media"]["coverImage"]["extraLarge"],
+                            imageUrl:
+                                widget
+                                    .data["media"]["coverImage"]["extraLarge"],
                             fit: BoxFit.fitWidth,
-                            placeholder: (context, url) => const Center(
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
-                            ),
-                            errorWidget: (context, url, error) => const Icon(Icons.error),
+                            placeholder:
+                                (context, url) => const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                            errorWidget:
+                                (context, url, error) =>
+                                    const Icon(Icons.error),
                           ),
-                          AnimatedOpacity(
-                            opacity: gradientOpacity.clamp(0.0, 1.0),
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
+                          AnimatedBuilder(
+                            animation: animation,
+                            builder: (context, child) {
+                              print(1 - animation.value);
+                              final double t = animation.value;
+                              final double gradientOpacity =
+                                  flightDirection == HeroFlightDirection.push
+                                      ? t // fade in
+                                      : 1 - t; // fade out
+                              return Opacity(
+                                opacity: gradientOpacity.clamp(0.0, 1.0),
+                                child: child,
+                              );
+                            },
                             child: Container(
                               decoration: const BoxDecoration(
                                 gradient: LinearGradient(
