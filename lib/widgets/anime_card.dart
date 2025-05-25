@@ -87,12 +87,9 @@ class _AnimeCardState extends State<AnimeCard> {
                             builder: (context, child) {
                               print(1 - animation.value);
                               final double t = animation.value;
-                              final double gradientOpacity =
-                                  flightDirection == HeroFlightDirection.push
-                                      ? t // fade in
-                                      : 1 - t; // fade out
+                              // double t;// fade out
                               return Opacity(
-                                opacity: gradientOpacity.clamp(0.0, 1.0),
+                                opacity: t.clamp(0.0, 1.0),
                                 child: child,
                               );
                             },
