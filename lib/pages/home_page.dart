@@ -176,273 +176,321 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: tabs.length,
-      child: Stack(
-        children: [
-          Scaffold(
-            backgroundColor: MyColors.backgroundColor,
-            appBar: AppBar(
-              backgroundColor: MyColors.appbarColor,
-              leading: Row(
-                children: [
-                  const SizedBox(width: 20),
-                  SvgPicture.asset(
-                    'assets/icons/anilist.svg',
-                    height: 35,
-                    colorFilter: const ColorFilter.mode(MyColors.appbarTextColor, BlendMode.srcIn),
-                  ),
-                ],
-              ),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, right: 4),
-                  child: PopupMenuButton<String>(
-                    //shape: Border.all(style: BorderStyle.none),
-                    surfaceTintColor: MyColors.backgroundColor,
-                    tooltip: "",
-                    //requestFocus: false,
-                    icon: const Icon(Icons.more_vert, color: MyColors.appbarTextColor, size: 29),
-                    onOpened: () {
-                      setState(() {
-                        _isPopupMenuOpen = true;
-                        _blurOpacity = 1.0; // Show the blur effect
-                      });
-                    },
-                    onCanceled: () {
-                      setState(() {
-                        _isPopupMenuOpen = false;
-                        _blurOpacity = 0.0; // Hide the blur effect
-                      });
-                    },
-                    constraints: const BoxConstraints(maxWidth: 160),
-                    itemBuilder:
-                        (context) => <PopupMenuEntry<String>>[
-                          PopupMenuItem<String>(
-                            onTap: () {
-                              Tools.Toast(context, "Refreshing...");
-                              _fetchAnimeLibrary(false);
-                            },
-                            height: 35,
-                            child: const Row(
-                              children: [
-                                Icon(Icons.refresh, size: 30, color: MyColors.unselectedColor),
-                                SizedBox(width: 10),
-                                Text(
-                                  "Refresh",
-                                  style: TextStyle(
-                                    color: MyColors.unselectedColor,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
+    return SafeArea(
+      top: false,
+      bottom: false,
+      left: true,
+      right: true,
+      child: DefaultTabController(
+        length: tabs.length,
+        child: Stack(
+          children: [
+            Scaffold(
+              backgroundColor: MyColors.backgroundColor,
+              appBar: AppBar(
+                backgroundColor: MyColors.appbarColor,
+                leading: Row(
+                  children: [
+                    const SizedBox(width: 20),
+                    SvgPicture.asset(
+                      'assets/icons/anilist.svg',
+                      height: 35,
+                      colorFilter: const ColorFilter.mode(MyColors.appbarTextColor, BlendMode.srcIn),
+                    ),
+                  ],
+                ),
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4, right: 4),
+                    child: PopupMenuButton<String>(
+                      //shape: Border.all(style: BorderStyle.none),
+                      surfaceTintColor: MyColors.backgroundColor,
+                      tooltip: "",
+                      //requestFocus: false,
+                      icon: const Icon(Icons.more_vert, color: MyColors.appbarTextColor, size: 29),
+                      onOpened: () {
+                        setState(() {
+                          _isPopupMenuOpen = true;
+                          _blurOpacity = 1.0; // Show the blur effect
+                        });
+                      },
+                      onCanceled: () {
+                        setState(() {
+                          _isPopupMenuOpen = false;
+                          _blurOpacity = 0.0; // Hide the blur effect
+                        });
+                      },
+                      constraints: const BoxConstraints(maxWidth: 160),
+                      itemBuilder:
+                          (context) => <PopupMenuEntry<String>>[
+                            PopupMenuItem<String>(
+                              onTap: () {
+                                Tools.Toast(context, "Refreshing...");
+                                _fetchAnimeLibrary(false);
+                              },
+                              height: 35,
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.refresh, size: 30, color: MyColors.unselectedColor),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Refresh",
+                                    style: TextStyle(
+                                      color: MyColors.unselectedColor,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          const PopupMenuDivider(height: 10),
-                          PopupMenuItem<String>(
-                            height: 35,
-                            child: const Row(
-                              children: [
-                                Icon(Icons.extension, size: 30, color: MyColors.unselectedColor),
-                                SizedBox(width: 10),
-                                Text(
-                                  "Extensions",
-                                  style: TextStyle(
-                                    color: MyColors.unselectedColor,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
+                            const PopupMenuDivider(height: 10),
+                            PopupMenuItem<String>(
+                              height: 35,
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.extension, size: 30, color: MyColors.unselectedColor),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Extensions",
+                                    style: TextStyle(
+                                      color: MyColors.unselectedColor,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            onTap: () {
-                              if (mounted) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const ExtensionsPage()),
-                                );
-                              }
-                            },
-                          ),
-                          const PopupMenuDivider(height: 10),
-                          PopupMenuItem<String>(
-                            onTap: () async {
-                              final prefs = await SharedPreferences.getInstance();
-                              final authCode = prefs.getString('auth_key');
-                              if (authCode != null && authCode.isNotEmpty) {
+                                ],
+                              ),
+                              onTap: () {
                                 if (mounted) {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (context) => const UserPage()),
+                                    MaterialPageRoute(builder: (context) => const ExtensionsPage()),
                                   );
                                 }
-                              } else {
-                                await _launchUrl(
-                                  Uri.parse(
-                                    "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
-                                  ),
-                                );
-                              }
-                            },
-                            height: 35,
-                            child: const Row(
-                              children: [
-                                Icon(Icons.login, size: 30, color: MyColors.unselectedColor),
-                                SizedBox(width: 10),
-                                Text(
-                                  "Login",
-                                  style: TextStyle(
-                                    color: MyColors.unselectedColor,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                              },
                             ),
-                          ),
-                        ],
-                    color: MyColors.backgroundColor,
-                  ),
-                ),
-              ],
-              title: const Row(
-                children: [
-                  SizedBox(width: 20),
-                  Text(
-                    "Metia",
-                    style: TextStyle(
-                      color: MyColors.appbarTextColor,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                            const PopupMenuDivider(height: 10),
+                            PopupMenuItem<String>(
+                              onTap: () async {
+                                final prefs = await SharedPreferences.getInstance();
+                                final authCode = prefs.getString('auth_key');
+                                if (authCode != null && authCode.isNotEmpty) {
+                                  if (mounted) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const UserPage()),
+                                    );
+                                  }
+                                } else {
+                                  await _launchUrl(
+                                    Uri.parse(
+                                      "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
+                                    ),
+                                  );
+                                }
+                              },
+                              height: 35,
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.login, size: 30, color: MyColors.unselectedColor),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Login",
+                                    style: TextStyle(
+                                      color: MyColors.unselectedColor,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                      color: MyColors.backgroundColor,
                     ),
                   ),
                 ],
-              ),
-              bottom: PreferredSize(
-                preferredSize: Size.fromHeight(tabs.isEmpty? 0 :40),
-                child: Column(
+                title: const Row(
                   children: [
-                    tabs.isNotEmpty
-                        ? TabBar(
-                            controller: _tabController,
-                            overlayColor: WidgetStateProperty.all(Colors.transparent),
-                            indicator: BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: _animeLibrary != null
-                                      ? (_animeLibrary![_tabController.index].state == "NEW EPISODE"
-                                          ? Colors.orange
-                                          : _animeLibrary![_tabController.index].state == "WATCHING"
-                                              ? Colors.green
-                                              : MyColors.appbarTextColor)
-                                      : MyColors.appbarTextColor,
-                                  width: 3,
-                                ),
-                              ),
-                            ),
-                            isScrollable: true,
-                            tabAlignment: TabAlignment.start,
-                            labelColor: MyColors.appbarTextColor,
-                            unselectedLabelColor: MyColors.unselectedColor,
-                            tabs:
-                                tabs.map((String tabName) {
-                                  return Tab(
-                                    child: Text(
-                                      tabName,
-                                      style: TextStyle(
-                                        color:
-                                            tabName.startsWith("NEW EPISODE")
-                                                ? Colors
-                                                    .orange // Set color to orange for "NEW EPISODE"
-                                                : tabName.startsWith("WATCHING") ? Colors.green : null,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                          )
-                        : const SizedBox(),
-
-                    PreferredSize(
-                      preferredSize: const Size.fromHeight(0),
-                      child: Container(
-                        color: tabs.isEmpty ? MyColors.unselectedColor : Colors.transparent,
-                        height: .5,
+                    SizedBox(width: 20),
+                    Text(
+                      "Metia",
+                      style: TextStyle(
+                        color: MyColors.appbarTextColor,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
+                bottom: PreferredSize(
+                  preferredSize: Size.fromHeight(tabs.isEmpty? 0 :40),
+                  child: Column(
+                    children: [
+                      tabs.isNotEmpty
+                          ? TabBar(
+                              controller: _tabController,
+                              overlayColor: WidgetStateProperty.all(Colors.transparent),
+                              indicator: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: _animeLibrary != null
+                                        ? (_animeLibrary![_tabController.index].state == "NEW EPISODE"
+                                            ? Colors.orange
+                                            : _animeLibrary![_tabController.index].state == "WATCHING"
+                                                ? Colors.green
+                                                : MyColors.appbarTextColor)
+                                        : MyColors.appbarTextColor,
+                                    width: 3,
+                                  ),
+                                ),
+                              ),
+                              isScrollable: true,
+                              tabAlignment: TabAlignment.start,
+                              labelColor: MyColors.appbarTextColor,
+                              unselectedLabelColor: MyColors.unselectedColor,
+                              tabs:
+                                  tabs.map((String tabName) {
+                                    return Tab(
+                                      child: Text(
+                                        tabName,
+                                        style: TextStyle(
+                                          color:
+                                              tabName.startsWith("NEW EPISODE")
+                                                  ? Colors
+                                                      .orange // Set color to orange for "NEW EPISODE"
+                                                  : tabName.startsWith("WATCHING") ? Colors.green : null,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                            )
+                          : const SizedBox(),
+      
+                      PreferredSize(
+                        preferredSize: const Size.fromHeight(0),
+                        child: Container(
+                          color: tabs.isEmpty ? MyColors.unselectedColor : Colors.transparent,
+                          height: .5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            body:
-                _loading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _error == "Exception: Please sign in to fetch your anime list."
-                    ? Center(
-                      child: GestureDetector(
-                        onTap: () async {
-                          await _launchUrl(
-                            Uri.parse(
-                              "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
+              body:
+                  _loading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _error == "Exception: Please sign in to fetch your anime list."
+                      ? Center(
+                        child: GestureDetector(
+                          onTap: () async {
+                            await _launchUrl(
+                              Uri.parse(
+                                "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            "Sign In",
+                            style: TextStyle(
+                              color: MyColors.appbarTextColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 25,
                             ),
-                          );
-                        },
-                        child: const Text(
-                          "Sign In",
+                          ),
+                        ),
+                      )
+                      : _error == "Exception: Failed to fetch anime list: 429"
+                      ? const Center(
+                        child: Text(
+                          "Your IP got blocked because you made way too many requests.\nWait for 2 minutes and then Refresh, The ban should go away",
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             color: MyColors.appbarTextColor,
                             fontWeight: FontWeight.bold,
                             fontSize: 25,
                           ),
                         ),
-                      ),
-                    )
-                    : _error == "Exception: Failed to fetch anime list: 429"
-                    ? const Center(
-                      child: Text(
-                        "Your IP got blocked because you made way too many requests.\nWait for 2 minutes and then Refresh, The ban should go away",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: MyColors.appbarTextColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 25,
+                      )
+                      : _error == "Exception: empty library"
+                      ? const Center(
+                        child: Text(
+                          "you dumb, you have no anime in your Anilist library!",
+                          style: TextStyle(
+                            color: MyColors.appbarTextColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 25,
+                          ),
                         ),
-                      ),
-                    )
-                    : _error == "Exception: empty library"
-                    ? const Center(
-                      child: Text(
-                        "you dumb, you have no anime in your Anilist library!",
-                        style: TextStyle(
-                          color: MyColors.appbarTextColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 25,
-                        ),
-                      ),
-                    )
-                    : _animeLibrary!.isNotEmpty
-                    ? TabBarView(
-                        controller: _tabController,
-                        children:
-                            _animeLibrary!.map((AnimeState state) {
-                              return Platform.isIOS
-                                  ? CupertinoTheme(
-                                    data: const CupertinoThemeData(
-                                      primaryColor: MyColors.appbarTextColor,
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
-                                      child: CustomScrollView(
-                                        //physics: AlwaysScrollableScrollPhysics(),
-                                        slivers: [
-                                          CupertinoSliverRefreshControl(
-                                            onRefresh: () async {
-                                              await _fetchAnimeLibrary(true);
-                                            },
-                                          ),
-                                          SliverGrid(
+                      )
+                      : _animeLibrary!.isNotEmpty
+                      ? TabBarView(
+                          controller: _tabController,
+                          children:
+                              _animeLibrary!.map((AnimeState state) {
+                                return Platform.isIOS
+                                    ? CupertinoTheme(
+                                      data: const CupertinoThemeData(
+                                        primaryColor: MyColors.appbarTextColor,
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
+                                        child: CustomScrollView(
+                                          //physics: AlwaysScrollableScrollPhysics(),
+                                          slivers: [
+                                            CupertinoSliverRefreshControl(
+                                              onRefresh: () async {
+                                                await _fetchAnimeLibrary(true);
+                                              },
+                                            ),
+                                            SliverGrid(
+                                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                crossAxisCount: Tools.getResponsiveCrossAxisVal(
+                                                  MediaQuery.of(context).size.width,
+                                                  itemWidth: 460 / 4,
+                                                ),
+                                                mainAxisExtent: state.state == "NEW EPISODE" ? 260 : 245,
+                                                crossAxisSpacing: 10,
+                                                mainAxisSpacing: 10,
+                                                childAspectRatio: 0.7,
+                                              ),
+                                              delegate: SliverChildBuilderDelegate((context, index) {
+                                                return AnimeCard(
+                                                  index: index,
+                                                  tabName: state.state,
+                                                  data: state.data[index],
+                                                );
+                                              }, childCount: state.data.length),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                    : RefreshIndicator.adaptive(
+                                      backgroundColor: MyColors.backgroundColor,
+                                      strokeWidth: 3,
+                                      color: MyColors.appbarTextColor,
+                                      onRefresh: () async {
+                                        print("object");
+                                        await _fetchAnimeLibrary(true);
+                                        print("object2");
+                                      },
+                                      child: ScrollConfiguration(
+                                        behavior: ScrollConfiguration.of(context).copyWith(
+                                          dragDevices: {
+                                            PointerDeviceKind.touch,
+                                            PointerDeviceKind.mouse,
+                                          },
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
+                                          child: GridView.builder(
+                                            controller: _scrollController,
+                                            cacheExtent: 500,
                                             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                               crossAxisCount: Tools.getResponsiveCrossAxisVal(
                                                 MediaQuery.of(context).size.width,
@@ -453,92 +501,50 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                               mainAxisSpacing: 10,
                                               childAspectRatio: 0.7,
                                             ),
-                                            delegate: SliverChildBuilderDelegate((context, index) {
+                                            itemCount: state.data.length,
+                                            itemBuilder: (context, index) {
                                               return AnimeCard(
                                                 index: index,
                                                 tabName: state.state,
                                                 data: state.data[index],
                                               );
-                                            }, childCount: state.data.length),
+                                            },
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                  : RefreshIndicator.adaptive(
-                                    backgroundColor: MyColors.backgroundColor,
-                                    strokeWidth: 3,
-                                    color: MyColors.appbarTextColor,
-                                    onRefresh: () async {
-                                      print("object");
-                                      await _fetchAnimeLibrary(true);
-                                      print("object2");
-                                    },
-                                    child: ScrollConfiguration(
-                                      behavior: ScrollConfiguration.of(context).copyWith(
-                                        dragDevices: {
-                                          PointerDeviceKind.touch,
-                                          PointerDeviceKind.mouse,
-                                        },
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
-                                        child: GridView.builder(
-                                          controller: _scrollController,
-                                          cacheExtent: 500,
-                                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: Tools.getResponsiveCrossAxisVal(
-                                              MediaQuery.of(context).size.width,
-                                              itemWidth: 460 / 4,
-                                            ),
-                                            mainAxisExtent: state.state == "NEW EPISODE" ? 260 : 245,
-                                            crossAxisSpacing: 10,
-                                            mainAxisSpacing: 10,
-                                            childAspectRatio: 0.7,
-                                          ),
-                                          itemCount: state.data.length,
-                                          itemBuilder: (context, index) {
-                                            return AnimeCard(
-                                              index: index,
-                                              tabName: state.state,
-                                              data: state.data[index],
-                                            );
-                                          },
                                         ),
                                       ),
-                                    ),
-                                  );
-                            }).toList(),
-                    )
-                    : Center(
-                      child: Text(
-                        _error.toString(),
-                        style: const TextStyle(
-                          color: MyColors.appbarTextColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 25,
+                                    );
+                              }).toList(),
+                      )
+                      : Center(
+                        child: Text(
+                          _error.toString(),
+                          style: const TextStyle(
+                            color: MyColors.appbarTextColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 25,
+                          ),
                         ),
                       ),
-                    ),
-          ),
-          IgnorePointer(
-            ignoring: !_isPopupMenuOpen, // Allow touch events when blur is inactive
-            child: AnimatedOpacity(
-              curve: Curves.easeOutBack, // iOS-like popping effect
-              opacity: _blurOpacity,
-              duration:
-                  _isPopupMenuOpen
-                      ? const Duration(milliseconds: 333) // Duration when opening
-                      : const Duration(milliseconds: 533), // Duration when closing
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-                child: Container(
-                  color: Colors.black.withOpacity(0.2), // Semi-transparent overlay
+            ),
+            IgnorePointer(
+              ignoring: !_isPopupMenuOpen, // Allow touch events when blur is inactive
+              child: AnimatedOpacity(
+                curve: Curves.easeOutBack, // iOS-like popping effect
+                opacity: _blurOpacity,
+                duration:
+                    _isPopupMenuOpen
+                        ? const Duration(milliseconds: 333) // Duration when opening
+                        : const Duration(milliseconds: 533), // Duration when closing
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.2), // Semi-transparent overlay
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
