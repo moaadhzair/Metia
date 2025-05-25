@@ -271,17 +271,21 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
   }
 
   void _scrollListener() {
-    // Use the expandedHeight of your cover sliver appbar
-    final double expandedHeight = MediaQuery.of(context).size.height * 0.7;
-    if (_scrollController.hasClients) {
-      final shouldBeCollapsed = _scrollController.offset > (expandedHeight - kToolbarHeight);
-      if (_isCollapsed != shouldBeCollapsed) {
-        setState(() {
-          _isCollapsed = shouldBeCollapsed;
-        });
-      }
+  final double expandedHeight = MediaQuery.of(context).size.height * 0.7;
+  if (_scrollController.hasClients) {
+    final shouldBeCollapsed = _scrollController.offset > (expandedHeight - kToolbarHeight);
+    if (_isCollapsed != shouldBeCollapsed) {
+      // Schedule setState after the frame to avoid conflicts with gestures
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _isCollapsed = shouldBeCollapsed;
+          });
+        }
+      });
     }
   }
+}
 
   @override
   void dispose() {
@@ -303,22 +307,18 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
       floatingActionButton:
           _isCollapsed ? _buildFloatingActionButton(scrollController: _scrollController) : null,
       backgroundColor: MyColors.backgroundColor,
-      body: SafeArea(
-        top: false,
-        bottom: false,
-        left: true,
-        right: true,
-        child: NestedScrollView(
-          controller: _scrollController,
-          headerSliverBuilder:
-              (context, innerBoxIsScrolled) => [
-                _buildAnimeCoverSliverAppBar(
-                  isCollapsed: _isCollapsed,
-                  title: title,
-                  widget: widget,
-                ),
-                SliverOverlapAbsorber(
-                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+      body: NestedScrollView(
+        controller: _scrollController,
+        headerSliverBuilder:
+            (context, innerBoxIsScrolled) => [
+              _buildAnimeCoverSliverAppBar(isCollapsed: _isCollapsed, title: title, widget: widget),
+              SliverOverlapAbsorber(
+                handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                sliver: SliverSafeArea(
+                  top: false,
+                  bottom: false,
+                  left: true,
+                  right: true,
                   sliver: SliverAppBar(
                     surfaceTintColor: MyColors.backgroundColor,
                     toolbarHeight: 163,
@@ -938,63 +938,63 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
-              ],
-          body:
-              _isLoading
-                  ? const Padding(
-                    padding: EdgeInsets.only(top: 115.0),
-                    child: Center(
-                      child: Column(
-                        spacing: 20,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Loading The Anime...",
-                            style: TextStyle(
-                              color: MyColors.appbarTextColor,
-                              fontSize: 30,
-                              fontWeight: FontWeight.w600,
-                            ),
+              ),
+            ],
+        body:
+            _isLoading
+                ? const Padding(
+                  padding: EdgeInsets.only(top: 115.0),
+                  child: Center(
+                    child: Column(
+                      spacing: 20,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Loading The Anime...",
+                          style: TextStyle(
+                            color: MyColors.appbarTextColor,
+                            fontSize: 30,
+                            fontWeight: FontWeight.w600,
                           ),
-                          CircularProgressIndicator(color: MyColors.coolPurple),
-                        ],
-                      ),
+                        ),
+                        CircularProgressIndicator(color: MyColors.coolPurple),
+                      ],
                     ),
-                  )
-                  : TabBarView(
-                    controller: _tabController,
-                    children: List.generate(tabCount, (tabIndex) {
-                      int count = tabItemCounts[tabIndex];
-                      int startIndex =
-                          (tabIndex == 0) ? 0 : firstTabCount + (tabIndex - 1) * eachItemForTab;
-                      return count == 0
-                          ? const Center(
-                            child: Padding(
-                              padding: EdgeInsets.only(top: 60.0),
-                              child: Text(
-                                "No Anime Was Found!.",
-                                style: TextStyle(
-                                  color: MyColors.appbarTextColor,
-                                  fontSize: 30,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                  ),
+                )
+                : TabBarView(
+                  controller: _tabController,
+                  children: List.generate(tabCount, (tabIndex) {
+                    int count = tabItemCounts[tabIndex];
+                    int startIndex =
+                        (tabIndex == 0) ? 0 : firstTabCount + (tabIndex - 1) * eachItemForTab;
+                    return count == 0
+                        ? const Center(
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 60.0),
+                            child: Text(
+                              "No Anime Was Found!.",
+                              style: TextStyle(
+                                color: MyColors.appbarTextColor,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          )
-                          : Padding(
-                            padding: const EdgeInsets.only(left: 12, right: 12, top: 12),
-                            child: _buildAnimeEpisodeList(
-                              count: count,
-                              startIndex: startIndex,
-                              extensionAnimeTitle: extensionAnimeTitle,
-                              widget: widget,
-                              currentExtension: currentExtension,
-                              episodeList: EpisodeList,
-                            ),
-                          );
-                    }),
-                  ),
-        ),
+                          ),
+                        )
+                        : Padding(
+                          padding: const EdgeInsets.only(left: 12, right: 12, top: 12),
+                          child: _buildAnimeEpisodeList(
+                            count: count,
+                            startIndex: startIndex,
+                            extensionAnimeTitle: extensionAnimeTitle,
+                            widget: widget,
+                            currentExtension: currentExtension,
+                            episodeList: EpisodeList,
+                          ),
+                        );
+                  }),
+                ),
       ),
     );
   }
@@ -1181,7 +1181,8 @@ class _buildAnimeCoverSliverAppBar extends StatelessWidget {
         child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
       ),
       expandedHeight: (MediaQuery.of(context).size.height) * 0.7,
-      flexibleSpace: FlexibleSpaceBar(background: AnimeCover(animeData: widget.animeData)),
+      stretch: true,
+      flexibleSpace: FlexibleSpaceBar( background: AnimeCover(animeData: widget.animeData), stretchModes: const [StretchMode.blurBackground, StretchMode.zoomBackground],),
     );
   }
 }
@@ -1426,82 +1427,88 @@ class _AnimeCoverState extends State<AnimeCover> {
             ),
           ),
         ),
-        AnimatedOpacity(
-          opacity: _opacity,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeIn,
+        SafeArea(
+          top: false,
+          bottom: false,
+          left: true,
+          right: true,
+          child: AnimatedOpacity(
+            opacity: _opacity,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeIn,
 
-          child: Align(
-            alignment: Alignment.bottomLeft,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 16.0, bottom: 16.0, right: 16.0),
-              child: SingleChildScrollView(
-                physics: const NeverScrollableScrollPhysics(),
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16.0, bottom: 16.0, right: 16.0),
+                child: SingleChildScrollView(
+                  physics: const NeverScrollableScrollPhysics(),
 
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 36,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      genres.join(' • '),
-                      style: const TextStyle(
-                        color: Color(0xFFA9A7A7),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          widget.animeData["media"]["averageScore"].toString() == "null"
-                              ? "0.0"
-                              : Tools.insertAt(
-                                widget.animeData["media"]["averageScore"].toString(),
-                                ".",
-                                1,
-                              ),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Colors.orange,
-                          ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 36,
+                          fontWeight: FontWeight.w400,
                         ),
-                        const Icon(Icons.star, color: Colors.orange, size: 18),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      "Synopsis",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      maxLines: 10,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        height: 1.1,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFFA9A7A7),
+                      const SizedBox(height: 4),
+                      Text(
+                        genres.join(' • '),
+                        style: const TextStyle(
+                          color: Color(0xFFA9A7A7),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            widget.animeData["media"]["averageScore"].toString() == "null"
+                                ? "0.0"
+                                : Tools.insertAt(
+                                  widget.animeData["media"]["averageScore"].toString(),
+                                  ".",
+                                  1,
+                                ),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.orange,
+                            ),
+                          ),
+                          const Icon(Icons.star, color: Colors.orange, size: 18),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        "Synopsis",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        description,
+                        maxLines: 10,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          height: 1.1,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFFA9A7A7),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
