@@ -94,7 +94,11 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
 
       // Clean and normalize titles for comparison
       String normalizeTitle(String title) {
-        return title.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '').replaceAll(RegExp(r'\s+'), ' ').trim();
+        return title
+            .toLowerCase()
+            .replaceAll(RegExp(r'[^\w\s]'), '')
+            .replaceAll(RegExp(r'\s+'), ' ')
+            .trim();
       }
 
       final normalizedSearchTitle = normalizeTitle(title);
@@ -295,19 +299,24 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
         widget.animeData["media"]["title"]["native"] ??
         "Unknown Title";
 
-    return SafeArea(
-      top: false,
-      bottom: false,
-      left: true,
-      right: true,
-      child: Scaffold(
-        floatingActionButton: _isCollapsed ? _buildFloatingActionButton(scrollController: _scrollController) : null,
-        backgroundColor: MyColors.backgroundColor,
-        body: NestedScrollView(
+    return Scaffold(
+      floatingActionButton:
+          _isCollapsed ? _buildFloatingActionButton(scrollController: _scrollController) : null,
+      backgroundColor: MyColors.backgroundColor,
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        left: true,
+        right: true,
+        child: NestedScrollView(
           controller: _scrollController,
           headerSliverBuilder:
               (context, innerBoxIsScrolled) => [
-                _buildAnimeCoverSliverAppBar(isCollapsed: _isCollapsed, title: title, widget: widget),
+                _buildAnimeCoverSliverAppBar(
+                  isCollapsed: _isCollapsed,
+                  title: title,
+                  widget: widget,
+                ),
                 SliverOverlapAbsorber(
                   handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
                   sliver: SliverAppBar(
@@ -324,7 +333,12 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                         child: Container(
                           color: Colors.transparent,
                           child: Padding(
-                            padding: const EdgeInsets.only(top: 12, left: 12, right: 12, bottom: 12),
+                            padding: const EdgeInsets.only(
+                              top: 12,
+                              left: 12,
+                              right: 12,
+                              bottom: 12,
+                            ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               //spacing: 5,
@@ -348,8 +362,11 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                   prepareTabBarAndListView();
                                                   _selectedExtension = value;
                                                 });
-                                                _localExtensionManager.setCurrentExtension(int.parse(value));
-                                                currentExtension = _localExtensionManager.getCurrentExtension();
+                                                _localExtensionManager.setCurrentExtension(
+                                                  int.parse(value),
+                                                );
+                                                currentExtension =
+                                                    _localExtensionManager.getCurrentExtension();
                                                 await initEpisodeList();
                                               },
                                               itemBuilder:
@@ -365,7 +382,8 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                                     width: 24,
                                                                     height: 24,
                                                                     child: ClipRRect(
-                                                                      borderRadius: BorderRadius.circular(4),
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(4),
                                                                       child: CachedNetworkImage(
                                                                         imageUrl: extension.iconUrl,
                                                                         fit: BoxFit.contain,
@@ -376,13 +394,17 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                                   Text(
                                                                     extension.title,
                                                                     style: const TextStyle(
-                                                                      color: MyColors.unselectedColor,
+                                                                      color:
+                                                                          MyColors.unselectedColor,
                                                                       fontWeight: FontWeight.w600,
                                                                     ),
                                                                   ),
-                                                                  if (_localExtensionManager.isMainExtension(extension))
+                                                                  if (_localExtensionManager
+                                                                      .isMainExtension(extension))
                                                                     const Padding(
-                                                                      padding: EdgeInsets.only(left: 8.0),
+                                                                      padding: EdgeInsets.only(
+                                                                        left: 8.0,
+                                                                      ),
                                                                       child: Icon(
                                                                         Icons.check,
                                                                         color: MyColors.coolPurple,
@@ -403,14 +425,21 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                       borderRadius: BorderRadius.circular(4),
                                                       child:
                                                           currentExtension?.iconUrl == null
-                                                              ? const Icon(Icons.extension, color: MyColors.coolPurple)
+                                                              ? const Icon(
+                                                                Icons.extension,
+                                                                color: MyColors.coolPurple,
+                                                              )
                                                               : CachedNetworkImage(
-                                                                imageUrl: currentExtension?.iconUrl ?? "",
+                                                                imageUrl:
+                                                                    currentExtension?.iconUrl ?? "",
                                                                 fit: BoxFit.contain,
                                                               ),
                                                     ),
                                                   ),
-                                                  const Icon(Icons.arrow_drop_down, color: MyColors.coolPurple),
+                                                  const Icon(
+                                                    Icons.arrow_drop_down,
+                                                    color: MyColors.coolPurple,
+                                                  ),
                                                 ],
                                               ),
                                             ),
@@ -421,7 +450,11 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                       padding: EdgeInsets.only(top: 4.0),
                                       child: Text(
                                         "Found:",
-                                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
                                     ),
                                     //found title
@@ -445,17 +478,21 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                       child: GestureDetector(
                                         onTap: () {
                                           final title =
-                                              currentExtension?.anilistPreferedTitle.toLowerCase() == "english"
+                                              currentExtension?.anilistPreferedTitle
+                                                          .toLowerCase() ==
+                                                      "english"
                                                   ? widget.animeData["media"]["title"]["english"]
-                                                  : currentExtension?.anilistPreferedTitle.toLowerCase() == "romaji"
+                                                  : currentExtension?.anilistPreferedTitle
+                                                          .toLowerCase() ==
+                                                      "romaji"
                                                   ? widget.animeData["media"]["title"]["romaji"]
                                                   : "";
-      
+
                                           _searchController.text = title;
                                           setState(() {
                                             _searchQuery = title;
                                           });
-      
+
                                           showModalBottomSheet(
                                             context: context,
                                             backgroundColor: MyColors.backgroundColor,
@@ -469,7 +506,9 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                         Expanded(
                                                           child: TextField(
                                                             controller: _searchController,
-                                                            style: const TextStyle(color: Colors.white),
+                                                            style: const TextStyle(
+                                                              color: Colors.white,
+                                                            ),
                                                             onChanged: (value) {
                                                               setState(() {
                                                                 _searchQuery = value;
@@ -477,11 +516,15 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                             },
                                                             decoration: InputDecoration(
                                                               hintText: 'Search...',
-                                                              hintStyle: const TextStyle(color: Colors.grey),
+                                                              hintStyle: const TextStyle(
+                                                                color: Colors.grey,
+                                                              ),
                                                               filled: true,
                                                               fillColor: MyColors.appbarColor,
                                                               border: OutlineInputBorder(
-                                                                borderRadius: BorderRadius.circular(8),
+                                                                borderRadius: BorderRadius.circular(
+                                                                  8,
+                                                                ),
                                                                 borderSide: BorderSide.none,
                                                               ),
                                                             ),
@@ -495,7 +538,10 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                             });
                                                             FocusScope.of(context).unfocus();
                                                           },
-                                                          icon: const Icon(Icons.search, color: Colors.white),
+                                                          icon: const Icon(
+                                                            Icons.search,
+                                                            color: Colors.white,
+                                                          ),
                                                         ),
                                                       ],
                                                     ),
@@ -505,120 +551,177 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                         future:
                                                             _searchQuery.isEmpty
                                                                 ? null
-                                                                : currentExtension?.search(_searchQuery),
+                                                                : currentExtension?.search(
+                                                                  _searchQuery,
+                                                                ),
                                                         builder: (context, snapshot) {
                                                           if (_searchQuery.isEmpty) {
                                                             return const Center(
                                                               child: Text(
                                                                 'Enter a search term',
-                                                                style: TextStyle(color: Colors.white),
+                                                                style: TextStyle(
+                                                                  color: Colors.white,
+                                                                ),
                                                               ),
                                                             );
                                                           }
-      
-                                                          if (snapshot.connectionState == ConnectionState.waiting) {
+
+                                                          if (snapshot.connectionState ==
+                                                              ConnectionState.waiting) {
                                                             return const Center(
                                                               child: CircularProgressIndicator(
                                                                 color: MyColors.coolPurple,
                                                               ),
                                                             );
                                                           }
-      
+
                                                           if (snapshot.hasError) {
                                                             return Center(
                                                               child: Text(
                                                                 'Error: ${snapshot.error}',
-                                                                style: const TextStyle(color: Colors.white),
+                                                                style: const TextStyle(
+                                                                  color: Colors.white,
+                                                                ),
                                                               ),
                                                             );
                                                           }
-      
+
                                                           final searchResults =
                                                               snapshot.data
-                                                                  ?.map((item) => item as Map<String, dynamic>)
+                                                                  ?.map(
+                                                                    (item) =>
+                                                                        item
+                                                                            as Map<String, dynamic>,
+                                                                  )
                                                                   .toList() ??
                                                               [];
-      
+
                                                           return GridView.builder(
-                                                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                                              crossAxisCount:
-                                                                  Tools.getResponsiveCrossAxisVal(
-                                                                            MediaQuery.of(context).size.width,
+                                                            gridDelegate:
+                                                                SliverGridDelegateWithFixedCrossAxisCount(
+                                                                  crossAxisCount:
+                                                                      Tools.getResponsiveCrossAxisVal(
+                                                                                MediaQuery.of(
+                                                                                  context,
+                                                                                ).size.width,
+                                                                                itemWidth: 460 / 4,
+                                                                              ) >
+                                                                              5
+                                                                          ? 5
+                                                                          : Tools.getResponsiveCrossAxisVal(
+                                                                            MediaQuery.of(
+                                                                              context,
+                                                                            ).size.width,
                                                                             itemWidth: 460 / 4,
-                                                                          ) >
-                                                                          5
-                                                                      ? 5
-                                                                      : Tools.getResponsiveCrossAxisVal(
-                                                                        MediaQuery.of(context).size.width,
-                                                                        itemWidth: 460 / 4,
-                                                                      ),
-                                                              mainAxisExtent: 240,
-                                                              crossAxisSpacing: 10,
-                                                              mainAxisSpacing: 10,
-                                                              childAspectRatio: 0.7,
-                                                            ),
+                                                                          ),
+                                                                  mainAxisExtent: 240,
+                                                                  crossAxisSpacing: 10,
+                                                                  mainAxisSpacing: 10,
+                                                                  childAspectRatio: 0.7,
+                                                                ),
                                                             itemCount: searchResults.length,
                                                             itemBuilder: (context, index) {
                                                               final anime = searchResults[index];
                                                               return AnimeCard2(
                                                                 onTap: (title) async {
-                                                                  final prefs = await SharedPreferences.getInstance();
+                                                                  final prefs =
+                                                                      await SharedPreferences.getInstance();
                                                                   final key =
                                                                       "anime_${widget.animeData["media"]["id"]}_extension_${currentExtension?.id}";
                                                                   // Set loading before closing the sheet
                                                                   setState(() {
                                                                     _isLoading = true;
                                                                   });
-      
+
                                                                   // Save the selected anime
                                                                   clossestAnime = anime;
-                                                                  await prefs.setString(key, jsonEncode(anime));
-                                                                  extensionAnimeTitle = anime["title"] ?? "";
-      
+                                                                  await prefs.setString(
+                                                                    key,
+                                                                    jsonEncode(anime),
+                                                                  );
+                                                                  extensionAnimeTitle =
+                                                                      anime["title"] ?? "";
+
                                                                   setState(() {
                                                                     foundTitle =
                                                                         clossestAnime == null
                                                                             ? " "
                                                                             : clossestAnime["title"];
                                                                   });
-      
+
                                                                   // Close the bottom sheet
                                                                   Navigator.pop(context);
-      
+
                                                                   // Fetch episodes after closing the sheet
                                                                   EpisodeList =
-                                                                      await currentExtension?.getEpisodeList(
-                                                                        clossestAnime["session"],
-                                                                      ) ??
+                                                                      await currentExtension
+                                                                          ?.getEpisodeList(
+                                                                            clossestAnime["session"],
+                                                                          ) ??
                                                                       [];
                                                                   itemCount = EpisodeList.length;
-      
-                                                                  int remaining = itemCount - firstTabCount;
-                                                                  int otherTabs = (remaining / eachItemForTab).ceil();
-                                                                  tabCount = 1 + (remaining > 0 ? otherTabs : 0);
-      
+
+                                                                  int remaining =
+                                                                      itemCount - firstTabCount;
+                                                                  int otherTabs =
+                                                                      (remaining / eachItemForTab)
+                                                                          .ceil();
+                                                                  tabCount =
+                                                                      1 +
+                                                                      (remaining > 0
+                                                                          ? otherTabs
+                                                                          : 0);
+
                                                                   tabItemCounts = [];
                                                                   if (itemCount <= firstTabCount) {
                                                                     tabItemCounts.add(itemCount);
                                                                   } else {
-                                                                    tabItemCounts.add(firstTabCount);
-                                                                    for (int i = 0; i < otherTabs; i++) {
-                                                                      int start = firstTabCount + i * eachItemForTab + 1;
-                                                                      int end = start + eachItemForTab - 1;
-                                                                      if (end > itemCount) end = itemCount;
-                                                                      tabItemCounts.add(end - start + 1);
+                                                                    tabItemCounts.add(
+                                                                      firstTabCount,
+                                                                    );
+                                                                    for (
+                                                                      int i = 0;
+                                                                      i < otherTabs;
+                                                                      i++
+                                                                    ) {
+                                                                      int start =
+                                                                          firstTabCount +
+                                                                          i * eachItemForTab +
+                                                                          1;
+                                                                      int end =
+                                                                          start +
+                                                                          eachItemForTab -
+                                                                          1;
+                                                                      if (end > itemCount)
+                                                                        end = itemCount;
+                                                                      tabItemCounts.add(
+                                                                        end - start + 1,
+                                                                      );
                                                                     }
                                                                   }
-      
+
                                                                   labels = [];
                                                                   if (itemCount <= firstTabCount) {
                                                                     labels.add("1 - $itemCount");
                                                                   } else {
-                                                                    labels.add("1 - $firstTabCount");
-                                                                    for (int i = 0; i < otherTabs; i++) {
-                                                                      int start = firstTabCount + i * eachItemForTab + 1;
-                                                                      int end = start + eachItemForTab - 1;
-                                                                      if (end > itemCount) end = itemCount;
+                                                                    labels.add(
+                                                                      "1 - $firstTabCount",
+                                                                    );
+                                                                    for (
+                                                                      int i = 0;
+                                                                      i < otherTabs;
+                                                                      i++
+                                                                    ) {
+                                                                      int start =
+                                                                          firstTabCount +
+                                                                          i * eachItemForTab +
+                                                                          1;
+                                                                      int end =
+                                                                          start +
+                                                                          eachItemForTab -
+                                                                          1;
+                                                                      if (end > itemCount)
+                                                                        end = itemCount;
                                                                       labels.add("$start - $end");
                                                                     }
                                                                   }
@@ -629,7 +732,9 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                                   });
                                                                 },
                                                                 index: index,
-                                                                title: anime["title"] ?? "Unknown Title",
+                                                                title:
+                                                                    anime["title"] ??
+                                                                    "Unknown Title",
                                                                 imageUrl: anime["poster"] ?? "",
                                                               );
                                                             },
@@ -668,21 +773,26 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                     ),
                                     label: Text(
                                       widget.animeData["media"]["episodes"] != null
-                                          ? widget.animeData["media"]["episodes"] == widget.animeData["progress"]
+                                          ? widget.animeData["media"]["episodes"] ==
+                                                  widget.animeData["progress"]
                                               ? "FINISHED"
                                               : "CONTINUE EPISODE ${widget.animeData["progress"] + 1}"
                                           : "NULL",
-                                      style: const TextStyle(color: MyColors.coolGreen, fontWeight: FontWeight.w600),
+                                      style: const TextStyle(
+                                        color: MyColors.coolGreen,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                     icon:
                                         widget.animeData["media"]["episodes"] != null &&
-                                                widget.animeData["media"]["episodes"] != widget.animeData["progress"]
+                                                widget.animeData["media"]["episodes"] !=
+                                                    widget.animeData["progress"]
                                             ? const Icon(Icons.play_arrow_outlined, size: 20)
                                             : const SizedBox(),
                                     onPressed: () async {
                                       showModalBottomSheet(
                                         backgroundColor: MyColors.backgroundColor,
-      
+
                                         context: context,
                                         builder: (context) {
                                           return Container(
@@ -708,13 +818,21 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                                   builder:
                                                                       (context) => PlayerPage(
                                                                         episodeList: EpisodeList,
-                                                                        currentExtension: currentExtension,
-                                                                        episodeCount: EpisodeList.length,
+                                                                        currentExtension:
+                                                                            currentExtension,
+                                                                        episodeCount:
+                                                                            EpisodeList.length,
                                                                         extensionEpisodeData:
-                                                                            EpisodeList[widget.animeData["progress"]],
-                                                                        episodeNumber: widget.animeData["progress"] + 1,
-                                                                        extensionStreamData: snapshot.data?[index],
-                                                                        anilistData: widget.animeData,
+                                                                            EpisodeList[widget
+                                                                                .animeData["progress"]],
+                                                                        episodeNumber:
+                                                                            widget
+                                                                                .animeData["progress"] +
+                                                                            1,
+                                                                        extensionStreamData:
+                                                                            snapshot.data?[index],
+                                                                        anilistData:
+                                                                            widget.animeData,
                                                                       ),
                                                                 ),
                                                               );
@@ -722,7 +840,9 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                             child: Container(
                                                               decoration: BoxDecoration(
                                                                 color: MyColors.coolPurple2,
-                                                                borderRadius: BorderRadius.circular(12),
+                                                                borderRadius: BorderRadius.circular(
+                                                                  12,
+                                                                ),
                                                               ),
                                                               width: double.infinity,
                                                               height: 60,
@@ -746,7 +866,9 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                       height: double.infinity,
                                                       width: double.infinity,
                                                       child: Center(
-                                                        child: CircularProgressIndicator(color: MyColors.coolPurple),
+                                                        child: CircularProgressIndicator(
+                                                          color: MyColors.coolPurple,
+                                                        ),
                                                       ),
                                                     );
                                               },
@@ -758,7 +880,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                   ),
                                 ),
                                 const SizedBox(height: 10),
-      
+
                                 //Tab bar builder
                                 Builder(
                                   builder: (context) {
@@ -768,7 +890,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                         tabController.addListener(() {
                                           setState(() {});
                                         });
-      
+
                                         return TabBar(
                                           controller: _tabController,
                                           tabAlignment: TabAlignment.start,
@@ -780,7 +902,10 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                             final bool selected = tabController.index == i;
                                             return Container(
                                               margin: const EdgeInsets.symmetric(horizontal: 5),
-                                              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                                              padding: const EdgeInsets.symmetric(
+                                                vertical: 6,
+                                                horizontal: 8,
+                                              ),
                                               decoration: BoxDecoration(
                                                 borderRadius: BorderRadius.circular(8),
                                                 color: selected ? Colors.white : Colors.transparent,
@@ -790,7 +915,10 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                 child: Text(
                                                   labels[i],
                                                   style: TextStyle(
-                                                    color: selected ? MyColors.coolPurple : const Color(0xFF9A989B),
+                                                    color:
+                                                        selected
+                                                            ? MyColors.coolPurple
+                                                            : const Color(0xFF9A989B),
                                                     fontWeight: FontWeight.w600,
                                                   ),
                                                 ),
@@ -822,7 +950,11 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                         children: [
                           Text(
                             "Loading The Anime...",
-                            style: TextStyle(color: MyColors.appbarTextColor, fontSize: 30, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              color: MyColors.appbarTextColor,
+                              fontSize: 30,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           CircularProgressIndicator(color: MyColors.coolPurple),
                         ],
@@ -833,7 +965,8 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                     controller: _tabController,
                     children: List.generate(tabCount, (tabIndex) {
                       int count = tabItemCounts[tabIndex];
-                      int startIndex = (tabIndex == 0) ? 0 : firstTabCount + (tabIndex - 1) * eachItemForTab;
+                      int startIndex =
+                          (tabIndex == 0) ? 0 : firstTabCount + (tabIndex - 1) * eachItemForTab;
                       return count == 0
                           ? const Center(
                             child: Padding(
@@ -961,11 +1094,14 @@ class _buildAnimeEpisodeList extends StatelessWidget {
                                                             builder:
                                                                 (context) => PlayerPage(
                                                                   episodeList: episodeList,
-                                                                  currentExtension: currentExtension,
+                                                                  currentExtension:
+                                                                      currentExtension,
                                                                   episodeCount: episodeList.length,
-                                                                  extensionEpisodeData: episodeList[episodeIndex],
+                                                                  extensionEpisodeData:
+                                                                      episodeList[episodeIndex],
                                                                   episodeNumber: episodeIndex + 1,
-                                                                  extensionStreamData: snapshot.data?[index],
+                                                                  extensionStreamData:
+                                                                      snapshot.data?[index],
                                                                   anilistData: widget.animeData,
                                                                 ),
                                                           ),
@@ -1000,7 +1136,9 @@ class _buildAnimeEpisodeList extends StatelessWidget {
                                 : const SizedBox(
                                   height: double.infinity,
                                   width: double.infinity,
-                                  child: Center(child: CircularProgressIndicator(color: MyColors.coolPurple)),
+                                  child: Center(
+                                    child: CircularProgressIndicator(color: MyColors.coolPurple),
+                                  ),
                                 );
                           },
                         ),
@@ -1019,8 +1157,12 @@ class _buildAnimeEpisodeList extends StatelessWidget {
 }
 
 class _buildAnimeCoverSliverAppBar extends StatelessWidget {
-  const _buildAnimeCoverSliverAppBar({super.key, required bool isCollapsed, required this.title, required this.widget})
-    : _isCollapsed = isCollapsed;
+  const _buildAnimeCoverSliverAppBar({
+    super.key,
+    required bool isCollapsed,
+    required this.title,
+    required this.widget,
+  }) : _isCollapsed = isCollapsed;
 
   final bool _isCollapsed;
   final dynamic title;
@@ -1039,9 +1181,7 @@ class _buildAnimeCoverSliverAppBar extends StatelessWidget {
         child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
       ),
       expandedHeight: (MediaQuery.of(context).size.height) * 0.7,
-      flexibleSpace: FlexibleSpaceBar(
-        background: AnimeCover(animeData: widget.animeData),
-      ),
+      flexibleSpace: FlexibleSpaceBar(background: AnimeCover(animeData: widget.animeData)),
     );
   }
 }
@@ -1062,7 +1202,8 @@ class _buildFloatingActionButton extends StatelessWidget {
         const double buttonHeight = 56; // Approximate button height
         const double verticalPadding = 12 + 12 + 12; // top + between + below
 
-        final double scrollTarget = sliverAppBarHeight + extensionPickerHeight + buttonHeight + verticalPadding;
+        final double scrollTarget =
+            sliverAppBarHeight + extensionPickerHeight + buttonHeight + verticalPadding;
 
         _scrollController.animateTo(
           scrollTarget - 90,
@@ -1199,7 +1340,10 @@ class AnimeEpisode extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   color: current ? const Color(0xFF3c3243) : MyColors.coolPurple2,
-                  borderRadius: const BorderRadius.only(topRight: Radius.circular(12), bottomLeft: Radius.circular(12)),
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
+                  ),
                 ),
                 padding: const EdgeInsets.only(left: 15, right: 15),
                 child: Text(
@@ -1309,7 +1453,11 @@ class _AnimeCoverState extends State<AnimeCover> {
                     const SizedBox(height: 4),
                     Text(
                       genres.join(' • '),
-                      style: const TextStyle(color: Color(0xFFA9A7A7), fontSize: 15, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        color: Color(0xFFA9A7A7),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -1318,8 +1466,16 @@ class _AnimeCoverState extends State<AnimeCover> {
                         Text(
                           widget.animeData["media"]["averageScore"].toString() == "null"
                               ? "0.0"
-                              : Tools.insertAt(widget.animeData["media"]["averageScore"].toString(), ".", 1),
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange),
+                              : Tools.insertAt(
+                                widget.animeData["media"]["averageScore"].toString(),
+                                ".",
+                                1,
+                              ),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.orange,
+                          ),
                         ),
                         const Icon(Icons.star, color: Colors.orange, size: 18),
                       ],
@@ -1327,7 +1483,11 @@ class _AnimeCoverState extends State<AnimeCover> {
                     const SizedBox(height: 2),
                     const Text(
                       "Synopsis",
-                      style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
