@@ -222,9 +222,11 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
 
     prepareTabBarAndListView();
 
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void prepareTabBarAndListView() {
@@ -259,7 +261,12 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
         labels.add("$start - $end");
       }
     }
-    _tabController = TabController(length: tabCount, vsync: this);
+    if (mounted) {
+      if (_tabController.length != tabCount) {
+        _tabController.dispose();
+        _tabController = TabController(length: tabCount, vsync: this);
+      }
+    }
   }
 
   Future<void> _initializeData() async {
@@ -362,7 +369,9 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                               );
                                               currentExtension =
                                                   _localExtensionManager.getCurrentExtension();
-                                              await initEpisodeList();
+                                              if (mounted) {
+                                                await initEpisodeList();
+                                              }
                                             },
                                             itemBuilder:
                                                 (context) =>
@@ -641,7 +650,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
 
                                                                 // Close the bottom sheet
                                                                 Navigator.pop(context);
-  
+
                                                                 // Fetch episodes after closing the sheet
                                                                 EpisodeList =
                                                                     await currentExtension
@@ -649,13 +658,15 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                                           clossestAnime["session"],
                                                                         ) ??
                                                                     [];
-                                                                
+
                                                                 prepareTabBarAndListView();
-                                                                
+
                                                                 // Remove loading and update UI
-                                                                setState(() {
-                                                                  _isLoading = false;
-                                                                });
+                                                                if (mounted) {
+                                                                  setState(() {
+                                                                    _isLoading = false;
+                                                                  });
+                                                                }
                                                               },
                                                               index: index,
                                                               title:
@@ -815,6 +826,10 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                         setState(() {});
                                       });
 
+                                      if (_tabController.length != tabCount) {
+                                        return const SizedBox(); // or a loading indicator
+                                      }
+
                                       return TabBar(
                                         controller: _tabController,
                                         tabAlignment: TabAlignment.start,
@@ -888,8 +903,12 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                 : TabBarView(
                   controller: _tabController,
                   children: List.generate(tabCount, (tabIndex) {
-                    bool isLandscape = MediaQuery.orientationOf(context) == Orientation.landscape; 
-                    EdgeInsetsGeometry padding = EdgeInsets.only(left: (isLandscape ? 20 : 0) + 12, right: (isLandscape ? 20 : 0) + 12, top: 12);
+                    bool isLandscape = MediaQuery.orientationOf(context) == Orientation.landscape;
+                    EdgeInsetsGeometry padding = EdgeInsets.only(
+                      left: (isLandscape ? 20 : 0) + 12,
+                      right: (isLandscape ? 20 : 0) + 12,
+                      top: 12,
+                    );
                     int count = tabItemCounts[tabIndex];
                     int startIndex =
                         (tabIndex == 0) ? 0 : firstTabCount + (tabIndex - 1) * eachItemForTab;

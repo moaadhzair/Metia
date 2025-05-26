@@ -100,10 +100,8 @@ class _PlayerPageState extends State<PlayerPage> {
       // Sort providers by quality (assuming quality is in the provider name)
       providers.sort((a, b) {
         // Extract quality numbers (e.g. "720p" -> 720)
-        int qualityA =
-            int.tryParse(RegExp(r'(\d+)p').firstMatch(a["provider"])?.group(1) ?? "0") ?? 0;
-        int qualityB =
-            int.tryParse(RegExp(r'(\d+)p').firstMatch(b["provider"])?.group(1) ?? "0") ?? 0;
+        int qualityA = int.tryParse(RegExp(r'(\d+)p').firstMatch(a["provider"])?.group(1) ?? "0") ?? 0;
+        int qualityB = int.tryParse(RegExp(r'(\d+)p').firstMatch(b["provider"])?.group(1) ?? "0") ?? 0;
         return qualityB.compareTo(qualityA); // Higher quality first
       });
 
@@ -140,10 +138,8 @@ class _PlayerPageState extends State<PlayerPage> {
       // Sort providers by quality (assuming quality is in the provider name)
       providers.sort((a, b) {
         // Extract quality numbers (e.g. "720p" -> 720)
-        int qualityA =
-            int.tryParse(RegExp(r'(\d+)p').firstMatch(a["provider"])?.group(1) ?? "0") ?? 0;
-        int qualityB =
-            int.tryParse(RegExp(r'(\d+)p').firstMatch(b["provider"])?.group(1) ?? "0") ?? 0;
+        int qualityA = int.tryParse(RegExp(r'(\d+)p').firstMatch(a["provider"])?.group(1) ?? "0") ?? 0;
+        int qualityB = int.tryParse(RegExp(r'(\d+)p').firstMatch(b["provider"])?.group(1) ?? "0") ?? 0;
         return qualityB.compareTo(qualityA); // Higher quality first
       });
 
@@ -170,10 +166,7 @@ class _PlayerPageState extends State<PlayerPage> {
     super.initState();
 
     // Force landscape only when this page is visible
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
     // Listen to player state changes
@@ -224,9 +217,17 @@ class _PlayerPageState extends State<PlayerPage> {
   }
 
   Future<void> initPlayer() async {
-    player.open(Media(extensionStreamData["m3u8"] ?? extensionStreamData["link"],  httpHeaders: {"referer" : extensionStreamData["referer"] ?? ""}), play: true).then((value) {
-      _startHideTimer();
-    });
+    player
+        .open(
+          Media(
+            extensionStreamData["m3u8"] ?? extensionStreamData["link"],
+            httpHeaders: {"referer": extensionStreamData["referer"] ?? ""},
+          ),
+          play: true,
+        )
+        .then((value) {
+          _startHideTimer();
+        });
 
     await player.seek(Duration.zero);
   }
@@ -266,8 +267,7 @@ class _PlayerPageState extends State<PlayerPage> {
                 final isLeftSide = _lastTapPosition!.dx < screenWidth / 2;
 
                 final now = DateTime.now();
-                if (_lastDoubleTapTime != null &&
-                    now.difference(_lastDoubleTapTime!).inSeconds <= 1) {
+                if (_lastDoubleTapTime != null && now.difference(_lastDoubleTapTime!).inSeconds <= 1) {
                   setState(() {
                     _seekSeconds += isLeftSide ? -10 : 10;
                   });
@@ -319,11 +319,7 @@ class _PlayerPageState extends State<PlayerPage> {
               child: Stack(
                 children: [
                   // This transparent container ensures the GestureDetector covers the full area
-                  Container(
-                    color: Colors.transparent,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
+                  Container(color: Colors.transparent, width: double.infinity, height: double.infinity),
                   // Seek indicator with fade animation
                   Positioned(
                     left:
@@ -332,9 +328,7 @@ class _PlayerPageState extends State<PlayerPage> {
                                 50 // Subtract half of approximate container width
                             : MediaQuery.of(context).size.width * 0.75 -
                                 50, // Subtract half of approximate container width
-                    top:
-                        MediaQuery.of(context).size.height * 0.5 -
-                        25, // Subtract half of approximate container height
+                    top: MediaQuery.of(context).size.height * 0.5 - 25, // Subtract half of approximate container height
                     child: AnimatedOpacity(
                       opacity: _showSeekDisplay ? 1.0 : 0.0,
                       duration: const Duration(milliseconds: 300),
@@ -346,11 +340,7 @@ class _PlayerPageState extends State<PlayerPage> {
                         ),
                         child: Text(
                           '${_seekSeconds > 0 ? "+" : ""}${_seekSeconds}s',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -438,9 +428,7 @@ class _PlayerPageState extends State<PlayerPage> {
                                                   }
                                                 },
                                                 icon: Icon(
-                                                  player.state.playing
-                                                      ? Icons.pause
-                                                      : Icons.play_arrow,
+                                                  player.state.playing ? Icons.pause : Icons.play_arrow,
                                                   size: 40,
                                                   color: Colors.white,
                                                 ),
@@ -485,56 +473,82 @@ class _PlayerPageState extends State<PlayerPage> {
                                                   fontWeight: FontWeight.w500,
                                                 ),
                                               ),
+                                              // ...inside your build method...
                                               Expanded(
                                                 child: Stack(
-                                                  alignment: Alignment.center,
+                                                  alignment: Alignment.centerLeft,
                                                   children: [
-                                                    // Buffering progress
-                                                    SliderTheme(
-                                                      data: SliderThemeData(
-                                                        trackHeight: 2.0,
-                                                        thumbShape: SliderComponentShape.noThumb,
-                                                        overlayShape:
-                                                            SliderComponentShape.noOverlay,
-                                                        activeTrackColor: Colors.white.withOpacity(
-                                                          0.3,
+                                                    // Buffering bar (background)
+                                                    Padding(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 12) ,
+                                                      child: Stack(
+                                                        children: [
+                                                          Container(
+                                                        height: 4,
+                                                        decoration: BoxDecoration(
+                                                          color: MyColors.coolPurple.withOpacity(0.3),
+                                                          borderRadius: BorderRadius.circular(2),
                                                         ),
-                                                        inactiveTrackColor: Colors.white
-                                                            .withOpacity(0.1),
                                                       ),
-                                                      child: Slider(
-                                                        min: 0,
-                                                        max:
-                                                            player.state.duration.inSeconds
-                                                                .toDouble(),
-                                                        value:
-                                                            player.state.buffer.inSeconds
-                                                                .toDouble(),
-                                                        onChanged: null,
+                                                      // Buffered progress
+                                                      FractionallySizedBox(
+                                                        widthFactor:
+                                                            player.state.duration.inSeconds == 0
+                                                                ? 0
+                                                                : player.state.buffer.inSeconds /
+                                                                    player.state.duration.inSeconds,
+                                                        child: Container(
+                                                          height: 4,
+                                                          decoration: BoxDecoration(
+                                                            color: MyColors.coolPurple,
+                                                            borderRadius: BorderRadius.circular(2),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      // Playback progress (white)
+                                                      FractionallySizedBox(
+                                                        widthFactor:
+                                                            player.state.duration.inSeconds == 0
+                                                                ? 0
+                                                                : player.state.position.inSeconds /
+                                                                    player.state.duration.inSeconds,
+                                                        child: Container(
+                                                          height: 4,
+                                                          decoration: BoxDecoration(
+                                                            color: Colors.white,
+                                                            borderRadius: BorderRadius.circular(2),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      // Slider thumb (interactive)
+                                                      
+                                                        ],
                                                       ),
                                                     ),
-                                                    // Playback progress
                                                     SliderTheme(
-                                                      data: const SliderThemeData(
-                                                        trackHeight: 2.0,
-                                                        activeTrackColor: MyColors.coolPurple,
-                                                        inactiveTrackColor: MyColors.coolPurple2,
+                                                      data: SliderTheme.of(context).copyWith(
+                                                        trackHeight: 0, // Hide the slider's own track
+                                                        thumbShape: const RoundSliderThumbShape(
+                                                          enabledThumbRadius: 7,
+                                                        ),
+                                                        overlayShape: const RoundSliderOverlayShape(
+                                                          overlayRadius: 14,
+                                                        ),
+                                                        activeTrackColor: Colors.transparent,
+                                                        inactiveTrackColor: Colors.transparent,
                                                       ),
                                                       child: Slider(
                                                         min: 0,
-                                                        max:
-                                                            player.state.duration.inSeconds
-                                                                .toDouble(),
-                                                        value:
-                                                            player.state.position.inSeconds
-                                                                .toDouble(),
+                                                        max: player.state.duration.inSeconds.toDouble(),
+                                                        value: player.state.position.inSeconds.toDouble().clamp(
+                                                          0,
+                                                          player.state.duration.inSeconds.toDouble(),
+                                                        ),
                                                         onChanged: (value) {
                                                           _startHideTimer();
                                                           if (mounted) {
                                                             setState(() {
-                                                              player.seek(
-                                                                Duration(seconds: value.toInt()),
-                                                              );
+                                                              player.seek(Duration(seconds: value.toInt()));
                                                             });
                                                           }
                                                         },
