@@ -55,6 +55,7 @@ class _PlayerPageState extends State<PlayerPage> {
   Timer? _hideTimer;
   Timer? _seekTimer;
   Timer? _seekDisplayTimer;
+  double? _dragValue;
 
   bool _showControls = true;
   bool _showSeekDisplay = false;
@@ -480,77 +481,82 @@ class _PlayerPageState extends State<PlayerPage> {
                                                   children: [
                                                     // Buffering bar (background)
                                                     Padding(
-                                                      padding: const EdgeInsets.symmetric(horizontal: 12) ,
+                                                      padding: const EdgeInsets.symmetric(horizontal: 12),
                                                       child: Stack(
                                                         children: [
                                                           Container(
-                                                        height: 4,
-                                                        decoration: BoxDecoration(
-                                                          color: MyColors.coolPurple.withOpacity(0.3),
-                                                          borderRadius: BorderRadius.circular(2),
-                                                        ),
-                                                      ),
-                                                      // Buffered progress
-                                                      FractionallySizedBox(
-                                                        widthFactor:
-                                                            player.state.duration.inSeconds == 0
-                                                                ? 0
-                                                                : player.state.buffer.inSeconds /
-                                                                    player.state.duration.inSeconds,
-                                                        child: Container(
-                                                          height: 4,
-                                                          decoration: BoxDecoration(
-                                                            color: MyColors.coolPurple,
-                                                            borderRadius: BorderRadius.circular(2),
+                                                            height: 4,
+                                                            decoration: BoxDecoration(
+                                                              color: MyColors.coolPurple.withOpacity(0.3),
+                                                              borderRadius: BorderRadius.circular(2),
+                                                            ),
                                                           ),
-                                                        ),
-                                                      ),
-                                                      // Playback progress (white)
-                                                      FractionallySizedBox(
-                                                        widthFactor:
-                                                            player.state.duration.inSeconds == 0
-                                                                ? 0
-                                                                : player.state.position.inSeconds /
-                                                                    player.state.duration.inSeconds,
-                                                        child: Container(
-                                                          height: 4,
-                                                          decoration: BoxDecoration(
-                                                            color: Colors.white,
-                                                            borderRadius: BorderRadius.circular(2),
+                                                          // Buffered progress
+                                                          FractionallySizedBox(
+                                                            widthFactor:
+                                                                player.state.duration.inSeconds == 0
+                                                                    ? 0
+                                                                    : player.state.buffer.inSeconds /
+                                                                        player.state.duration.inSeconds,
+                                                            child: Container(
+                                                              height: 4,
+                                                              decoration: BoxDecoration(
+                                                                color: MyColors.coolPurple,
+                                                                borderRadius: BorderRadius.circular(2),
+                                                              ),
+                                                            ),
                                                           ),
-                                                        ),
-                                                      ),
-                                                      // Slider thumb (interactive)
-                                                      
+                                                          // Playback progress (white)
+                                                          // Playback progress (white)
+                                                          FractionallySizedBox(
+                                                            widthFactor:
+                                                                player.state.duration.inSeconds == 0
+                                                                    ? 0
+                                                                    : (_dragValue ??
+                                                                            player.state.position.inSeconds
+                                                                                .toDouble()) /
+                                                                        player.state.duration.inSeconds,
+                                                            child: Container(
+                                                              height: 4,
+                                                              decoration: BoxDecoration(
+                                                                color: Colors.white,
+                                                                borderRadius: BorderRadius.circular(2),
+                                                              ),
+                                                            ),
+                                                          ),
+
+                                                          // Slider thumb (interactive)
                                                         ],
                                                       ),
                                                     ),
                                                     SliderTheme(
                                                       data: SliderTheme.of(context).copyWith(
-                                                        trackHeight: 0, // Hide the slider's own track
-                                                        thumbShape: const RoundSliderThumbShape(
-                                                          enabledThumbRadius: 7,
-                                                        ),
-                                                        overlayShape: const RoundSliderOverlayShape(
-                                                          overlayRadius: 14,
-                                                        ),
+                                                        trackHeight: 0,
+                                                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                                                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
                                                         activeTrackColor: Colors.transparent,
                                                         inactiveTrackColor: Colors.transparent,
                                                       ),
                                                       child: Slider(
                                                         min: 0,
                                                         max: player.state.duration.inSeconds.toDouble(),
-                                                        value: player.state.position.inSeconds.toDouble().clamp(
-                                                          0,
-                                                          player.state.duration.inSeconds.toDouble(),
-                                                        ),
+                                                        value:
+                                                            _dragValue ??
+                                                            player.state.position.inSeconds.toDouble().clamp(
+                                                              0,
+                                                              player.state.duration.inSeconds.toDouble(),
+                                                            ),
                                                         onChanged: (value) {
                                                           _startHideTimer();
-                                                          if (mounted) {
-                                                            setState(() {
-                                                              player.seek(Duration(seconds: value.toInt()));
-                                                            });
-                                                          }
+                                                          setState(() {
+                                                            _dragValue = value;
+                                                          });
+                                                        },
+                                                        onChangeEnd: (value) {
+                                                          setState(() {
+                                                            _dragValue = null;
+                                                          });
+                                                          player.seek(Duration(seconds: value.toInt()));
                                                         },
                                                       ),
                                                     ),
