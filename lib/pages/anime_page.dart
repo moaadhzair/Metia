@@ -641,7 +641,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
 
                                                                 // Close the bottom sheet
                                                                 Navigator.pop(context);
-
+  
                                                                 // Fetch episodes after closing the sheet
                                                                 EpisodeList =
                                                                     await currentExtension
@@ -649,63 +649,9 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                                           clossestAnime["session"],
                                                                         ) ??
                                                                     [];
-                                                                itemCount = EpisodeList.length;
-
-                                                                int remaining =
-                                                                    itemCount - firstTabCount;
-                                                                int otherTabs =
-                                                                    (remaining / eachItemForTab)
-                                                                        .ceil();
-                                                                tabCount =
-                                                                    1 +
-                                                                    (remaining > 0 ? otherTabs : 0);
-
-                                                                tabItemCounts = [];
-                                                                if (itemCount <= firstTabCount) {
-                                                                  tabItemCounts.add(itemCount);
-                                                                } else {
-                                                                  tabItemCounts.add(firstTabCount);
-                                                                  for (
-                                                                    int i = 0;
-                                                                    i < otherTabs;
-                                                                    i++
-                                                                  ) {
-                                                                    int start =
-                                                                        firstTabCount +
-                                                                        i * eachItemForTab +
-                                                                        1;
-                                                                    int end =
-                                                                        start + eachItemForTab - 1;
-                                                                    if (end > itemCount)
-                                                                      end = itemCount;
-                                                                    tabItemCounts.add(
-                                                                      end - start + 1,
-                                                                    );
-                                                                  }
-                                                                }
-
-                                                                labels = [];
-                                                                if (itemCount <= firstTabCount) {
-                                                                  labels.add("1 - $itemCount");
-                                                                } else {
-                                                                  labels.add("1 - $firstTabCount");
-                                                                  for (
-                                                                    int i = 0;
-                                                                    i < otherTabs;
-                                                                    i++
-                                                                  ) {
-                                                                    int start =
-                                                                        firstTabCount +
-                                                                        i * eachItemForTab +
-                                                                        1;
-                                                                    int end =
-                                                                        start + eachItemForTab - 1;
-                                                                    if (end > itemCount)
-                                                                      end = itemCount;
-                                                                    labels.add("$start - $end");
-                                                                  }
-                                                                }
-                                                                print("finished loading");
+                                                                
+                                                                prepareTabBarAndListView();
+                                                                
                                                                 // Remove loading and update UI
                                                                 setState(() {
                                                                   _isLoading = false;
