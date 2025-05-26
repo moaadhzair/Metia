@@ -381,12 +381,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 ),
               ),
             ),
-            body: SafeArea(
-              top: false,
-              bottom: false,
-              left: true,
-              right: true,
-              child:
+            body: Padding(
+             padding: EdgeInsets.symmetric(horizontal: MediaQuery.orientationOf(context) == Orientation.landscape ? 40 : 0),
+             child:
                   _loading
                       ? const Center(child: CircularProgressIndicator())
                       : _error == "Exception: Please sign in to fetch your anime list."
