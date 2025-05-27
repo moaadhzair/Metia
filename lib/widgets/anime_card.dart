@@ -154,7 +154,7 @@ class _AnimeCardState extends State<AnimeCard> {
                     children: [
                       TextSpan(
                         text:
-                            "${widget.data["progress"]}/${widget.data["media"]["episodes"] ?? "??"}",
+                            "${widget.data["progress"]}/${widget.data["media"]["episodes"] ?? "?"}",
                         style: const TextStyle(
                           color: MyColors.appbarTextColor,
                           fontSize: 16,

@@ -197,112 +197,120 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               actions: [
                 Padding(
                   padding: const EdgeInsets.only(top: 4, right: 4),
-                  child: PopupMenuButton<String>(
-                    //shape: Border.all(style: BorderStyle.none),
-                    surfaceTintColor: MyColors.backgroundColor,
-                    tooltip: "",
-                    //requestFocus: false,
-                    icon: const Icon(Icons.more_vert, color: MyColors.appbarTextColor, size: 29),
-                    onOpened: () {
-                      setState(() {
-                        _isPopupMenuOpen = true;
-                        _blurOpacity = 1.0; // Show the blur effect
-                      });
-                    },
-                    onCanceled: () {
-                      setState(() {
-                        _isPopupMenuOpen = false;
-                        _blurOpacity = 0.0; // Hide the blur effect
-                      });
-                    },
-                    constraints: const BoxConstraints(maxWidth: 160),
-                    itemBuilder:
-                        (context) => <PopupMenuEntry<String>>[
-                          PopupMenuItem<String>(
-                            onTap: () {
-                              Tools.Toast(context, "Refreshing...");
-                              _fetchAnimeLibrary(false);
-                            },
-                            height: 35,
-                            child: const Row(
-                              children: [
-                                Icon(Icons.refresh, size: 30, color: MyColors.unselectedColor),
-                                SizedBox(width: 10),
-                                Text(
-                                  "Refresh",
-                                  style: TextStyle(
-                                    color: MyColors.unselectedColor,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
+                  child: Theme(
+                    data: Theme.of(context).copyWith(
+                                            splashColor: Colors.transparent,
+                                            highlightColor: Colors.transparent,
+                                          ),
+                                          
+                    child: PopupMenuButton<String>(
+                      splashRadius: 1,
+                      
+                      //shape: Border.all(style: BorderStyle.none),
+                      color: MyColors.backgroundColor,
+                      tooltip: "",
+                      //requestFocus: false,
+                      icon: const Icon(Icons.more_vert, color: MyColors.appbarTextColor, size: 29),
+                      onOpened: () {
+                        setState(() {
+                          _isPopupMenuOpen = true;
+                          _blurOpacity = 1.0; // Show the blur effect
+                        });
+                      },
+                      onCanceled: () {
+                        setState(() {
+                          _isPopupMenuOpen = false;
+                          _blurOpacity = 0.0; // Hide the blur effect
+                        });
+                      },
+                      constraints: const BoxConstraints(maxWidth: 160),
+                      itemBuilder:
+                          (context) => <PopupMenuEntry<String>>[
+                            PopupMenuItem<String>(
+                              onTap: () {
+                                Tools.Toast(context, "Refreshing...");
+                                _fetchAnimeLibrary(false);
+                              },
+                              height: 35,
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.refresh, size: 30, color: MyColors.unselectedColor),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Refresh",
+                                    style: TextStyle(
+                                      color: MyColors.unselectedColor,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          const PopupMenuDivider(height: 10),
-                          PopupMenuItem<String>(
-                            height: 35,
-                            child: const Row(
-                              children: [
-                                Icon(Icons.extension, size: 30, color: MyColors.unselectedColor),
-                                SizedBox(width: 10),
-                                Text(
-                                  "Extensions",
-                                  style: TextStyle(
-                                    color: MyColors.unselectedColor,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
+                            const PopupMenuDivider(height: 10),
+                            PopupMenuItem<String>(
+                              height: 35,
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.extension, size: 30, color: MyColors.unselectedColor),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Extensions",
+                                    style: TextStyle(
+                                      color: MyColors.unselectedColor,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            onTap: () {
-                              if (mounted) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const ExtensionsPage()),
-                                );
-                              }
-                            },
-                          ),
-                          const PopupMenuDivider(height: 10),
-                          PopupMenuItem<String>(
-                            onTap: () async {
-                              final prefs = await SharedPreferences.getInstance();
-                              final authCode = prefs.getString('auth_key');
-                              if (authCode != null && authCode.isNotEmpty) {
+                                ],
+                              ),
+                              onTap: () {
                                 if (mounted) {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (context) => const UserPage()),
+                                    MaterialPageRoute(builder: (context) => const ExtensionsPage()),
                                   );
                                 }
-                              } else {
-                                await _launchUrl(
-                                  Uri.parse(
-                                    "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
-                                  ),
-                                );
-                              }
-                            },
-                            height: 35,
-                            child: const Row(
-                              children: [
-                                Icon(Icons.login, size: 30, color: MyColors.unselectedColor),
-                                SizedBox(width: 10),
-                                Text(
-                                  "Login",
-                                  style: TextStyle(
-                                    color: MyColors.unselectedColor,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                              },
                             ),
-                          ),
-                        ],
-                    color: MyColors.backgroundColor,
+                            const PopupMenuDivider(height: 10),
+                            PopupMenuItem<String>(
+                              onTap: () async {
+                                final prefs = await SharedPreferences.getInstance();
+                                final authCode = prefs.getString('auth_key');
+                                if (authCode != null && authCode.isNotEmpty) {
+                                  if (mounted) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const UserPage()),
+                                    );
+                                  }
+                                } else {
+                                  await _launchUrl(
+                                    Uri.parse(
+                                      "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
+                                    ),
+                                  );
+                                }
+                              },
+                              height: 35,
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.login, size: 30, color: MyColors.unselectedColor),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Login",
+                                    style: TextStyle(
+                                      color: MyColors.unselectedColor,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                    ),
                   ),
                 ),
               ],
