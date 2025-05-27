@@ -85,7 +85,6 @@ class _AnimeCardState extends State<AnimeCard> {
                           AnimatedBuilder(
                             animation: animation,
                             builder: (context, child) {
-                              print(1 - animation.value);
                               final double t = animation.value;
                               // double t;// fade out
                               return Opacity(

@@ -196,6 +196,9 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
 
     super.initState();
     _isLoading = true;
+    EpisodeList = [];
+    prepareTabBarAndListView();
+
     _localExtensionManager = ExtensionManager();
     _scrollController.addListener(_scrollListener);
     _localExtensionManager.init().then((value) async {
@@ -804,21 +807,17 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
             ],
         body:
             _isLoading
-                ? const Padding(
-                  padding: EdgeInsets.only(top: 115.0),
-                  child: Center(
-                    child: Column(
-                      spacing: 20,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Loading The Anime...",
-                          style: TextStyle(color: MyColors.appbarTextColor, fontSize: 30, fontWeight: FontWeight.w600),
-                        ),
-                        CircularProgressIndicator(color: MyColors.coolPurple),
-                      ],
+                ? const Column(
+                  spacing: 20,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      "Loading The Anime...",
+                      style: TextStyle(color: MyColors.appbarTextColor, fontSize: 30, fontWeight: FontWeight.w600),
                     ),
-                  ),
+                    CircularProgressIndicator(color: MyColors.coolPurple),
+                    SizedBox(height: 20),
+                  ],
                 )
                 : TabBarView(
                   controller: _tabController,
@@ -848,6 +847,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                         : Padding(
                           padding: padding,
                           child: _buildAnimeEpisodeList(
+                            isCollapsed: _isCollapsed,
                             count: count,
                             startIndex: startIndex,
                             extensionAnimeTitle: extensionAnimeTitle,
@@ -863,7 +863,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
   }
 }
 
-class _buildAnimeEpisodeList extends StatelessWidget {
+class _buildAnimeEpisodeList extends StatefulWidget {
   const _buildAnimeEpisodeList({
     super.key,
     required this.count,
@@ -872,6 +872,7 @@ class _buildAnimeEpisodeList extends StatelessWidget {
     required this.widget,
     required this.currentExtension,
     required this.episodeList,
+    required this.isCollapsed,
   });
 
   final int count;
@@ -880,23 +881,34 @@ class _buildAnimeEpisodeList extends StatelessWidget {
   final AnimePage widget;
   final Extension? currentExtension;
   final List episodeList;
+  final bool isCollapsed;
 
+  @override
+  State<_buildAnimeEpisodeList> createState() => _buildAnimeEpisodeListState();
+}
+
+class _buildAnimeEpisodeListState extends State<_buildAnimeEpisodeList> {
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
-      key: PageStorageKey<String>('anime-episode-list-$startIndex'),
+      key: PageStorageKey<String>('anime-episode-list-${widget.startIndex}'),
       slivers: [
         SliverOverlapInjector(handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
+        //SliverToBoxAdapter(child: SizedBox(height: widget.isCollapsed ? kToolbarHeight : 0)),
+        const SliverToBoxAdapter(child: SizedBox(height: kToolbarHeight)),
+
+        // Scroll up by kToolbarHeight when the list is built
+        
         SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
-            int episodeIndex = startIndex + index;
+            int episodeIndex = widget.startIndex + index;
             return Padding(
               padding: const EdgeInsets.only(bottom: 7),
               child: AnimeEpisode(
-                title: extensionAnimeTitle,
-                current: widget.animeData["progress"] == episodeIndex,
-                animeData: widget.animeData,
-                seen: widget.animeData["progress"] > episodeIndex,
+                title: widget.extensionAnimeTitle,
+                current: widget.widget.animeData["progress"] == episodeIndex,
+                animeData: widget.widget.animeData,
+                seen: widget.widget.animeData["progress"] > episodeIndex,
                 index: episodeIndex,
                 onClicked: (details) async {
                   showModalBottomSheet(
@@ -906,7 +918,7 @@ class _buildAnimeEpisodeList extends StatelessWidget {
                     builder: (context) {
                       return Container(
                         child: FutureBuilder(
-                          future: currentExtension?.getStreamData(episodeList[episodeIndex]["id"]),
+                          future: widget.currentExtension?.getStreamData(widget.episodeList[episodeIndex]["id"]),
                           builder: (context, snapshot) {
                             return snapshot.hasData
                                 ? Container(
@@ -956,13 +968,14 @@ class _buildAnimeEpisodeList extends StatelessWidget {
                                                           MaterialPageRoute(
                                                             builder:
                                                                 (context) => PlayerPage(
-                                                                  episodeList: episodeList,
-                                                                  currentExtension: currentExtension,
-                                                                  episodeCount: episodeList.length,
-                                                                  extensionEpisodeData: episodeList[episodeIndex],
+                                                                  episodeList: widget.episodeList,
+                                                                  currentExtension: widget.currentExtension,
+                                                                  episodeCount: widget.episodeList.length,
+                                                                  extensionEpisodeData:
+                                                                      widget.episodeList[episodeIndex],
                                                                   episodeNumber: episodeIndex + 1,
                                                                   extensionStreamData: snapshot.data?[index],
-                                                                  anilistData: widget.animeData,
+                                                                  anilistData: widget.widget.animeData,
                                                                 ),
                                                           ),
                                                         );
@@ -1004,10 +1017,10 @@ class _buildAnimeEpisodeList extends StatelessWidget {
                     },
                   );
                 },
-                episodeData: {"episode": episodeList[episodeIndex]},
+                episodeData: {"episode": widget.episodeList[episodeIndex]},
               ),
             );
-          }, childCount: count),
+          }, childCount: widget.count),
         ),
       ],
     );
@@ -1057,17 +1070,11 @@ class _buildFloatingActionButton extends StatelessWidget {
       onPressed: () {
         // Example: Scroll to top when pressed
         final double sliverAppBarHeight = MediaQuery.of(context).size.height * 0.7;
-        const double extensionPickerHeight = 56; // Approximate DropdownMenu height
-        const double buttonHeight = 56; // Approximate button height
-        const double verticalPadding = 12 + 12 + 12; // top + between + below
+        const double secondAppBarHeight = 0;
 
-        final double scrollTarget = sliverAppBarHeight + extensionPickerHeight + buttonHeight + verticalPadding;
+        final double scrollTarget = sliverAppBarHeight + secondAppBarHeight;
 
-        _scrollController.animateTo(
-          scrollTarget - 90,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeOut,
-        );
+        _scrollController.jumpTo(sliverAppBarHeight - kToolbarHeight + 1); //482 for bluestakcs
       },
       backgroundColor: MyColors.coolPurple,
       child: const Icon(Icons.arrow_upward, size: 30, color: MyColors.coolPurple2),
