@@ -458,7 +458,7 @@ class _PlayerPageState extends State<PlayerPage> {
                                       ),
                                       //bottom => current time, seekbar, duration
                                       Container(
-                                        alignment: Alignment.bottomCenter,
+                                        alignment: Alignment.center,
                                         width: double.infinity,
                                         height: MediaQuery.of(context).size.height * 0.3,
                                         child: Padding(
@@ -476,91 +476,96 @@ class _PlayerPageState extends State<PlayerPage> {
                                               ),
                                               // ...inside your build method...
                                               Expanded(
-                                                child: Stack(
-                                                  alignment: Alignment.centerLeft,
-                                                  children: [
-                                                    // Buffering bar (background)
-                                                    Padding(
-                                                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                                                      child: Stack(
-                                                        children: [
-                                                          Container(
-                                                            height: 4,
-                                                            decoration: BoxDecoration(
-                                                              color: MyColors.coolPurple.withOpacity(0.3),
-                                                              borderRadius: BorderRadius.circular(2),
-                                                            ),
-                                                          ),
-                                                          // Buffered progress
-                                                          FractionallySizedBox(
-                                                            widthFactor:
-                                                                player.state.duration.inSeconds == 0
-                                                                    ? 0
-                                                                    : player.state.buffer.inSeconds /
-                                                                        player.state.duration.inSeconds,
-                                                            child: Container(
+                                                child: Container(
+                                                  height: 30,
+                                                  color: Colors.black,
+                                                  child: Stack(
+                                                    alignment: Alignment.centerLeft,
+                                                    children: [
+                                                      // Buffering bar (background)
+                                                      Padding(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                                                        child: Stack(
+                                                          children: [
+                                                            Container(
                                                               height: 4,
                                                               decoration: BoxDecoration(
-                                                                color: MyColors.coolPurple,
+                                                                color: MyColors.coolPurple.withOpacity(0.3),
                                                                 borderRadius: BorderRadius.circular(2),
                                                               ),
                                                             ),
-                                                          ),
-                                                          // Playback progress (white)
-                                                          // Playback progress (white)
-                                                          FractionallySizedBox(
-                                                            widthFactor:
-                                                                player.state.duration.inSeconds == 0
-                                                                    ? 0
-                                                                    : (_dragValue ??
-                                                                            player.state.position.inSeconds
-                                                                                .toDouble()) /
-                                                                        player.state.duration.inSeconds,
-                                                            child: Container(
-                                                              height: 4,
-                                                              decoration: BoxDecoration(
-                                                                color: Colors.white,
-                                                                borderRadius: BorderRadius.circular(2),
+                                                            // Buffered progress
+                                                            FractionallySizedBox(
+                                                              widthFactor:
+                                                                  player.state.duration.inSeconds == 0
+                                                                      ? 0
+                                                                      : player.state.buffer.inSeconds /
+                                                                          player.state.duration.inSeconds,
+                                                              child: Container(
+                                                                height: 4,
+                                                                decoration: BoxDecoration(
+                                                                  color: MyColors.coolPurple,
+                                                                  borderRadius: BorderRadius.circular(2),
+                                                                ),
                                                               ),
                                                             ),
-                                                          ),
-
-                                                          // Slider thumb (interactive)
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    SliderTheme(
-                                                      data: SliderTheme.of(context).copyWith(
-                                                        trackHeight: 0,
-                                                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                                                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-                                                        activeTrackColor: Colors.transparent,
-                                                        inactiveTrackColor: Colors.transparent,
-                                                      ),
-                                                      child: Slider(
-                                                        min: 0,
-                                                        max: player.state.duration.inSeconds.toDouble(),
-                                                        value:
-                                                            _dragValue ??
-                                                            player.state.position.inSeconds.toDouble().clamp(
-                                                              0,
-                                                              player.state.duration.inSeconds.toDouble(),
+                                                            // Playback progress (white)
+                                                            // Playback progress (white)
+                                                            FractionallySizedBox(
+                                                              widthFactor:
+                                                                  player.state.duration.inSeconds == 0
+                                                                      ? 0
+                                                                      : (_dragValue ??
+                                                                              player.state.position.inSeconds
+                                                                                  .toDouble()) /
+                                                                          player.state.duration.inSeconds,
+                                                              child: Container(
+                                                                height: 4,
+                                                                decoration: BoxDecoration(
+                                                                  color: Colors.white,
+                                                                  borderRadius: BorderRadius.circular(2),
+                                                                ),
+                                                              ),
                                                             ),
-                                                        onChanged: (value) {
-                                                          _startHideTimer();
-                                                          setState(() {
-                                                            _dragValue = value;
-                                                          });
-                                                        },
-                                                        onChangeEnd: (value) {
-                                                          setState(() {
-                                                            _dragValue = null;
-                                                          });
-                                                          player.seek(Duration(seconds: value.toInt()));
-                                                        },
+                                                  
+                                                            // Slider thumb (interactive)
+                                                          ],
+                                                        ),
                                                       ),
-                                                    ),
-                                                  ],
+                                                      SliderTheme(
+                                                        data: SliderTheme.of(context).copyWith(
+                                                          trackHeight: 0,
+                                                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                                                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                                                          activeTrackColor: Colors.transparent,
+                                                          inactiveTrackColor: Colors.transparent,
+                                                        ),
+                                                        child: Slider(
+                                                           
+                                                          min: 0,
+                                                          max: player.state.duration.inSeconds.toDouble(),
+                                                          value:
+                                                              _dragValue ??
+                                                              player.state.position.inSeconds.toDouble().clamp(
+                                                                0,
+                                                                player.state.duration.inSeconds.toDouble(),
+                                                              ),
+                                                          onChanged: (value) {
+                                                            _startHideTimer();
+                                                            setState(() {
+                                                              _dragValue = value;
+                                                            });
+                                                          },
+                                                          onChangeEnd: (value) {
+                                                            setState(() {
+                                                              _dragValue = null;
+                                                            });
+                                                            player.seek(Duration(seconds: value.toInt()));
+                                                          },
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
                                               Text(
@@ -575,6 +580,7 @@ class _PlayerPageState extends State<PlayerPage> {
                                           ),
                                         ),
                                       ),
+                                      
                                     ],
                                   ),
                                 ),
