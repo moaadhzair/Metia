@@ -1038,7 +1038,6 @@ class _buildAnimeCoverSliverAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverAppBar(
-      leadingWidth: 90,
       surfaceTintColor: MyColors.backgroundColor,
       backgroundColor: MyColors.backgroundColor,
       foregroundColor: MyColors.appbarTextColor,
