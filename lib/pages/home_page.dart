@@ -30,8 +30,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   late TabController _tabController;
 
-  bool _isPopupMenuOpen = false; // Track whether the popup menu is open
-  double _blurOpacity = 0.0; // Track the opacity of the blur effect
+  bool _isPopupMenuOpen = false;
+  double _blurOpacity = 0.0;
 
   List<String> tabs = [];
   int oldIndexTabController = 0;
@@ -41,6 +41,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   List<AnimeState>? _animeLibrary;
   bool _loading = true;
   String? _error;
+
+  Color _previousTabColor = MyColors.appbarTextColor;
 
   @override
   void initState() {
@@ -85,7 +87,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _tabController.index = newIndex;
 
       _tabController.addListener(() {
-        setState(() {});
+        setState(() {
+          _previousTabColor = _getTabBorderColor(_tabController.previousIndex);
+        });
       });
     }
   }
@@ -152,7 +156,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
 
     try {
-      await Setting.getuseSettingsUserId(); // Await this call
+      await Setting.getuseSettingsUserId();
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getInt('user_id') ?? 0;
       final customUserId = prefs.getInt("custom_user_id") ?? 0;
@@ -197,6 +201,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
+  Color _getTabBorderColor(int index) {
+    if (_animeLibrary == null) return MyColors.appbarTextColor;
+    final state = _animeLibrary![index].state;
+    if (state == "NEW EPISODE") return Colors.orange;
+    if (state == "WATCHING") return Colors.green;
+    return MyColors.appbarTextColor;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -220,25 +232,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 padding: const EdgeInsets.only(top: 4, right: 4),
                 child: Theme(
                   data: Theme.of(context).copyWith(splashColor: Colors.transparent, highlightColor: Colors.transparent),
-
                   child: PopupMenuButton<String>(
                     splashRadius: 1,
-
-                    //shape: Border.all(style: BorderStyle.none),
                     color: MyColors.backgroundColor,
                     tooltip: "",
-                    //requestFocus: false,
                     icon: const Icon(Icons.more_vert, color: MyColors.appbarTextColor, size: 29),
                     onOpened: () {
                       setState(() {
                         _isPopupMenuOpen = true;
-                        _blurOpacity = 1.0; // Show the blur effect
+                        _blurOpacity = 1.0;
                       });
                     },
                     onCanceled: () {
                       setState(() {
                         _isPopupMenuOpen = false;
-                        _blurOpacity = 0.0; // Hide the blur effect
+                        _blurOpacity = 0.0;
                       });
                     },
                     constraints: const BoxConstraints(maxWidth: 160),
@@ -343,50 +351,43 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               child: Column(
                 children: [
                   tabs.isNotEmpty
-                      ? TabBar(
-                        controller: _tabController,
-                        overlayColor: WidgetStateProperty.all(Colors.transparent),
-                        indicator: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color:
-                                  _animeLibrary != null
-                                      ? (_animeLibrary![_tabController.index].state == "NEW EPISODE"
-                                          ? Colors.orange
-                                          : _animeLibrary![_tabController.index].state == "WATCHING"
-                                          ? Colors.green
-                                          : MyColors.appbarTextColor)
-                                      : MyColors.appbarTextColor,
-                              width: 3,
+                      ? TweenAnimationBuilder<Color?>(
+                        tween: ColorTween(begin: _previousTabColor, end: _getTabBorderColor(_tabController.index)),
+                        duration: kTabScrollDuration,
+                        builder: (context, color, child) {
+                          return TabBar(
+                            controller: _tabController,
+                            overlayColor: WidgetStateProperty.all(Colors.transparent),
+                            indicator: UnderlineTabIndicator(
+                              borderSide: BorderSide(width: 3, color: color ?? MyColors.appbarTextColor),
+                              insets: const EdgeInsets.symmetric(horizontal: 16),
                             ),
-                          ),
-                        ),
-                        isScrollable: true,
-                        tabAlignment: TabAlignment.start,
-                        labelColor: MyColors.appbarTextColor,
-                        unselectedLabelColor: MyColors.unselectedColor,
-                        tabs:
-                            tabs.map((String tabName) {
-                              return Tab(
-                                child: Text(
-                                  tabName,
-                                  style: TextStyle(
-                                    color:
-                                        tabName.startsWith("NEW EPISODE")
-                                            ? Colors
-                                                .orange // Set color to orange for "NEW EPISODE"
-                                            : tabName.startsWith("WATCHING")
-                                            ? Colors.green
-                                            : null,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                            isScrollable: true,
+                            tabAlignment: TabAlignment.start,
+                            labelColor: MyColors.appbarTextColor,
+                            unselectedLabelColor: MyColors.unselectedColor,
+                            tabs:
+                                tabs.map((String tabName) {
+                                  return Tab(
+                                    child: Text(
+                                      tabName,
+                                      style: TextStyle(
+                                        color:
+                                            tabName.startsWith("NEW EPISODE")
+                                                ? Colors.orange
+                                                : tabName.startsWith("WATCHING")
+                                                ? Colors.green
+                                                : null,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                          );
+                        },
                       )
                       : const SizedBox(),
-
                   PreferredSize(
                     preferredSize: const Size.fromHeight(0),
                     child: Container(color: tabs.isEmpty ? MyColors.unselectedColor : Colors.transparent, height: .5),
@@ -454,7 +455,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   child: Padding(
                                     padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
                                     child: CustomScrollView(
-                                      //physics: AlwaysScrollableScrollPhysics(),
                                       slivers: [
                                         CupertinoSliverRefreshControl(
                                           onRefresh: () async {
@@ -489,9 +489,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   strokeWidth: 3,
                                   color: MyColors.appbarTextColor,
                                   onRefresh: () async {
-                                    print("object");
                                     await _fetchAnimeLibrary(true);
-                                    print("object2");
                                   },
                                   child: ScrollConfiguration(
                                     behavior: ScrollConfiguration.of(
@@ -525,19 +523,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
         ),
         IgnorePointer(
-          ignoring: !_isPopupMenuOpen, // Allow touch events when blur is inactive
+          ignoring: !_isPopupMenuOpen,
           child: AnimatedOpacity(
-            curve: Curves.easeOutBack, // iOS-like popping effect
+            curve: Curves.easeOutBack,
             opacity: _blurOpacity,
-            duration:
-                _isPopupMenuOpen
-                    ? const Duration(milliseconds: 333) // Duration when opening
-                    : const Duration(milliseconds: 533), // Duration when closing
+            duration: _isPopupMenuOpen ? const Duration(milliseconds: 333) : const Duration(milliseconds: 533),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-              child: Container(
-                color: Colors.black.withOpacity(0.2), // Semi-transparent overlay
-              ),
+              child: Container(color: Colors.black.withOpacity(0.2)),
             ),
           ),
         ),
