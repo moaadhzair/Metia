@@ -478,7 +478,6 @@ class _PlayerPageState extends State<PlayerPage> {
                                               Expanded(
                                                 child: Container(
                                                   height: 30,
-                                                  color: Colors.black,
                                                   child: Stack(
                                                     alignment: Alignment.centerLeft,
                                                     children: [
