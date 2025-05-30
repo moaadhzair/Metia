@@ -7,15 +7,15 @@
       "name": "Metia",
       "bundleIdentifier": "com.example.metia",
       "developerName": "MoaadXD",
-      "version": "v1.0.1",
-      "versionDate": "2025-05-30T21:35:47.735Z",
+      "version": "v1.0.2",
+      "versionDate": "2025-05-30T22:24:13.962Z",
       "versionDescription": "m9awed asat",
       "downloadURL": "https://github.com/moaadhzair/Metia/releases/download/v1.0.2/metia.ipa",
       "localizedDescription": "ollah ta m9awed",
       "iconURL": "https://raw.githubusercontent.com/moaadhzair/Metia/refs/heads/main/assets/icons/Metia.png",
       "tintColor": "018084",
       "isLanZouCloud": 0,
-      "size": 30999145,
+      "size": 31001264,
       "type": 1
     }
   ]
