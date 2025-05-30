@@ -59,7 +59,8 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
     if (currentExtension == null) return;
 
     final prefs = await SharedPreferences.getInstance();
-    final key = "anime_${widget.animeData["media"]["id"]}_extension_${currentExtension?.id}";
+    final key =
+        "anime_${widget.animeData["media"]["id"]}_extension_${currentExtension?.id}";
 
     // Check if we already have a saved match
     final String? existingMatch = prefs.getString(key);
@@ -95,7 +96,11 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
 
       // Clean and normalize titles for comparison
       String normalizeTitle(String title) {
-        return title.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '').replaceAll(RegExp(r'\s+'), ' ').trim();
+        return title
+            .toLowerCase()
+            .replaceAll(RegExp(r'[^\w\s]'), '')
+            .replaceAll(RegExp(r'\s+'), ' ')
+            .trim();
       }
 
       final normalizedSearchTitle = normalizeTitle(title);
@@ -148,7 +153,8 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
       await prefs.setString(key, jsonEncode(bestMatch));
 
       //here is where we get the episode list
-      EpisodeList = await currentExtension?.getEpisodeList(clossestAnime["session"]) ?? [];
+      EpisodeList =
+          await currentExtension?.getEpisodeList(clossestAnime["session"]) ?? [];
       itemCount = EpisodeList.length;
 
       int remaining = itemCount - firstTabCount;
@@ -280,7 +286,8 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
   void _scrollListener() {
     final double expandedHeight = MediaQuery.of(context).size.height * 0.7;
     if (_scrollController.hasClients) {
-      final shouldBeCollapsed = _scrollController.offset > (expandedHeight - kToolbarHeight);
+      final shouldBeCollapsed =
+          _scrollController.offset > (expandedHeight - kToolbarHeight);
       if (_isCollapsed != shouldBeCollapsed) {
         // Schedule setState after the frame to avoid conflicts with gestures
         SchedulerBinding.instance.addPostFrameCallback((_) {
@@ -311,13 +318,20 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
         "Unknown Title";
 
     return Scaffold(
-      floatingActionButton: _isCollapsed ? _buildFloatingActionButton(scrollController: _scrollController) : null,
+      floatingActionButton:
+          _isCollapsed
+              ? _buildFloatingActionButton(scrollController: _scrollController)
+              : null,
       backgroundColor: MyColors.backgroundColor,
       body: NestedScrollView(
         controller: _scrollController,
         headerSliverBuilder:
             (context, innerBoxIsScrolled) => [
-              _buildAnimeCoverSliverAppBar(isCollapsed: _isCollapsed, title: title, widget: widget),
+              _buildAnimeCoverSliverAppBar(
+                isCollapsed: _isCollapsed,
+                title: title,
+                widget: widget,
+              ),
               SliverOverlapAbsorber(
                 handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
                 sliver: SliverAppBar(
@@ -331,11 +345,19 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                   flexibleSpace: FlexibleSpaceBar(
                     background: Container(
                       padding: EdgeInsets.symmetric(
-                        horizontal: MediaQuery.of(context).orientation == Orientation.landscape ? 23 : 0,
+                        horizontal:
+                            MediaQuery.of(context).orientation == Orientation.landscape
+                                ? 23
+                                : 0,
                       ),
                       color: Colors.transparent,
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 12, left: 12, right: 12, bottom: 12),
+                        padding: const EdgeInsets.only(
+                          top: 12,
+                          left: 12,
+                          right: 12,
+                          bottom: 12,
+                        ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           //spacing: 5,
@@ -366,8 +388,12 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                 prepareTabBarAndListView();
                                                 _selectedExtension = value;
                                               });
-                                              _localExtensionManager.setCurrentExtension(int.parse(value));
-                                              currentExtension = _localExtensionManager.getCurrentExtension();
+                                              _localExtensionManager.setCurrentExtension(
+                                                int.parse(value),
+                                              );
+                                              currentExtension =
+                                                  _localExtensionManager
+                                                      .getCurrentExtension();
                                               if (mounted) {
                                                 await initEpisodeList();
                                               }
@@ -377,35 +403,57 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                     _localExtensionManager
                                                         .getExtensions()
                                                         .map(
-                                                          (extension) => PopupMenuItem<String>(
-                                                            value: extension.id.toString(),
+                                                          (
+                                                            extension,
+                                                          ) => PopupMenuItem<String>(
+                                                            value:
+                                                                extension.id.toString(),
                                                             child: Row(
                                                               children: [
                                                                 SizedBox(
                                                                   width: 24,
                                                                   height: 24,
                                                                   child: ClipRRect(
-                                                                    borderRadius: BorderRadius.circular(4),
-                                                                    child: CachedNetworkImage(
-                                                                      imageUrl: extension.iconUrl,
-                                                                      fit: BoxFit.contain,
-                                                                    ),
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                          4,
+                                                                        ),
+                                                                    child:
+                                                                        CachedNetworkImage(
+                                                                          imageUrl:
+                                                                              extension
+                                                                                  .iconUrl,
+                                                                          fit:
+                                                                              BoxFit
+                                                                                  .contain,
+                                                                        ),
                                                                   ),
                                                                 ),
                                                                 const SizedBox(width: 8),
                                                                 Text(
                                                                   extension.title,
                                                                   style: const TextStyle(
-                                                                    color: MyColors.unselectedColor,
-                                                                    fontWeight: FontWeight.w600,
+                                                                    color:
+                                                                        MyColors
+                                                                            .unselectedColor,
+                                                                    fontWeight:
+                                                                        FontWeight.w600,
                                                                   ),
                                                                 ),
-                                                                if (_localExtensionManager.isMainExtension(extension))
+                                                                if (_localExtensionManager
+                                                                    .isMainExtension(
+                                                                      extension,
+                                                                    ))
                                                                   const Padding(
-                                                                    padding: EdgeInsets.only(left: 8.0),
+                                                                    padding:
+                                                                        EdgeInsets.only(
+                                                                          left: 8.0,
+                                                                        ),
                                                                     child: Icon(
                                                                       Icons.check,
-                                                                      color: MyColors.coolPurple,
+                                                                      color:
+                                                                          MyColors
+                                                                              .coolPurple,
                                                                       size: 20,
                                                                     ),
                                                                   ),
@@ -420,17 +468,28 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                   width: 32,
                                                   height: 32,
                                                   child: ClipRRect(
-                                                    borderRadius: BorderRadius.circular(4),
+                                                    borderRadius: BorderRadius.circular(
+                                                      4,
+                                                    ),
                                                     child:
                                                         currentExtension?.iconUrl == null
-                                                            ? const Icon(Icons.extension, color: MyColors.coolPurple)
+                                                            ? const Icon(
+                                                              Icons.extension,
+                                                              color: MyColors.coolPurple,
+                                                            )
                                                             : CachedNetworkImage(
-                                                              imageUrl: currentExtension?.iconUrl ?? "",
+                                                              imageUrl:
+                                                                  currentExtension
+                                                                      ?.iconUrl ??
+                                                                  "",
                                                               fit: BoxFit.contain,
                                                             ),
                                                   ),
                                                 ),
-                                                const Icon(Icons.arrow_drop_down, color: MyColors.coolPurple),
+                                                const Icon(
+                                                  Icons.arrow_drop_down,
+                                                  color: MyColors.coolPurple,
+                                                ),
                                               ],
                                             ),
                                           ),
@@ -442,7 +501,11 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                   padding: EdgeInsets.only(top: 4.0),
                                   child: Text(
                                     "Found:",
-                                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                                 //found title
@@ -466,10 +529,16 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                   child: GestureDetector(
                                     onTap: () {
                                       final title =
-                                          currentExtension?.anilistPreferedTitle.toLowerCase() == "english"
-                                              ? widget.animeData["media"]["title"]["english"]
-                                              : currentExtension?.anilistPreferedTitle.toLowerCase() == "romaji"
-                                              ? widget.animeData["media"]["title"]["romaji"]
+                                          currentExtension?.anilistPreferedTitle
+                                                      .toLowerCase() ==
+                                                  "english"
+                                              ? widget
+                                                  .animeData["media"]["title"]["english"]
+                                              : currentExtension?.anilistPreferedTitle
+                                                      .toLowerCase() ==
+                                                  "romaji"
+                                              ? widget
+                                                  .animeData["media"]["title"]["romaji"]
                                               : "";
 
                                       _searchController.text = title;
@@ -490,7 +559,9 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                     Expanded(
                                                       child: TextField(
                                                         controller: _searchController,
-                                                        style: const TextStyle(color: Colors.white),
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                        ),
                                                         onChanged: (value) {
                                                           setState(() {
                                                             _searchQuery = value;
@@ -498,11 +569,14 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                         },
                                                         decoration: InputDecoration(
                                                           hintText: 'Search...',
-                                                          hintStyle: const TextStyle(color: Colors.grey),
+                                                          hintStyle: const TextStyle(
+                                                            color: Colors.grey,
+                                                          ),
                                                           filled: true,
                                                           fillColor: MyColors.appbarColor,
                                                           border: OutlineInputBorder(
-                                                            borderRadius: BorderRadius.circular(8),
+                                                            borderRadius:
+                                                                BorderRadius.circular(8),
                                                             borderSide: BorderSide.none,
                                                           ),
                                                         ),
@@ -512,11 +586,15 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                     IconButton(
                                                       onPressed: () {
                                                         setState(() {
-                                                          _searchQuery = _searchController.text;
+                                                          _searchQuery =
+                                                              _searchController.text;
                                                         });
                                                         FocusScope.of(context).unfocus();
                                                       },
-                                                      icon: const Icon(Icons.search, color: Colors.white),
+                                                      icon: const Icon(
+                                                        Icons.search,
+                                                        color: Colors.white,
+                                                      ),
                                                     ),
                                                   ],
                                                 ),
@@ -526,20 +604,29 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                     future:
                                                         _searchQuery.isEmpty
                                                             ? null
-                                                            : currentExtension?.search(_searchQuery),
+                                                            : currentExtension?.search(
+                                                              _searchQuery,
+                                                            ),
                                                     builder: (context, snapshot) {
                                                       if (_searchQuery.isEmpty) {
                                                         return const Center(
                                                           child: Text(
                                                             'Enter a search term',
-                                                            style: TextStyle(color: Colors.white),
+                                                            style: TextStyle(
+                                                              color: Colors.white,
+                                                            ),
                                                           ),
                                                         );
                                                       }
 
-                                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                                      if (snapshot.connectionState ==
+                                                          ConnectionState.waiting) {
                                                         return const Center(
-                                                          child: CircularProgressIndicator(color: MyColors.coolPurple),
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                                color:
+                                                                    MyColors.coolPurple,
+                                                              ),
                                                         );
                                                       }
 
@@ -547,41 +634,59 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                         return Center(
                                                           child: Text(
                                                             'Error: ${snapshot.error}',
-                                                            style: const TextStyle(color: Colors.white),
+                                                            style: const TextStyle(
+                                                              color: Colors.white,
+                                                            ),
                                                           ),
                                                         );
                                                       }
 
                                                       final searchResults =
                                                           snapshot.data
-                                                              ?.map((item) => item as Map<String, dynamic>)
+                                                              ?.map(
+                                                                (item) =>
+                                                                    item
+                                                                        as Map<
+                                                                          String,
+                                                                          dynamic
+                                                                        >,
+                                                              )
                                                               .toList() ??
                                                           [];
 
                                                       return GridView.builder(
-                                                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                                          crossAxisCount:
-                                                              Tools.getResponsiveCrossAxisVal(
-                                                                        MediaQuery.of(context).size.width,
-                                                                        itemWidth: 460 / 4,
-                                                                      ) >
-                                                                      5
-                                                                  ? 5
-                                                                  : Tools.getResponsiveCrossAxisVal(
-                                                                    MediaQuery.of(context).size.width,
-                                                                    itemWidth: 460 / 4,
-                                                                  ),
-                                                          mainAxisExtent: 240,
-                                                          crossAxisSpacing: 10,
-                                                          mainAxisSpacing: 10,
-                                                          childAspectRatio: 0.7,
-                                                        ),
+                                                        gridDelegate:
+                                                            SliverGridDelegateWithFixedCrossAxisCount(
+                                                              crossAxisCount:
+                                                                  Tools.getResponsiveCrossAxisVal(
+                                                                            MediaQuery.of(
+                                                                              context,
+                                                                            ).size.width,
+                                                                            itemWidth:
+                                                                                460 / 4,
+                                                                          ) >
+                                                                          5
+                                                                      ? 5
+                                                                      : Tools.getResponsiveCrossAxisVal(
+                                                                        MediaQuery.of(
+                                                                          context,
+                                                                        ).size.width,
+                                                                        itemWidth:
+                                                                            460 / 4,
+                                                                      ),
+                                                              mainAxisExtent: 240,
+                                                              crossAxisSpacing: 10,
+                                                              mainAxisSpacing: 10,
+                                                              childAspectRatio: 0.7,
+                                                            ),
                                                         itemCount: searchResults.length,
                                                         itemBuilder: (context, index) {
-                                                          final anime = searchResults[index];
+                                                          final anime =
+                                                              searchResults[index];
                                                           return AnimeCard2(
                                                             onTap: (title) async {
-                                                              final prefs = await SharedPreferences.getInstance();
+                                                              final prefs =
+                                                                  await SharedPreferences.getInstance();
                                                               final key =
                                                                   "anime_${widget.animeData["media"]["id"]}_extension_${currentExtension?.id}";
                                                               // Set loading before closing the sheet
@@ -591,8 +696,12 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
 
                                                               // Save the selected anime
                                                               clossestAnime = anime;
-                                                              await prefs.setString(key, jsonEncode(anime));
-                                                              extensionAnimeTitle = anime["title"] ?? "";
+                                                              await prefs.setString(
+                                                                key,
+                                                                jsonEncode(anime),
+                                                              );
+                                                              extensionAnimeTitle =
+                                                                  anime["title"] ?? "";
 
                                                               setState(() {
                                                                 foundTitle =
@@ -606,9 +715,10 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
 
                                                               // Fetch episodes after closing the sheet
                                                               EpisodeList =
-                                                                  await currentExtension?.getEpisodeList(
-                                                                    clossestAnime["session"],
-                                                                  ) ??
+                                                                  await currentExtension
+                                                                      ?.getEpisodeList(
+                                                                        clossestAnime["session"],
+                                                                      ) ??
                                                                   [];
 
                                                               prepareTabBarAndListView();
@@ -621,8 +731,11 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                               }
                                                             },
                                                             index: index,
-                                                            title: anime["title"] ?? "Unknown Title",
-                                                            imageUrl: anime["poster"] ?? "",
+                                                            title:
+                                                                anime["title"] ??
+                                                                "Unknown Title",
+                                                            imageUrl:
+                                                                anime["poster"] ?? "",
                                                           );
                                                         },
                                                       );
@@ -660,92 +773,24 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                 ),
                                 label: Text(
                                   widget.animeData["media"]["episodes"] != null
-                                      ? widget.animeData["media"]["episodes"] == widget.animeData["progress"]
+                                      ? widget.animeData["media"]["episodes"] ==
+                                              widget.animeData["progress"]
                                           ? "FINISHED"
                                           : "CONTINUE EPISODE ${widget.animeData["progress"] + 1}"
                                       : "NULL",
-                                  style: const TextStyle(color: MyColors.coolGreen, fontWeight: FontWeight.w600),
+                                  style: const TextStyle(
+                                    color: MyColors.coolGreen,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                                 icon:
                                     widget.animeData["media"]["episodes"] != null &&
-                                            widget.animeData["media"]["episodes"] != widget.animeData["progress"]
+                                            widget.animeData["media"]["episodes"] !=
+                                                widget.animeData["progress"]
                                         ? const Icon(Icons.play_arrow_outlined, size: 20)
                                         : const SizedBox(),
                                 onPressed: () async {
-                                  showModalBottomSheet(
-                                    backgroundColor: MyColors.backgroundColor,
-
-                                    context: context,
-                                    builder: (context) {
-                                      return Container(
-                                        child: FutureBuilder(
-                                          future: currentExtension?.getStreamData(
-                                            EpisodeList[widget.animeData["progress"]]["id"],
-                                          ),
-                                          builder: (context, snapshot) {
-                                            return snapshot.hasData
-                                                ? Container(
-                                                  padding: const EdgeInsets.all(12),
-                                                  child: ListView.separated(
-                                                    separatorBuilder: (context, index) {
-                                                      return const SizedBox(height: 12);
-                                                    },
-                                                    itemCount: snapshot.data!.length,
-                                                    itemBuilder: (context, index) {
-                                                      return GestureDetector(
-                                                        onTap: () {
-                                                          Navigator.push(
-                                                            context,
-                                                            MaterialPageRoute(
-                                                              builder:
-                                                                  (context) => PlayerPage(
-                                                                    episodeList: EpisodeList,
-                                                                    currentExtension: currentExtension,
-                                                                    episodeCount: EpisodeList.length,
-                                                                    extensionEpisodeData:
-                                                                        EpisodeList[widget.animeData["progress"]],
-                                                                    episodeNumber: widget.animeData["progress"] + 1,
-                                                                    extensionStreamData: snapshot.data?[index],
-                                                                    anilistData: widget.animeData,
-                                                                  ),
-                                                            ),
-                                                          );
-                                                        },
-                                                        child: Container(
-                                                          decoration: BoxDecoration(
-                                                            color: MyColors.coolPurple2,
-                                                            borderRadius: BorderRadius.circular(12),
-                                                          ),
-                                                          width: double.infinity,
-                                                          height: 60,
-                                                          padding: const EdgeInsets.all(12),
-                                                          child: Center(
-                                                            child: Text(
-                                                              "${snapshot.data?[index]["provider"]} - ${snapshot.data?[index]["sub"] ? "Sub" : "Dub"}",
-                                                              style: const TextStyle(
-                                                                color: MyColors.appbarTextColor,
-                                                                fontWeight: FontWeight.w600,
-                                                                fontSize: 16.5,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      );
-                                                    },
-                                                  ),
-                                                )
-                                                : const SizedBox(
-                                                  height: double.infinity,
-                                                  width: double.infinity,
-                                                  child: Center(
-                                                    child: CircularProgressIndicator(color: MyColors.coolPurple),
-                                                  ),
-                                                );
-                                          },
-                                        ),
-                                      );
-                                    },
-                                  );
+                                  await showSourcePicker(context, currentExtension, EpisodeList, widget.animeData["progress"], widget.animeData);
                                 },
                               ),
                             ),
@@ -774,18 +819,31 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                       tabs: List.generate(labels.length, (i) {
                                         final bool selected = tabController.index == i;
                                         return Container(
-                                          margin: const EdgeInsets.symmetric(horizontal: 5),
-                                          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                                          margin: const EdgeInsets.symmetric(
+                                            horizontal: 5,
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 6,
+                                            horizontal: 8,
+                                          ),
                                           decoration: BoxDecoration(
                                             borderRadius: BorderRadius.circular(8),
-                                            color: selected ? Colors.white : Colors.transparent,
-                                            border: Border.all(color: MyColors.coolPurple),
+                                            color:
+                                                selected
+                                                    ? Colors.white
+                                                    : Colors.transparent,
+                                            border: Border.all(
+                                              color: MyColors.coolPurple,
+                                            ),
                                           ),
                                           child: Center(
                                             child: Text(
                                               labels[i],
                                               style: TextStyle(
-                                                color: selected ? MyColors.coolPurple : const Color(0xFF9A989B),
+                                                color:
+                                                    selected
+                                                        ? MyColors.coolPurple
+                                                        : const Color(0xFF9A989B),
                                                 fontWeight: FontWeight.w600,
                                               ),
                                             ),
@@ -813,7 +871,11 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                   children: [
                     Text(
                       "Loading The Anime...",
-                      style: TextStyle(color: MyColors.appbarTextColor, fontSize: 30, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        color: MyColors.appbarTextColor,
+                        fontSize: 30,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     CircularProgressIndicator(color: MyColors.coolPurple),
                     SizedBox(height: 20),
@@ -822,14 +884,18 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                 : TabBarView(
                   controller: _tabController,
                   children: List.generate(tabCount, (tabIndex) {
-                    bool isLandscape = MediaQuery.orientationOf(context) == Orientation.landscape;
+                    bool isLandscape =
+                        MediaQuery.orientationOf(context) == Orientation.landscape;
                     EdgeInsetsGeometry padding = EdgeInsets.only(
                       left: (isLandscape ? 20 : 0) + 12,
                       right: (isLandscape ? 20 : 0) + 12,
                       top: 12,
                     );
                     int count = tabItemCounts[tabIndex];
-                    int startIndex = (tabIndex == 0) ? 0 : firstTabCount + (tabIndex - 1) * eachItemForTab;
+                    int startIndex =
+                        (tabIndex == 0)
+                            ? 0
+                            : firstTabCount + (tabIndex - 1) * eachItemForTab;
                     return count == 0
                         ? const Center(
                           child: Padding(
@@ -893,12 +959,13 @@ class _buildAnimeEpisodeListState extends State<_buildAnimeEpisodeList> {
     return CustomScrollView(
       key: PageStorageKey<String>('anime-episode-list-${widget.startIndex}'),
       slivers: [
-        SliverOverlapInjector(handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
+        SliverOverlapInjector(
+          handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+        ),
         //SliverToBoxAdapter(child: SizedBox(height: widget.isCollapsed ? kToolbarHeight : 0)),
         const SliverToBoxAdapter(child: SizedBox(height: kToolbarHeight)),
 
         // Scroll up by kToolbarHeight when the list is built
-        
         SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
             int episodeIndex = widget.startIndex + index;
@@ -911,110 +978,12 @@ class _buildAnimeEpisodeListState extends State<_buildAnimeEpisodeList> {
                 seen: widget.widget.animeData["progress"] > episodeIndex,
                 index: episodeIndex,
                 onClicked: (details) async {
-                  showModalBottomSheet(
-                    backgroundColor: MyColors.backgroundColor,
-
-                    context: context,
-                    builder: (context) {
-                      return Container(
-                        child: FutureBuilder(
-                          future: widget.currentExtension?.getStreamData(widget.episodeList[episodeIndex]["id"]),
-                          builder: (context, snapshot) {
-                            return snapshot.hasData
-                                ? Container(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Column(
-                                    spacing: 12,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 8, top: 4, bottom: 4),
-                                        child: Text(
-                                          "Available Sources:",
-                                          style: TextStyle(
-                                            color: MyColors.appbarTextColor,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 16.5,
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child:
-                                            snapshot.data!.isEmpty
-                                                ? const SizedBox(
-                                                  width: double.infinity,
-                                                  height: double.infinity,
-                                                  child: Center(
-                                                    child: Text(
-                                                      "No Sources Are Available!",
-                                                      style: TextStyle(
-                                                        color: MyColors.appbarTextColor,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontSize: 16.5,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                )
-                                                : ListView.separated(
-                                                  separatorBuilder: (context, index) {
-                                                    return const SizedBox(height: 12);
-                                                  },
-                                                  itemCount: snapshot.data!.length,
-                                                  itemBuilder: (context, index) {
-                                                    return GestureDetector(
-                                                      onTap: () {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder:
-                                                                (context) => PlayerPage(
-                                                                  episodeList: widget.episodeList,
-                                                                  currentExtension: widget.currentExtension,
-                                                                  episodeCount: widget.episodeList.length,
-                                                                  extensionEpisodeData:
-                                                                      widget.episodeList[episodeIndex],
-                                                                  episodeNumber: episodeIndex + 1,
-                                                                  extensionStreamData: snapshot.data?[index],
-                                                                  anilistData: widget.widget.animeData,
-                                                                ),
-                                                          ),
-                                                        );
-                                                      },
-                                                      child: Container(
-                                                        decoration: BoxDecoration(
-                                                          color: MyColors.coolPurple2,
-                                                          borderRadius: BorderRadius.circular(12),
-                                                        ),
-                                                        width: double.infinity,
-                                                        height: 60,
-                                                        padding: const EdgeInsets.all(12),
-                                                        child: Center(
-                                                          child: Text(
-                                                            "${snapshot.data?[index]["provider"].toString().toUpperCase()} - ${snapshot.data?[index]["sub"] ? "Sub" : "Dub"}",
-                                                            style: const TextStyle(
-                                                              color: MyColors.appbarTextColor,
-                                                              fontWeight: FontWeight.w600,
-                                                              fontSize: 16.5,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                                : const SizedBox(
-                                  height: double.infinity,
-                                  width: double.infinity,
-                                  child: Center(child: CircularProgressIndicator(color: MyColors.coolPurple)),
-                                );
-                          },
-                        ),
-                      );
-                    },
+                  await showSourcePicker(
+                    context,
+                    widget.currentExtension,
+                    widget.episodeList,
+                    episodeIndex,
+                    widget.widget.animeData,
                   );
                 },
                 episodeData: {"episode": widget.episodeList[episodeIndex]},
@@ -1027,9 +996,130 @@ class _buildAnimeEpisodeListState extends State<_buildAnimeEpisodeList> {
   }
 }
 
+Future<void> showSourcePicker(
+  BuildContext context,
+  Extension? currentExtension,
+  List<dynamic> episodeList,
+  int episodeIndex,
+  animeData,
+) async {
+  showModalBottomSheet(
+    backgroundColor: MyColors.backgroundColor,
+
+    context: context,
+    builder: (context) {
+      return Container(
+        child: FutureBuilder(
+          future: currentExtension?.getStreamData(episodeList[episodeIndex]["id"]),
+          builder: (context, snapshot) {
+            return snapshot.hasData
+                ? Container(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    spacing: 12,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8, top: 4, bottom: 4),
+                        child: Text(
+                          "Available Sources:",
+                          style: TextStyle(
+                            color: MyColors.appbarTextColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16.5,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child:
+                            snapshot.data!.isEmpty
+                                ? const SizedBox(
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  child: Center(
+                                    child: Text(
+                                      "No Sources Are Available!",
+                                      style: TextStyle(
+                                        color: MyColors.appbarTextColor,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16.5,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                : ListView.separated(
+                                  separatorBuilder: (context, index) {
+                                    return const SizedBox(height: 12);
+                                  },
+                                  itemCount: snapshot.data!.length,
+                                  itemBuilder: (context, index) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => PlayerPage(
+                                                  episodeList: episodeList,
+                                                  currentExtension: currentExtension,
+                                                  episodeCount: episodeList.length,
+                                                  extensionEpisodeData:
+                                                      episodeList[episodeIndex],
+                                                  episodeNumber: episodeIndex + 1,
+                                                  extensionStreamData:
+                                                      snapshot.data?[index],
+                                                  anilistData: animeData,
+                                                ),
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: MyColors.coolPurple2,
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        width: double.infinity,
+                                        height: 60,
+                                        padding: const EdgeInsets.all(12),
+                                        child: Center(
+                                          child: Text(
+                                            "${snapshot.data?[index]["provider"].toString().toUpperCase()} - ${snapshot.data?[index]["sub"] ? "Sub" : "Dub"}",
+                                            style: const TextStyle(
+                                              color: MyColors.appbarTextColor,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 16.5,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                      ),
+                    ],
+                  ),
+                )
+                : const SizedBox(
+                  height: double.infinity,
+                  width: double.infinity,
+                  child: Center(
+                    child: CircularProgressIndicator(color: MyColors.coolPurple),
+                  ),
+                );
+          },
+        ),
+      );
+    },
+  );
+}
+
 class _buildAnimeCoverSliverAppBar extends StatelessWidget {
-  const _buildAnimeCoverSliverAppBar({super.key, required bool isCollapsed, required this.title, required this.widget})
-    : _isCollapsed = isCollapsed;
+  const _buildAnimeCoverSliverAppBar({
+    super.key,
+    required bool isCollapsed,
+    required this.title,
+    required this.widget,
+  }) : _isCollapsed = isCollapsed;
 
   final bool _isCollapsed;
   final dynamic title;
@@ -1058,8 +1148,10 @@ class _buildAnimeCoverSliverAppBar extends StatelessWidget {
 }
 
 class _buildFloatingActionButton extends StatelessWidget {
-  const _buildFloatingActionButton({super.key, required ScrollController scrollController})
-    : _scrollController = scrollController;
+  const _buildFloatingActionButton({
+    super.key,
+    required ScrollController scrollController,
+  }) : _scrollController = scrollController;
 
   final ScrollController _scrollController;
 
@@ -1073,7 +1165,9 @@ class _buildFloatingActionButton extends StatelessWidget {
 
         final double scrollTarget = sliverAppBarHeight + secondAppBarHeight;
 
-        _scrollController.jumpTo(sliverAppBarHeight - kToolbarHeight + 1); //482 for bluestakcs
+        _scrollController.jumpTo(
+          sliverAppBarHeight - kToolbarHeight + 1,
+        ); //482 for bluestakcs
       },
       backgroundColor: MyColors.coolPurple,
       child: const Icon(Icons.arrow_upward, size: 30, color: MyColors.coolPurple2),
@@ -1167,7 +1261,8 @@ class AnimeEpisode extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  episodeData["episode"]["dub"] && episodeData["episode"]["sub"]
+                                  episodeData["episode"]["dub"] &&
+                                          episodeData["episode"]["sub"]
                                       ? "Sub | Dub"
                                       : episodeData["episode"]["sub"]
                                       ? "Sub"
@@ -1204,7 +1299,10 @@ class AnimeEpisode extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   color: current ? const Color(0xFF3c3243) : MyColors.coolPurple2,
-                  borderRadius: const BorderRadius.only(topRight: Radius.circular(12), bottomLeft: Radius.circular(12)),
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
+                  ),
                 ),
                 padding: const EdgeInsets.only(left: 15, right: 15),
                 child: Text(
@@ -1271,7 +1369,11 @@ class _AnimeCoverState extends State<AnimeCover> {
                   if (mounted) setState(() => _opacity = 1.0);
                 });
               }
-              return Image(image: imageProvider, fit: BoxFit.cover, alignment: Alignment.center);
+              return Image(
+                image: imageProvider,
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
+              );
             },
           ),
         ),
@@ -1299,17 +1401,29 @@ class _AnimeCoverState extends State<AnimeCover> {
               child: SingleChildScrollView(
                 physics: const NeverScrollableScrollPhysics(),
                 padding: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.orientationOf(context) == Orientation.landscape ? 20 : 0,
+                  horizontal:
+                      MediaQuery.orientationOf(context) == Orientation.landscape ? 20 : 0,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w400)),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 36,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       genres.join(' • '),
-                      style: const TextStyle(color: Color(0xFFA9A7A7), fontSize: 15, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        color: Color(0xFFA9A7A7),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -1318,8 +1432,16 @@ class _AnimeCoverState extends State<AnimeCover> {
                         Text(
                           widget.animeData["media"]["averageScore"].toString() == "null"
                               ? "0.0"
-                              : Tools.insertAt(widget.animeData["media"]["averageScore"].toString(), ".", 1),
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange),
+                              : Tools.insertAt(
+                                widget.animeData["media"]["averageScore"].toString(),
+                                ".",
+                                1,
+                              ),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.orange,
+                          ),
                         ),
                         const Icon(Icons.star, color: Colors.orange, size: 18),
                       ],
@@ -1327,7 +1449,11 @@ class _AnimeCoverState extends State<AnimeCover> {
                     const SizedBox(height: 2),
                     const Text(
                       "Synopsis",
-                      style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(

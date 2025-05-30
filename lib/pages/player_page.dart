@@ -131,7 +131,7 @@ class _PlayerPageState extends State<PlayerPage> {
       );
 
       extensionEpisodeData = episodeList[episodeNumber];
-      extensionStreamData = value;
+      extensionStreamData = preferedProvider;
       anilistData;
       episodeNumber++;
 
@@ -167,7 +167,7 @@ class _PlayerPageState extends State<PlayerPage> {
       );
 
       extensionEpisodeData = episodeList[episodeNumber - 2];
-      extensionStreamData = value;
+      extensionStreamData = preferedProvider;
       anilistData;
       episodeNumber--;
 
@@ -181,15 +181,15 @@ class _PlayerPageState extends State<PlayerPage> {
   // Add this to your _PlayerPageState:
 
   void _toggleFullscreen() async {
-  setState(() {
-    _isFullscreen = !_isFullscreen;
-  });
-  if (_isFullscreen) {
-    await windowManager.setFullScreen(true);
-  } else {
-    await windowManager.setFullScreen(false);
+    setState(() {
+      _isFullscreen = !_isFullscreen;
+    });
+    if (_isFullscreen) {
+      await windowManager.setFullScreen(true);
+    } else {
+      await windowManager.setFullScreen(false);
+    }
   }
-}
 
   @override
   void initState() {
@@ -288,6 +288,7 @@ class _PlayerPageState extends State<PlayerPage> {
   void dispose() {
     _hideTimer?.cancel();
     _seekTimer?.cancel();
+
     _seekDisplayTimer?.cancel();
     // Restore your app's normal orientations when leaving this page
     SystemChrome.setPreferredOrientations([
@@ -297,6 +298,8 @@ class _PlayerPageState extends State<PlayerPage> {
       DeviceOrientation.landscapeRight,
     ]);
     player.dispose();
+    windowManager.setFullScreen(false);
+
     super.dispose();
   }
 
@@ -326,7 +329,11 @@ class _PlayerPageState extends State<PlayerPage> {
                 player.seek(player.state.position + const Duration(seconds: 10));
               }
               if (event.logicalKey == LogicalKeyboardKey.f12) {
-                _toggleFullscreen();
+                if (_isFullscreen) {
+                  await windowManager.setFullScreen(true);
+                } else {
+                  await windowManager.setFullScreen(false);
+                }
               }
             }
           },
@@ -783,17 +790,18 @@ class _PlayerPageState extends State<PlayerPage> {
                                                     fontWeight: FontWeight.w500,
                                                   ),
                                                 ),
-                                                !(Platform.isIOS || Platform.isAndroid) ?
-                                                IconButton(
-                                                  icon: Icon(
-                                                    _isFullscreen
-                                                        ? Icons.fullscreen_exit
-                                                        : Icons.fullscreen,
-                                                    size: 30,
-                                                    color: Colors.white,
-                                                  ),
-                                                  onPressed: _toggleFullscreen,
-                                                ) : const SizedBox(),
+                                                !(Platform.isIOS || Platform.isAndroid)
+                                                    ? IconButton(
+                                                      icon: Icon(
+                                                        _isFullscreen
+                                                            ? Icons.fullscreen_exit
+                                                            : Icons.fullscreen,
+                                                        size: 30,
+                                                        color: Colors.white,
+                                                      ),
+                                                      onPressed: _toggleFullscreen,
+                                                    )
+                                                    : const SizedBox(),
                                               ],
                                             ),
                                           ),
