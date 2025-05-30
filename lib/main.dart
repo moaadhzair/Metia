@@ -14,11 +14,10 @@ import 'package:window_manager/window_manager.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
-  //await windowManager.ensureInitialized();
 
-  if (Platform.isWindows) {
-    registerCustomScheme('metia');
-  }
+  if (!(Platform.isIOS || Platform.isAndroid)) await windowManager.ensureInitialized();
+  if (Platform.isWindows) registerCustomScheme('metia');
+
   runApp(const Main());
 }
 
@@ -26,9 +25,6 @@ class Main extends StatelessWidget {
   const Main({super.key});
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: HomePage(),
-    );
+    return const MaterialApp(debugShowCheckedModeBanner: false, home: HomePage());
   }
 }
