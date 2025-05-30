@@ -14,7 +14,7 @@ import 'package:window_manager/window_manager.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
-  await windowManager.ensureInitialized();
+  //await windowManager.ensureInitialized();
 
   if (Platform.isWindows) {
     registerCustomScheme('metia');
