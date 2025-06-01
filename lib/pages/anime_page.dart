@@ -547,6 +547,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                       });
 
                                       showModalBottomSheet(
+                                        enableDrag: false, // disables drag gestures that trigger rebuilds
                                         context: context,
                                         backgroundColor: MyColors.backgroundColor,
                                         builder: (context) {
