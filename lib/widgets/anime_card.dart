@@ -32,15 +32,20 @@ class _AnimeCardState extends State<AnimeCard> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Tools.Toast(
+        /*Tools.Toast(
           context,
           "${widget.data["media"]["title"]["english"]} in (${widget.tabName})",
-        );
+        );*/
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => AnimePage(animeData: widget.data),
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 500),
+            pageBuilder: (_, __, ___) => AnimePage(animeData: widget.data),
           ),
+          /*MaterialPageRoute(
+            
+            builder: (context) => AnimePage(animeData: widget.data),
+          ),*/
         );
       },
       behavior: HitTestBehavior.translucent, // Ensures taps are registered
@@ -71,7 +76,7 @@ class _AnimeCardState extends State<AnimeCard> {
                             imageUrl:
                                 widget
                                     .data["media"]["coverImage"]["extraLarge"],
-                            fit: BoxFit.fitWidth,
+                            fit: BoxFit.cover,
                             placeholder:
                                 (context, url) => const Center(
                                   child: CircularProgressIndicator(

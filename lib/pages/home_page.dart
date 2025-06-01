@@ -397,8 +397,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
           body: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: MediaQuery.orientationOf(context) == Orientation.landscape ? 40 : 0,
+            padding: const EdgeInsets.symmetric(
+              //horizontal: MediaQuery.orientationOf(context) == Orientation.landscape ? 40 : 0,
             ),
             child:
                 _loading

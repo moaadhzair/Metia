@@ -790,7 +790,13 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                         ? const Icon(Icons.play_arrow_outlined, size: 20)
                                         : const SizedBox(),
                                 onPressed: () async {
-                                  await showSourcePicker(context, currentExtension, EpisodeList, widget.animeData["progress"], widget.animeData);
+                                  await showSourcePicker(
+                                    context,
+                                    currentExtension,
+                                    EpisodeList,
+                                    widget.animeData["progress"],
+                                    widget.animeData,
+                                  );
                                 },
                               ),
                             ),
@@ -1141,7 +1147,7 @@ class _buildAnimeCoverSliverAppBar extends StatelessWidget {
       stretch: true,
       flexibleSpace: FlexibleSpaceBar(
         background: AnimeCover(animeData: widget.animeData),
-        stretchModes: const [StretchMode.blurBackground, StretchMode.zoomBackground],
+        //stretchModes: const [StretchMode.blurBackground, StretchMode.zoomBackground],
       ),
     );
   }
@@ -1358,23 +1364,26 @@ class _AnimeCoverState extends State<AnimeCover> {
       children: [
         Hero(
           tag: '${widget.animeData["media"]["id"]}',
-          child: CachedNetworkImage(
-            imageUrl: imageUrl,
-            fit: BoxFit.cover,
-            alignment: Alignment.center,
-            // When the image loads, fade in
-            imageBuilder: (context, imageProvider) {
-              if (_opacity == 0.0) {
-                SchedulerBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) setState(() => _opacity = 1.0);
-                });
-              }
-              return Image(
-                image: imageProvider,
-                fit: BoxFit.cover,
-                alignment: Alignment.center,
-              );
-            },
+          child: AspectRatio(
+            aspectRatio: 16 / 9,
+            child: CachedNetworkImage(
+              imageUrl: imageUrl,
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+              // When the image loads, fade in
+              imageBuilder: (context, imageProvider) {
+                if (_opacity == 0.0) {
+                  Future.delayed(const Duration(milliseconds: 500), () {
+                    if (mounted) setState(() => _opacity = 1.0);
+                  });
+                }
+                return Image(
+                  image: imageProvider,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.center,
+                );
+              },
+            ),
           ),
         ),
         Transform.translate(
