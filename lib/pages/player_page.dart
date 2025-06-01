@@ -124,12 +124,14 @@ class _PlayerPageState extends State<PlayerPage> {
         orElse: () => providers.first, // If no dub found, take highest quality
       );
 
-      AnilistApi.updateAnimeTracking(
-        mediaId: anilistData["media"]["id"],
-        progress: episodeNumber,
-        status:
-            anilistData["media"]["episodes"] == episodeNumber ? "COMPLETED" : "CURRENT",
-      );
+      if (anilistData["progress"] < episodeNumber) {
+        AnilistApi.updateAnimeTracking(
+          mediaId: anilistData["media"]["id"],
+          progress: episodeNumber,
+          status:
+              anilistData["media"]["episodes"] == episodeNumber ? "COMPLETED" : "CURRENT",
+        );
+      }
 
       extensionEpisodeData = episodeList[episodeNumber];
       extensionStreamData = preferedProvider;
@@ -237,14 +239,16 @@ class _PlayerPageState extends State<PlayerPage> {
           // Update Anilist tracking for next episode
           if (firstTime) {
             firstTime = false;
-            AnilistApi.updateAnimeTracking(
-              mediaId: anilistData["media"]["id"],
-              progress: episodeNumber,
-              status:
-                  anilistData["media"]["episodes"] == episodeNumber
-                      ? "COMPLETED"
-                      : "CURRENT",
-            );
+            if (anilistData["progress"] < episodeNumber) {
+              AnilistApi.updateAnimeTracking(
+                mediaId: anilistData["media"]["id"],
+                progress: episodeNumber,
+                status:
+                    anilistData["media"]["episodes"] == episodeNumber
+                        ? "COMPLETED"
+                        : "CURRENT",
+              );
+            }
           }
         }
       }
