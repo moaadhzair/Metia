@@ -170,7 +170,7 @@ class _AnimeCardState extends State<AnimeCard> {
                               widget.tabName.startsWith("NEW EPISODE")
                           ? TextSpan(
                             text:
-                                "\n${widget.data["media"]["nextAiringEpisode"]["episode"]}",
+                                "\n${widget.data["media"]["nextAiringEpisode"]["episode"] - 1}",
                             style: const TextStyle(
                               color: Colors.orange,
                               fontSize: 16,
