@@ -134,7 +134,7 @@ jobs:
       - name: Download iOS IPA
         uses: actions/download-artifact@v4
         with:
-          name: ios-ipa
+          name: ios-ipa-signed
           path: artifacts/ios/
 
       - name: Create Release
