@@ -14,6 +14,7 @@ import 'package:metia/pages/user_page.dart';
 import 'package:metia/tools.dart';
 import 'package:metia/widgets/anime_card.dart';
 import 'package:app_links/app_links.dart';
+import 'package:metia/widgets/anime_card3.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
@@ -44,12 +45,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Color _previousTabColor = MyColors.appbarTextColor;
 
+  int currentIndex = 0;
+
+  List<Map<String, dynamic>> searchAnimeData = [];
+  List<Map<String, dynamic>> popularAnimeData = [];
+  bool isSearching = false;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 1, vsync: this); // Safe default
     _initDeepLinking();
     _fetchAnimeLibrary(false);
+    _fetchPopularAnime();
   }
 
   @override
@@ -132,13 +140,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     _appLinks.uriLinkStream.listen((Uri? uri) {
       if (uri != null) {
-        String code = uri.toString().substring(uri.toString().indexOf('code=') + 5);
+        String code = uri.toString().substring(
+          uri.toString().indexOf('code=') + 5,
+        );
         fetchAniListAccessToken(code)
             .then((accessToken) {
               SharedPreferences.getInstance().then((prefs) {
                 prefs.setString('auth_key', accessToken);
                 if (mounted) {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const UserPage()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const UserPage()),
+                  );
                 }
               });
             })
@@ -201,6 +214,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _fetchPopularAnime() async {
+    AnilistApi.fetchPopularAnime().then((data) {
+      popularAnimeData = data;
+    });
+  }
+
   Color _getTabBorderColor(int index) {
     if (_animeLibrary == null) return MyColors.appbarTextColor;
     final state = _animeLibrary![index].state;
@@ -214,16 +233,47 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return Stack(
       children: [
         Scaffold(
+          bottomNavigationBar: Theme(
+            data: Theme.of(context).copyWith(
+              splashFactory: NoSplash.splashFactory,
+              highlightColor: Colors.transparent,
+              splashColor: Colors.transparent,
+            ),
+            child: BottomNavigationBar(
+              selectedItemColor: MyColors.appbarTextColor,
+              backgroundColor: MyColors.coolPurple2,
+              onTap: (index) {
+                setState(() {
+                  currentIndex = index;
+                });
+              },
+              currentIndex: currentIndex,
+              unselectedItemColor: const Color.fromARGB(255, 105, 105, 105),
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.video_library),
+                  label: "Library",
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.search),
+                  label: "Search",
+                ),
+              ],
+            ),
+          ),
           backgroundColor: MyColors.backgroundColor,
           appBar: AppBar(
-            backgroundColor: MyColors.appbarColor,
+            backgroundColor: MyColors.backgroundColor,
             leading: Row(
               children: [
                 const SizedBox(width: 20),
                 SvgPicture.asset(
                   'assets/icons/anilist.svg',
                   height: 35,
-                  colorFilter: const ColorFilter.mode(MyColors.appbarTextColor, BlendMode.srcIn),
+                  colorFilter: const ColorFilter.mode(
+                    MyColors.appbarTextColor,
+                    BlendMode.srcIn,
+                  ),
                 ),
               ],
             ),
@@ -231,12 +281,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               Padding(
                 padding: const EdgeInsets.only(top: 4, right: 4),
                 child: Theme(
-                  data: Theme.of(context).copyWith(splashColor: Colors.transparent, highlightColor: Colors.transparent),
+                  data: Theme.of(context).copyWith(
+                    splashColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                  ),
                   child: PopupMenuButton<String>(
                     splashRadius: 1,
                     color: MyColors.backgroundColor,
                     tooltip: "",
-                    icon: const Icon(Icons.more_vert, color: MyColors.appbarTextColor, size: 29),
+                    icon: const Icon(
+                      Icons.more_vert,
+                      color: MyColors.appbarTextColor,
+                      size: 29,
+                    ),
                     onOpened: () {
                       setState(() {
                         _isPopupMenuOpen = true;
@@ -260,7 +317,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             height: 35,
                             child: const Row(
                               children: [
-                                Icon(Icons.refresh, size: 30, color: MyColors.unselectedColor),
+                                Icon(
+                                  Icons.refresh,
+                                  size: 30,
+                                  color: MyColors.unselectedColor,
+                                ),
                                 SizedBox(width: 10),
                                 Text(
                                   "Refresh",
@@ -278,7 +339,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             height: 35,
                             child: const Row(
                               children: [
-                                Icon(Icons.extension, size: 30, color: MyColors.unselectedColor),
+                                Icon(
+                                  Icons.extension,
+                                  size: 30,
+                                  color: MyColors.unselectedColor,
+                                ),
                                 SizedBox(width: 10),
                                 Text(
                                   "Extensions",
@@ -294,7 +359,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               if (mounted) {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => const ExtensionsPage()),
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => const ExtensionsPage(),
+                                  ),
                                 );
                               }
                             },
@@ -302,11 +370,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           const PopupMenuDivider(height: 10),
                           PopupMenuItem<String>(
                             onTap: () async {
-                              final prefs = await SharedPreferences.getInstance();
+                              final prefs =
+                                  await SharedPreferences.getInstance();
                               final authCode = prefs.getString('auth_key');
                               if (authCode != null && authCode.isNotEmpty) {
                                 if (mounted) {
-                                  Navigator.push(context, MaterialPageRoute(builder: (context) => const UserPage()));
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const UserPage(),
+                                    ),
+                                  );
                                 }
                               } else {
                                 await _launchUrl(
@@ -319,7 +393,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             height: 35,
                             child: const Row(
                               children: [
-                                Icon(Icons.login, size: 30, color: MyColors.unselectedColor),
+                                Icon(
+                                  Icons.login,
+                                  size: 30,
+                                  color: MyColors.unselectedColor,
+                                ),
                                 SizedBox(width: 10),
                                 Text(
                                   "Login",
@@ -342,25 +420,39 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 SizedBox(width: 20),
                 Text(
                   "Metia",
-                  style: TextStyle(color: MyColors.appbarTextColor, fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: MyColors.appbarTextColor,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
-            bottom: PreferredSize(
+            /*bottom: PreferredSize(
               preferredSize: Size.fromHeight(tabs.isEmpty ? 0 : 40),
               child: Column(
                 children: [
                   tabs.isNotEmpty
                       ? TweenAnimationBuilder<Color?>(
-                        tween: ColorTween(begin: _previousTabColor, end: _getTabBorderColor(_tabController.index)),
+                        tween: ColorTween(
+                          begin: _previousTabColor,
+                          end: _getTabBorderColor(_tabController.index),
+                        ),
                         duration: kTabScrollDuration,
                         builder: (context, color, child) {
                           return TabBar(
                             controller: _tabController,
-                            overlayColor: WidgetStateProperty.all(Colors.transparent),
+                            overlayColor: WidgetStateProperty.all(
+                              Colors.transparent,
+                            ),
                             indicator: UnderlineTabIndicator(
-                              borderSide: BorderSide(width: 3, color: color ?? MyColors.appbarTextColor),
-                              insets: const EdgeInsets.symmetric(horizontal: 16),
+                              borderSide: BorderSide(
+                                width: 3,
+                                color: color ?? MyColors.appbarTextColor,
+                              ),
+                              insets: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                             ),
                             isScrollable: true,
                             tabAlignment: TabAlignment.start,
@@ -390,144 +482,410 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       : const SizedBox(),
                   PreferredSize(
                     preferredSize: const Size.fromHeight(0),
-                    child: Container(color: tabs.isEmpty ? MyColors.unselectedColor : Colors.transparent, height: .5),
+                    child: Container(
+                      color:
+                          tabs.isEmpty
+                              ? MyColors.unselectedColor
+                              : Colors.transparent,
+                      height: .5,
+                    ),
                   ),
                 ],
               ),
             ),
+          */
           ),
-          body: Padding(
-            padding: const EdgeInsets.symmetric(
-              //horizontal: MediaQuery.orientationOf(context) == Orientation.landscape ? 40 : 0,
-            ),
-            child:
-                _loading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _error == "Exception: Please sign in to fetch your anime list."
-                    ? Center(
-                      child: GestureDetector(
-                        onTap: () async {
-                          await _launchUrl(
-                            Uri.parse(
-                              "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
+          body:
+              currentIndex == 0
+                  ? (tabs.isNotEmpty
+                      ? Column(
+                        children: [
+                          TweenAnimationBuilder<Color?>(
+                            tween: ColorTween(
+                              begin: _previousTabColor,
+                              end: _getTabBorderColor(_tabController.index),
                             ),
-                          );
-                        },
-                        child: const Text(
-                          "Sign In",
-                          style: TextStyle(color: MyColors.appbarTextColor, fontWeight: FontWeight.bold, fontSize: 25),
-                        ),
-                      ),
-                    )
-                    : _error == "Exception: Failed to fetch anime list: 429"
-                    ? const Center(
-                      child: Text(
-                        "Your IP got blocked because you made way too many requests.\nWait for 2 minutes and then Refresh, The ban should go away",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: MyColors.appbarTextColor, fontWeight: FontWeight.bold, fontSize: 25),
-                      ),
-                    )
-                    : _error == "Exception: empty library"
-                    ? const Center(
-                      child: Text(
-                        "you dumb, you have no anime in your Anilist library!",
-                        style: TextStyle(color: MyColors.appbarTextColor, fontWeight: FontWeight.bold, fontSize: 25),
-                      ),
-                    )
-                    : _error != null
-                    ? Center(
-                      child: Text(
-                        _error.toString(),
-                        style: const TextStyle(
-                          color: MyColors.appbarTextColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 25,
-                        ),
-                      ),
-                    )
-                    : TabBarView(
-                      controller: _tabController,
-                      children:
-                          _animeLibrary!.map((AnimeState state) {
-                            return Platform.isIOS
-                                ? CupertinoTheme(
-                                  data: const CupertinoThemeData(primaryColor: MyColors.appbarTextColor),
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
-                                    child: CustomScrollView(
-                                      slivers: [
-                                        CupertinoSliverRefreshControl(
-                                          onRefresh: () async {
-                                            await _fetchAnimeLibrary(true);
-                                          },
-                                        ),
-                                        SliverGrid(
-                                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: Tools.getResponsiveCrossAxisVal(
-                                              MediaQuery.of(context).size.width,
-                                              itemWidth: 460 / 4,
-                                            ),
-                                            mainAxisExtent: state.state == "NEW EPISODE" ? 260 : 245,
-                                            crossAxisSpacing: 10,
-                                            mainAxisSpacing: 10,
-                                            childAspectRatio: 0.7,
-                                          ),
-                                          delegate: SliverChildBuilderDelegate((context, index) {
-                                            return AnimeCard(
-                                              index: index,
-                                              tabName: state.state,
-                                              data: state.data[index],
-                                            );
-                                          }, childCount: state.data.length),
-                                        ),
-                                      ],
-                                    ),
+                            duration: kTabScrollDuration,
+                            builder: (context, color, child) {
+                              return TabBar(
+                                controller: _tabController,
+                                overlayColor: WidgetStateProperty.all(
+                                  Colors.transparent,
+                                ),
+                                indicator: UnderlineTabIndicator(
+                                  borderSide: BorderSide(
+                                    width: 3,
+                                    color: color ?? MyColors.appbarTextColor,
                                   ),
-                                )
-                                : RefreshIndicator.adaptive(
-                                  backgroundColor: MyColors.backgroundColor,
-                                  strokeWidth: 3,
-                                  color: MyColors.appbarTextColor,
-                                  onRefresh: () async {
-                                    await _fetchAnimeLibrary(true);
-                                  },
-                                  child: ScrollConfiguration(
-                                    behavior: ScrollConfiguration.of(
-                                      context,
-                                    ).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
-                                      child: GridView.builder(
-                                        controller: _scrollController,
-                                        cacheExtent: 500,
-                                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: Tools.getResponsiveCrossAxisVal(
+                                  insets: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                ),
+                                isScrollable: true,
+                                tabAlignment: TabAlignment.start,
+                                labelColor: MyColors.appbarTextColor,
+                                unselectedLabelColor: MyColors.unselectedColor,
+                                tabs:
+                                    tabs.map((String tabName) {
+                                      return Tab(
+                                        child: Text(
+                                          tabName,
+                                          style: TextStyle(
+                                            color:
+                                                tabName.startsWith(
+                                                      "NEW EPISODE",
+                                                    )
+                                                    ? Colors.orange
+                                                    : tabName.startsWith(
+                                                      "WATCHING",
+                                                    )
+                                                    ? Colors.green
+                                                    : null,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                              );
+                            },
+                          ),
+
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                //horizontal: MediaQuery.orientationOf(context) == Orientation.landscape ? 40 : 0,
+                              ),
+                              child:
+                                  _loading
+                                      ? const Center(
+                                        child: CircularProgressIndicator(),
+                                      )
+                                      : _error ==
+                                          "Exception: Please sign in to fetch your anime list."
+                                      ? Center(
+                                        child: GestureDetector(
+                                          onTap: () async {
+                                            await _launchUrl(
+                                              Uri.parse(
+                                                "https://anilist.co/api/v2/oauth/authorize?client_id=25588&redirect_uri=metia://&response_type=code",
+                                              ),
+                                            );
+                                          },
+                                          child: const Text(
+                                            "Sign In",
+                                            style: TextStyle(
+                                              color: MyColors.appbarTextColor,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 25,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                      : _error ==
+                                          "Exception: Failed to fetch anime list: 429"
+                                      ? const Center(
+                                        child: Text(
+                                          "Your IP got blocked because you made way too many requests.\nWait for 2 minutes and then Refresh, The ban should go away",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: MyColors.appbarTextColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 25,
+                                          ),
+                                        ),
+                                      )
+                                      : _error == "Exception: empty library"
+                                      ? const Center(
+                                        child: Text(
+                                          "you dumb, you have no anime in your Anilist library!",
+                                          style: TextStyle(
+                                            color: MyColors.appbarTextColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 25,
+                                          ),
+                                        ),
+                                      )
+                                      : _error != null
+                                      ? Center(
+                                        child: Text(
+                                          _error.toString(),
+                                          style: const TextStyle(
+                                            color: MyColors.appbarTextColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 25,
+                                          ),
+                                        ),
+                                      )
+                                      : TabBarView(
+                                        controller: _tabController,
+                                        children:
+                                            _animeLibrary!.map((
+                                              AnimeState state,
+                                            ) {
+                                              return Platform.isIOS
+                                                  ? CupertinoTheme(
+                                                    data: const CupertinoThemeData(
+                                                      primaryColor:
+                                                          MyColors
+                                                              .appbarTextColor,
+                                                    ),
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                            top: 8,
+                                                            left: 4,
+                                                            right: 4,
+                                                          ),
+                                                      child: CustomScrollView(
+                                                        slivers: [
+                                                          CupertinoSliverRefreshControl(
+                                                            onRefresh: () async {
+                                                              await _fetchAnimeLibrary(
+                                                                true,
+                                                              );
+                                                            },
+                                                          ),
+                                                          SliverGrid(
+                                                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                              crossAxisCount:
+                                                                  Tools.getResponsiveCrossAxisVal(
+                                                                    MediaQuery.of(
+                                                                      context,
+                                                                    ).size.width,
+                                                                    itemWidth:
+                                                                        460 / 4,
+                                                                  ),
+                                                              mainAxisExtent:
+                                                                  state.state ==
+                                                                          "NEW EPISODE"
+                                                                      ? 260
+                                                                      : 245,
+                                                              crossAxisSpacing:
+                                                                  10,
+                                                              mainAxisSpacing:
+                                                                  10,
+                                                              childAspectRatio:
+                                                                  0.7,
+                                                            ),
+                                                            delegate: SliverChildBuilderDelegate(
+                                                              (context, index) {
+                                                                return AnimeCard(
+                                                                  index: index,
+                                                                  tabName:
+                                                                      state
+                                                                          .state,
+                                                                  data:
+                                                                      state
+                                                                          .data[index],
+                                                                );
+                                                              },
+                                                              childCount:
+                                                                  state
+                                                                      .data
+                                                                      .length,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  )
+                                                  : RefreshIndicator.adaptive(
+                                                    backgroundColor:
+                                                        MyColors
+                                                            .backgroundColor,
+                                                    strokeWidth: 3,
+                                                    color:
+                                                        MyColors
+                                                            .appbarTextColor,
+                                                    onRefresh: () async {
+                                                      await _fetchAnimeLibrary(
+                                                        true,
+                                                      );
+                                                    },
+                                                    child: ScrollConfiguration(
+                                                      behavior:
+                                                          ScrollConfiguration.of(
+                                                            context,
+                                                          ).copyWith(
+                                                            dragDevices: {
+                                                              PointerDeviceKind
+                                                                  .touch,
+                                                              PointerDeviceKind
+                                                                  .mouse,
+                                                            },
+                                                          ),
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets.only(
+                                                              top: 8,
+                                                              left: 4,
+                                                              right: 4,
+                                                            ),
+                                                        child: GridView.builder(
+                                                          controller:
+                                                              _scrollController,
+                                                          cacheExtent: 500,
+                                                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                            crossAxisCount:
+                                                                Tools.getResponsiveCrossAxisVal(
+                                                                  MediaQuery.of(
+                                                                    context,
+                                                                  ).size.width,
+                                                                  itemWidth:
+                                                                      460 / 4,
+                                                                ),
+                                                            mainAxisExtent:
+                                                                state.state ==
+                                                                        "NEW EPISODE"
+                                                                    ? 260
+                                                                    : 245,
+                                                            crossAxisSpacing:
+                                                                10,
+                                                            mainAxisSpacing: 10,
+                                                            childAspectRatio:
+                                                                0.7,
+                                                          ),
+                                                          itemCount:
+                                                              state.data.length,
+                                                          itemBuilder: (
+                                                            context,
+                                                            index,
+                                                          ) {
+                                                            return AnimeCard(
+                                                              index: index,
+                                                              tabName:
+                                                                  state.state,
+                                                              data:
+                                                                  state
+                                                                      .data[index],
+                                                            );
+                                                          },
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                            }).toList(),
+                                      ),
+                            ),
+                          ),
+                        ],
+                      )
+                      : const Center(child: CircularProgressIndicator()))
+                  :
+                  // search page
+                  Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          right: 8.0,
+                          left: 8.0,
+                          top: 20,
+                        ),
+                        child: Column(
+                          spacing: 8,
+                          children: [
+                            const Text(
+                              "Popular right now:",
+                              style: TextStyle(
+                                color: MyColors.coolPurple,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 18,
+                              ),
+                            ),
+                            Expanded(
+                              child: GridView.builder(
+                                itemCount:
+                                    isSearching
+                                        ? searchAnimeData.length
+                                        : popularAnimeData.length,
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount:
+                                          Tools.getResponsiveCrossAxisVal(
                                             MediaQuery.of(context).size.width,
                                             itemWidth: 460 / 4,
                                           ),
-                                          mainAxisExtent: state.state == "NEW EPISODE" ? 260 : 245,
-                                          crossAxisSpacing: 10,
-                                          mainAxisSpacing: 10,
-                                          childAspectRatio: 0.7,
-                                        ),
-                                        itemCount: state.data.length,
-                                        itemBuilder: (context, index) {
-                                          return AnimeCard(index: index, tabName: state.state, data: state.data[index]);
-                                        },
-                                      ),
+                                      mainAxisExtent: 245,
+                                      crossAxisSpacing: 10,
+                                      mainAxisSpacing: 10,
+                                      childAspectRatio: 0.7,
+                                    ),
+                                itemBuilder: (context, index) {
+                                  return AnimeCard3(
+                                    tabName: "Search",
+                                    index: index,
+                                    data:
+                                        isSearching
+                                            ? {"media": searchAnimeData[index]}
+                                            : {"media": popularAnimeData[index]},
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Container(
+                          height: 50,
+                          margin: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: MyColors.coolPurple2,
+                            borderRadius: BorderRadius.circular(25),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  decoration: InputDecoration(
+                                    hintText: "Search anime...",
+                                    hintStyle: TextStyle(
+                                      color: Colors.grey[500],
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 18,
                                     ),
                                   ),
-                                );
-                          }).toList(),
-                    ),
-          ),
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                child: Icon(
+                                  Icons.search,
+                                  color: MyColors.appbarTextColor,
+                                  size: 28,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
         ),
         IgnorePointer(
           ignoring: !_isPopupMenuOpen,
           child: AnimatedOpacity(
             curve: Curves.easeOutBack,
             opacity: _blurOpacity,
-            duration: _isPopupMenuOpen ? const Duration(milliseconds: 333) : const Duration(milliseconds: 533),
+            duration:
+                _isPopupMenuOpen
+                    ? const Duration(milliseconds: 333)
+                    : const Duration(milliseconds: 533),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
               child: Container(color: Colors.black.withOpacity(0.2)),

@@ -9,12 +9,12 @@ import 'package:metia/tools.dart';
 import 'dart:io';
 import 'package:pasteboard/pasteboard.dart';
 
-class AnimeCard extends StatefulWidget {
+class AnimeCard3 extends StatefulWidget {
   final String tabName;
   final int index;
   final Map<String, dynamic> data;
 
-  const AnimeCard({
+  const AnimeCard3({
     super.key,
     required this.tabName,
     required this.index,
@@ -22,10 +22,10 @@ class AnimeCard extends StatefulWidget {
   });
 
   @override
-  State<AnimeCard> createState() => _AnimeCardState();
+  State<AnimeCard3> createState() => _AnimeCard3State();
 }
 
-class _AnimeCardState extends State<AnimeCard> {
+class _AnimeCard3State extends State<AnimeCard3> {
   final double _opacity = 0.0;
 
   @override

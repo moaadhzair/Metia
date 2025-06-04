@@ -124,7 +124,7 @@ class _PlayerPageState extends State<PlayerPage> {
         orElse: () => providers.first, // If no dub found, take highest quality
       );
 
-      if (anilistData["progress"] < episodeNumber) {
+      if (anilistData["progress"] ?? 0 < episodeNumber) {
         AnilistApi.updateAnimeTracking(
           mediaId: anilistData["media"]["id"],
           progress: episodeNumber,
@@ -239,7 +239,7 @@ class _PlayerPageState extends State<PlayerPage> {
           // Update Anilist tracking for next episode
           if (firstTime) {
             firstTime = false;
-            if (anilistData["progress"] < episodeNumber) {
+            if (anilistData["progress"] ?? 0 < episodeNumber) {
               AnilistApi.updateAnimeTracking(
                 mediaId: anilistData["media"]["id"],
                 progress: episodeNumber,

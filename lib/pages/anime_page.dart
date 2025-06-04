@@ -777,7 +777,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                       ? widget.animeData["media"]["episodes"] ==
                                               widget.animeData["progress"]
                                           ? "FINISHED"
-                                          : "CONTINUE EPISODE ${widget.animeData["progress"] + 1}"
+                                          : "CONTINUE EPISODE ${widget.animeData["progress"] ?? 0 + 1}"
                                       : "NULL",
                                   style: const TextStyle(
                                     color: MyColors.coolGreen,
@@ -795,7 +795,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                     context,
                                     currentExtension,
                                     EpisodeList,
-                                    widget.animeData["progress"],
+                                    widget.animeData["progress"] ?? 0,
                                     widget.animeData,
                                   );
                                 },
@@ -980,9 +980,9 @@ class _buildAnimeEpisodeListState extends State<_buildAnimeEpisodeList> {
               padding: const EdgeInsets.only(bottom: 7),
               child: AnimeEpisode(
                 title: widget.extensionAnimeTitle,
-                current: widget.widget.animeData["progress"] == episodeIndex,
+                current: widget.widget.animeData["progress"] ?? 0 == episodeIndex,
                 animeData: widget.widget.animeData,
-                seen: widget.widget.animeData["progress"] > episodeIndex,
+                seen: widget.widget.animeData["progress"] ?? 0 > episodeIndex,
                 index: episodeIndex,
                 onClicked: (details) async {
                   await showSourcePicker(

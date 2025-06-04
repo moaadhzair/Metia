@@ -8,7 +8,61 @@ import 'package:metia/tools.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AnilistApi {
+  static Future<List<Map<String, dynamic>>> fetchPopularAnime() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? accessToken = prefs.getString('auth_key');
 
+    const String url = 'https://graphql.anilist.co';
+
+    Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      //'Authorization': 'Bearer $authKey',
+      'Accept': 'application/json',
+    };
+
+    const String query = r'''
+query {
+  Page(perPage: 40) {
+    media(type: ANIME, sort: POPULARITY_DESC) {
+      averageScore
+      id
+      title {
+        romaji
+        english
+        native
+      }
+      coverImage {
+        extraLarge
+      }
+      popularity
+      episodes
+      genres
+      description(asHtml: false)
+    }
+  }
+}
+''';
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: headers,
+        body: jsonEncode({'query': query}),
+      );
+
+      if (response.statusCode == 200) {
+        print(response);
+        return List<Map<String, dynamic>>.from(
+          jsonDecode(response.body)["data"]["Page"]["media"],
+        );
+      } else {
+        throw Exception('Failed to fetch anime list: ${response.statusCode}');
+      }
+    } catch (error) {
+      // Rethrow the original exception without wrapping it
+      rethrow;
+    }
+  }
 
   static Future<void> updateAnimeTracking({
     required int mediaId,
@@ -19,19 +73,18 @@ class AnilistApi {
     final prefs = await SharedPreferences.getInstance();
     final String? accessToken = prefs.getString('auth_key');
 
-
     const String url = 'https://graphql.anilist.co';
 
     const String mutation = r'''
-    mutation($mediaId: Int, $status: MediaListStatus, $progress: Int, $score: Float) {
-      SaveMediaListEntry(mediaId: $mediaId, status: $status, progress: $progress, score: $score) {
-        id
-        status
-        progress
-        score
+      mutation($mediaId: Int, $status: MediaListStatus, $progress: Int, $score: Float) {
+        SaveMediaListEntry(mediaId: $mediaId, status: $status, progress: $progress, score: $score) {
+          id
+          status
+          progress
+          score
+        }
       }
-    }
-  ''';
+    ''';
 
     final Map<String, dynamic> variables = {
       'mediaId': mediaId,
@@ -42,7 +95,10 @@ class AnilistApi {
 
     final response = await http.post(
       Uri.parse(url),
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $accessToken'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
       body: jsonEncode({'query': mutation, 'variables': variables}),
     );
 
@@ -58,7 +114,10 @@ class AnilistApi {
     }
   }
 
-  static Future<Map<String, dynamic>> fetchUserAnimeList(int userId, bool signedIn) async {
+  static Future<Map<String, dynamic>> fetchUserAnimeList(
+    int userId,
+    bool signedIn,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
 
@@ -121,7 +180,11 @@ query (\$type: MediaType!, \$userId: Int!) {
     });
 
     try {
-      final response = await http.post(Uri.parse(url), headers: headers, body: body);
+      final response = await http.post(
+        Uri.parse(url),
+        headers: headers,
+        body: body,
+      );
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -134,7 +197,10 @@ query (\$type: MediaType!, \$userId: Int!) {
     }
   }
 
-  static Future<List<AnimeState>> fetchAnimeListofID(int userId, bool signedIn) async {
+  static Future<List<AnimeState>> fetchAnimeListofID(
+    int userId,
+    bool signedIn,
+  ) async {
     //final defaultSearch = await Setting.getdefaultSearch();
     final result = await fetchUserAnimeList(userId, signedIn);
     //Tools.Toast(context, );
@@ -167,7 +233,9 @@ query (\$type: MediaType!, \$userId: Int!) {
       if (state.state == "WATCHING") {
         for (var data in state.data) {
           if (data["media"]["nextAiringEpisode"] != null) {
-            int episode = int.parse(data["media"]["nextAiringEpisode"]["episode"].toString());
+            int episode = int.parse(
+              data["media"]["nextAiringEpisode"]["episode"].toString(),
+            );
             int progress = int.parse(data["progress"].toString());
             if (episode - 1 > progress) {
               //animes.add(AnimeState("NEW EPISODE", [data]));
@@ -201,7 +269,10 @@ query (\$type: MediaType!, \$userId: Int!) {
 
   static Future<Map<String, dynamic>> searchAnime(String animeName) async {
     const url = 'https://graphql.anilist.co';
-    const headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+    const headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
 
     final body = jsonEncode({
       "query": """
@@ -226,7 +297,11 @@ query (\$type: MediaType!, \$userId: Int!) {
       "variables": {"search": animeName},
     });
 
-    final response = await http.post(Uri.parse(url), headers: headers, body: body);
+    final response = await http.post(
+      Uri.parse(url),
+      headers: headers,
+      body: body,
+    );
     print("a request to the graphql has been made!!!!");
 
     if (response.statusCode == 200) {
