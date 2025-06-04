@@ -64,6 +64,63 @@ query {
     }
   }
 
+  static Future<List<Map<String, dynamic>>> fetchSearchAnime(
+    String keyword,
+  ) async {
+    const String url = 'https://graphql.anilist.co';
+
+    Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      //'Authorization': 'Bearer $authKey',
+      'Accept': 'application/json',
+    };
+
+    const String query = r'''
+query ($search: String) {
+  Page(perPage: 1000) {
+    media(search: $search, type: ANIME, sort: POPULARITY_DESC, isAdult: false) {
+      averageScore
+      id
+      title {
+        romaji
+        english
+        native
+      }
+      coverImage {
+        extraLarge
+      }
+      episodes
+      genres
+      description(asHtml: false)
+    }
+  }
+}
+
+''';
+
+    Map variables = {"search": keyword};
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: headers,
+        body: jsonEncode({'query': query, "variables": variables}),
+      );
+
+      if (response.statusCode == 200) {
+        print(response);
+        return List<Map<String, dynamic>>.from(
+          jsonDecode(response.body)["data"]["Page"]["media"],
+        );
+      } else {
+        throw Exception('Failed to fetch anime list: ${response.statusCode}');
+      }
+    } catch (error) {
+      // Rethrow the original exception without wrapping it
+      rethrow;
+    }
+  }
+
   static Future<void> updateAnimeTracking({
     required int mediaId,
     String? status, // e.g., "CURRENT", "COMPLETED"
