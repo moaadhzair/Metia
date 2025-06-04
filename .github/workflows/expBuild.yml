@@ -1,15 +1,10 @@
 name: metia-build-exp
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main  # or your default branch name
-    paths:
-      - 'lib/**'
-      - 'ios/**'
-      - 'android/**'
-      - 'pubspec.yaml'
+  workflow_run:
+    workflows: ["Bump Version on Commit"] # <-- Use the exact name of your version bump workflow
+    types:
+      - completed
 
 jobs:
   build-android:
