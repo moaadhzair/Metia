@@ -740,43 +740,17 @@ class _HomePageState extends State<HomePage>
                         Expanded(
                           child:
                               _searchEnded == true
-                                  ? GridView.builder(
-                                    key: const PageStorageKey('searchResults'),
-                                    itemCount:
-                                        isSearching
-                                            ? searchAnimeData.length
-                                            : popularAnimeData.length,
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount:
-                                              Tools.getResponsiveCrossAxisVal(
-                                                MediaQuery.of(
-                                                  context,
-                                                ).size.width,
-                                                itemWidth: 460 / 4,
-                                              ),
-                                          mainAxisExtent: 245,
-                                          crossAxisSpacing: 10,
-                                          mainAxisSpacing: 10,
-                                          childAspectRatio: 0.7,
-                                        ),
-                                    itemBuilder: (context, index) {
-                                      return AnimeCard3(
-                                        tabName: "Search",
-                                        index: index,
-                                        data:
-                                            isSearching
-                                                ? {
-                                                  "media":
-                                                      searchAnimeData[index],
-                                                }
-                                                : {
-                                                  "media":
-                                                      popularAnimeData[index],
-                                                },
-                                      );
-                                    },
-                                  )
+                                  ? isSearching
+                                      ? searchAnimeData.isEmpty
+                                          ? const Center(
+                                            child: Text("No Anime Was Found!", style: TextStyle(color: MyColors.appbarTextColor, fontSize: 20),),
+                                          )
+                                          : _buildGrid()
+                                      : popularAnimeData.isEmpty
+                                      ? const Center(
+                                        child: Text("No Anime Was Found!", style: TextStyle(color: MyColors.appbarTextColor, fontSize: 20),),
+                                      )
+                                      : _buildGrid()
                                   : const Center(
                                     child: CircularProgressIndicator(),
                                   ),
@@ -903,6 +877,33 @@ class _HomePageState extends State<HomePage>
           ),
         ),
       ],
+    );
+  }
+
+  _buildGrid() {
+    return GridView.builder(
+      key: const PageStorageKey('searchResults'),
+      itemCount: isSearching ? searchAnimeData.length : popularAnimeData.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: Tools.getResponsiveCrossAxisVal(
+          MediaQuery.of(context).size.width,
+          itemWidth: 460 / 4,
+        ),
+        mainAxisExtent: 245,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 0.7,
+      ),
+      itemBuilder: (context, index) {
+        return AnimeCard3(
+          tabName: "Search",
+          index: index,
+          data:
+              isSearching
+                  ? {"media": searchAnimeData[index]}
+                  : {"media": popularAnimeData[index]},
+        );
+      },
     );
   }
 
