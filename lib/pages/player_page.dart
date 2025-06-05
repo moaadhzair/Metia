@@ -7,7 +7,7 @@ import 'package:media_kit/media_kit.dart'; // Provides [Player], [Media], [Playl
 import 'package:media_kit_video/media_kit_video.dart'; // Provides [VideoController] & [Video] etc.
 
 import 'package:flutter/services.dart';
-import 'package:metia/api/anilist_search.dart';
+import 'package:metia/api/anilist_api.dart';
 import 'package:metia/api/extension.dart';
 import 'dart:async';
 
@@ -124,7 +124,7 @@ class _PlayerPageState extends State<PlayerPage> {
         orElse: () => providers.first, // If no dub found, take highest quality
       );
 
-      if (anilistData["progress"] ?? 0 < episodeNumber) {
+      if ((anilistData["progress"] ?? 0) < episodeNumber) {
         AnilistApi.updateAnimeTracking(
           mediaId: anilistData["media"]["id"],
           progress: episodeNumber,
@@ -239,7 +239,7 @@ class _PlayerPageState extends State<PlayerPage> {
           // Update Anilist tracking for next episode
           if (firstTime) {
             firstTime = false;
-            if (anilistData["progress"] ?? 0 < episodeNumber) {
+            if ((anilistData["progress"] ?? 0) < episodeNumber) {
               AnilistApi.updateAnimeTracking(
                 mediaId: anilistData["media"]["id"],
                 progress: episodeNumber,

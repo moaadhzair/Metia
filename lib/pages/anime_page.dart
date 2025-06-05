@@ -1072,9 +1072,9 @@ class _buildAnimeEpisodeListState extends State<_buildAnimeEpisodeList> {
               child: AnimeEpisode(
                 title: widget.extensionAnimeTitle,
                 current:
-                    widget.widget.animeData["progress"] ?? 0 == episodeIndex,
+                    (widget.widget.animeData["progress"] ?? 0) == episodeIndex,
                 animeData: widget.widget.animeData,
-                seen: widget.widget.animeData["progress"] ?? 0 > episodeIndex,
+                seen: (widget.widget.animeData["progress"] ?? 0) > episodeIndex,
                 index: episodeIndex,
                 onClicked: (details) async {
                   await showSourcePicker(

@@ -1,20 +1,23 @@
+import 'dart:ui';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
+import 'package:metia/api/anilist_api.dart';
 import 'package:metia/constants/Colors.dart';
 import 'package:metia/pages/anime_page.dart';
 import 'package:metia/tools.dart';
 import 'dart:io';
 import 'package:pasteboard/pasteboard.dart';
 
-class AnimeCard3 extends StatefulWidget {
+class SearchAnimeCard extends StatefulWidget {
   final String tabName;
   final int index;
   final Map<String, dynamic> data;
 
-  const AnimeCard3({
+  const SearchAnimeCard({
     super.key,
     required this.tabName,
     required this.index,
@@ -22,14 +25,26 @@ class AnimeCard3 extends StatefulWidget {
   });
 
   @override
-  State<AnimeCard3> createState() => _AnimeCard3State();
+  State<SearchAnimeCard> createState() => Search_AnimeCardState();
 }
 
-class _AnimeCard3State extends State<AnimeCard3> {
+class Search_AnimeCardState extends State<SearchAnimeCard> {
   final double _opacity = 0.0;
+  late final title;
+
+  @override
+  void initState() {
+    super.initState();
+    title =
+        widget.data["media"]["title"]["english"] ??
+        widget.data["media"]["title"]["romaji"] ??
+        widget.data["media"]["title"]["native"] ??
+        "Unknown Title";
+  }
 
   @override
   Widget build(BuildContext context) {
+    
     return GestureDetector(
       onTap: () {
         /*Tools.Toast(
@@ -61,70 +76,365 @@ class _AnimeCard3State extends State<AnimeCard3> {
                 clipBehavior: Clip.hardEdge,
                 child: AspectRatio(
                   aspectRatio: 16 / 9,
-                  child: Hero(
-                    flightShuttleBuilder: (
-                      flightContext,
-                      animation,
-                      flightDirection,
-                      fromHeroContext,
-                      toHeroContext,
-                    ) {
-                      return Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          CachedNetworkImage(
-                            imageUrl:
-                                widget
-                                    .data["media"]["coverImage"]["extraLarge"],
-                            fit: BoxFit.cover,
-                            placeholder:
-                                (context, url) => const Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Hero(
+                        flightShuttleBuilder: (
+                          flightContext,
+                          animation,
+                          flightDirection,
+                          fromHeroContext,
+                          toHeroContext,
+                        ) {
+                          return Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              CachedNetworkImage(
+                                imageUrl:
+                                    widget
+                                        .data["media"]["coverImage"]["extraLarge"],
+                                fit: BoxFit.cover,
+                                placeholder:
+                                    (context, url) => const Center(
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                errorWidget:
+                                    (context, url, error) =>
+                                        const Icon(Icons.error),
+                              ),
+                              AnimatedBuilder(
+                                animation: animation,
+                                builder: (context, child) {
+                                  final double t = animation.value;
+                                  // double t;// fade out
+                                  return Opacity(
+                                    opacity: t.clamp(0.0, 1.0),
+                                    child: child,
+                                  );
+                                },
+                                child: Container(
+                                  decoration: const BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.transparent,
+                                        MyColors.backgroundColor,
+                                      ],
+                                    ),
                                   ),
                                 ),
-                            errorWidget:
-                                (context, url, error) =>
-                                    const Icon(Icons.error),
-                          ),
-                          AnimatedBuilder(
-                            animation: animation,
-                            builder: (context, child) {
-                              final double t = animation.value;
-                              // double t;// fade out
-                              return Opacity(
-                                opacity: t.clamp(0.0, 1.0),
-                                child: child,
-                              );
-                            },
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.transparent,
-                                    MyColors.backgroundColor,
-                                  ],
+                              ),
+                            ],
+                          );
+                        },
+                        tag: '${widget.data["media"]["id"]}',
+                        child: CachedNetworkImage(
+                          imageUrl:
+                              widget.data["media"]["coverImage"]["extraLarge"],
+                          fit: BoxFit.cover,
+                          placeholder:
+                              (context, url) => const Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                          errorWidget:
+                              (context, url, error) => const Icon(Icons.error),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: GestureDetector(
+                          onTapUp: (details) {
+                            showModalBottomSheet(
+                              context: context,
+                              builder: (context) {
+                                return StatefulBuilder(
+                                  builder: (context, setModalState) {
+                                    return ClipRRect(
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(25),
+                                        topRight: Radius.circular(25),
+                                      ),
+                                      child: Scaffold(
+                                        floatingActionButton: FloatingActionButton(
+                                          backgroundColor: MyColors.coolPurple,
+                                          child: const Icon(
+                                            Icons.add,
+                                            color: MyColors.backgroundColor,
+                                          ),
+                                          onPressed: () async {
+                                            final result = await showDialog(
+                                              context: context,
+                                              builder: (context) {
+                                                TextEditingController
+                                                listNameController =
+                                                    TextEditingController();
+                                                return AlertDialog(
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          16,
+                                                        ),
+                                                  ),
+                                                  backgroundColor:
+                                                      MyColors.backgroundColor,
+                                                  title: const Text(
+                                                    "Create New List",
+                                                    style: TextStyle(
+                                                      color:
+                                                          MyColors
+                                                              .appbarTextColor,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                  content: TextField(
+                                                    controller:
+                                                        listNameController,
+                                                    decoration: const InputDecoration(
+                                                      hintText:
+                                                          "Enter List Name",
+                                                      hintStyle: TextStyle(
+                                                        color:
+                                                            MyColors
+                                                                .unselectedColor,
+                                                      ),
+                                                      enabledBorder:
+                                                          UnderlineInputBorder(
+                                                            borderSide: BorderSide(
+                                                              color:
+                                                                  MyColors
+                                                                      .coolPurple,
+                                                            ),
+                                                          ),
+                                                      focusedBorder:
+                                                          UnderlineInputBorder(
+                                                            borderSide: BorderSide(
+                                                              color:
+                                                                  MyColors
+                                                                      .coolPurple,
+                                                            ),
+                                                          ),
+                                                    ),
+                                                    style: const TextStyle(
+                                                      color:
+                                                          MyColors
+                                                              .appbarTextColor,
+                                                    ),
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.of(
+                                                          context,
+                                                        ).pop();
+                                                      },
+                                                      child: const Text(
+                                                        "Cancel",
+                                                        style: TextStyle(
+                                                          color:
+                                                              MyColors
+                                                                  .unselectedColor,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    ElevatedButton(
+                                                      style:
+                                                          ElevatedButton.styleFrom(
+                                                            backgroundColor:
+                                                                MyColors
+                                                                    .coolPurple,
+                                                          ),
+                                                      onPressed: () async {
+                                                        final listName =
+                                                            listNameController
+                                                                .text
+                                                                .trim();
+                                                        if (listName.isEmpty)
+                                                          return;
+                                                        await AnilistApi.createCustomList(
+                                                          listName,
+                                                        );
+                                                        Navigator.of(
+                                                          context,
+                                                        ).pop("refresh");
+                                                      },
+                                                      child: const Text(
+                                                        "Add",
+                                                        style: TextStyle(
+                                                          color:
+                                                              MyColors
+                                                                  .backgroundColor,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            );
+
+                                            if (result == "refresh") {
+                                              setModalState(
+                                                () {},
+                                              ); // This will rebuild the FutureBuilder!
+                                            }
+                                          },
+                                        ),
+                                        backgroundColor:
+                                            MyColors.backgroundColor,
+                                        body: Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 16,
+                                            left: 16,
+                                            right: 16,
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            spacing: 16,
+                                            children: [
+                                              const Text(
+                                                "Add To List:",
+                                                style: TextStyle(
+                                                  color:
+                                                      MyColors.appbarTextColor,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 16.5,
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: FutureBuilder(
+                                                  future:
+                                                      AnilistApi.getUserAnimeLists(),
+                                                  builder: (context, snapshot) {
+                                                    if (snapshot
+                                                            .connectionState ==
+                                                        ConnectionState
+                                                            .waiting) {
+                                                      return const Center(
+                                                        child:
+                                                            CircularProgressIndicator(),
+                                                      );
+                                                    }
+                                                    if (snapshot
+                                                            .connectionState ==
+                                                        ConnectionState.done) {
+                                                      List<
+                                                        Map<String, dynamic>
+                                                      >?
+                                                      userLists = snapshot.data;
+                                                      return ListView.separated(
+                                                        separatorBuilder: (
+                                                          context,
+                                                          index,
+                                                        ) {
+                                                          return const SizedBox(
+                                                            height: 12,
+                                                          );
+                                                        },
+                                                        itemBuilder: (
+                                                          context,
+                                                          index,
+                                                        ) {
+                                                          return GestureDetector(
+                                                            onTapUp: (
+                                                              details,
+                                                            ) async {
+                                                              await AnilistApi.addAnimeToList(
+                                                                userLists[index]["isCustom"],
+                                                                widget
+                                                                    .data["media"]["id"],
+                                                                userLists[index]["name"],
+                                                              );
+                                                              Navigator.of(
+                                                                context,
+                                                              ).pop();
+                                                              Tools.Toast(
+                                                                context,
+                                                                "added $title to ${userLists[index]["name"]}",
+                                                              );
+                                                            },
+                                                            child: Container(
+                                                              decoration: BoxDecoration(
+                                                                color:
+                                                                    MyColors
+                                                                        .coolPurple2,
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      12,
+                                                                    ),
+                                                              ),
+                                                              width:
+                                                                  double
+                                                                      .infinity,
+                                                              height: 60,
+                                                              padding:
+                                                                  const EdgeInsets.all(
+                                                                    12,
+                                                                  ),
+                                                              alignment:
+                                                                  Alignment
+                                                                      .center,
+                                                              child: Text(
+                                                                userLists[index]["name"],
+                                                                style: const TextStyle(
+                                                                  color:
+                                                                      MyColors
+                                                                          .appbarTextColor,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  fontSize:
+                                                                      16.5,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
+                                                        itemCount:
+                                                            userLists!.length,
+                                                      );
+                                                    }
+                                                    return Container();
+                                                  },
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            );
+                          },
+                          child: Container(
+                            height: 30,
+                            width: 30,
+                            margin: const EdgeInsets.all(4),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(25),
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  color: Color.fromARGB(178, 41, 41, 41),
+                                ),
+                                child: const Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                  size: 25,
                                 ),
                               ),
                             ),
                           ),
-                        ],
-                      );
-                    },
-                    tag: '${widget.data["media"]["id"]}',
-                    child: CachedNetworkImage(
-                      imageUrl:
-                          widget.data["media"]["coverImage"]["extraLarge"],
-                      fit: BoxFit.cover,
-                      placeholder:
-                          (context, url) => const Center(
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                      errorWidget:
-                          (context, url, error) => const Icon(Icons.error),
-                    ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -133,10 +443,7 @@ class _AnimeCard3State extends State<AnimeCard3> {
             Expanded(
               child: Center(
                 child: Text(
-                  widget.data["media"]["title"]["english"] ??
-                      widget.data["media"]["title"]["romaji"] ??
-                      widget.data["media"]["title"]["native"] ??
-                      "Unknown Title",
+                  title,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                   style: const TextStyle(
@@ -157,8 +464,7 @@ class _AnimeCard3State extends State<AnimeCard3> {
                   text: TextSpan(
                     children: [
                       TextSpan(
-                        text:
-                            "${widget.data["media"]["episodes"] ?? "?"} Ep",
+                        text: "${widget.data["media"]["episodes"] ?? "?"} Ep",
                         style: const TextStyle(
                           color: MyColors.appbarTextColor,
                           fontSize: 16,

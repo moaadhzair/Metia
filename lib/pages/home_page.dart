@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:metia/api/anilist_search.dart';
+import 'package:metia/api/anilist_api.dart';
 import 'package:metia/constants/Colors.dart';
 import 'package:metia/data/Library.dart';
 import 'package:metia/data/setting.dart';
@@ -895,7 +895,7 @@ class _HomePageState extends State<HomePage>
         childAspectRatio: 0.7,
       ),
       itemBuilder: (context, index) {
-        return AnimeCard3(
+        return SearchAnimeCard(
           tabName: "Search",
           index: index,
           data:

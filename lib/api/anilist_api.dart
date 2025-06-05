@@ -367,4 +367,246 @@ query (\$type: MediaType!, \$userId: Int!) {
       throw Exception('Failed to fetch anime data: ${response.statusCode}');
     }
   }
+
+  static Future<void> addAnimeToList(
+    bool isCustomList,
+    int mediaId,
+    String statusList,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? authKey = prefs.getString('auth_key');
+
+    const String url = 'https://graphql.anilist.co';
+    Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $authKey',
+      'Accept': 'application/json',
+    };
+
+    final String query =
+        isCustomList
+            ? '''
+        mutation (
+  \$id: Int,
+  \$mediaId: Int,
+  \$status: MediaListStatus,
+  \$score: Float,
+  \$progress: Int,
+  \$progressVolumes: Int,
+  \$repeat: Int,
+  \$private: Boolean,
+  \$notes: String,
+  \$customLists: [String],
+  \$hiddenFromStatusLists: Boolean,
+  \$advancedScores: [Float],
+  \$startedAt: FuzzyDateInput,
+  \$completedAt: FuzzyDateInput
+) {
+  SaveMediaListEntry(
+    id: \$id,
+    mediaId: \$mediaId,
+    status: \$status,
+    score: \$score,
+    progress: \$progress,
+    progressVolumes: \$progressVolumes,
+    repeat: \$repeat,
+    private: \$private,
+    notes: \$notes,
+    customLists: \$customLists,
+    hiddenFromStatusLists: \$hiddenFromStatusLists,
+    advancedScores: \$advancedScores,
+    startedAt: \$startedAt,
+    completedAt: \$completedAt
+  ) {
+    id
+    mediaId
+    status
+    score
+    advancedScores
+    progress
+    progressVolumes
+    repeat
+    priority
+    private
+    hiddenFromStatusLists
+    customLists
+    notes
+    updatedAt
+    startedAt {
+      year
+      month
+      day
+    }
+    completedAt {
+      year
+      month
+      day
+    }
+    user {
+      id
+      name
+    }
+    media {
+      id
+      title {
+        userPreferred
+      }
+      coverImage {
+        large
+      }
+      type
+      format
+      status
+      episodes
+      volumes
+      chapters
+      averageScore
+      popularity
+      isAdult
+      startDate {
+        year
+      }
+    }
+  }
+}
+      '''
+            : '''
+        mutation(\$mediaId: Int!, \$status: MediaListStatus) {
+          SaveMediaListEntry(
+            mediaId: \$mediaId,
+            status: \$status
+          ) {
+            id
+            mediaId
+            status
+          }
+        }
+      ''';
+
+    final Map<String, dynamic> variables =
+        isCustomList
+            ? {
+              "mediaId": mediaId,
+              "status": "CURRENT", // or let user pick a status
+              "customLists": [
+                statusList,
+              ], // statusList is your custom list name
+            }
+            : {
+              "mediaId": mediaId,
+              "status":
+                  statusList == "WATCHING"
+                      ? "CURRENT"
+                      : statusList.toUpperCase(),
+            };
+
+    final String body = jsonEncode({'query': query, 'variables': variables});
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: headers,
+      body: body,
+    );
+
+    if (response.statusCode != 200)
+      print(
+        "Error: error encountered in the addAnimToList function from AnilistApi",
+      );
+  }
+
+  static Future<void> createCustomList(String listName) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? authKey = prefs.getString('auth_key');
+
+    const String url = 'https://graphql.anilist.co';
+    Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $authKey',
+      'Accept': 'application/json',
+    };
+
+    List userAnimeLists = await getUserAnimeLists();
+    List<String> userAnimeCustomLists =
+        userAnimeLists
+            .where((list) => list['isCustom'] == true)
+            .map<String>((list) => list['name'] as String)
+            .toList();
+
+    userAnimeCustomLists.add(listName);
+
+    final Map<String, dynamic> body = {
+      'query': '''
+      mutation(\$animeListOptions: MediaListOptionsInput) {
+        UpdateUser(animeListOptions: \$animeListOptions) {
+          id
+        }
+      }
+    ''',
+      'variables': {
+        'animeListOptions': {'customLists': userAnimeCustomLists},
+      },
+    };
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authKey',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      print('Custom list "$listName" added successfully.');
+    } else {
+      print('Failed to add custom list: ${response.body}');
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getUserAnimeLists() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? authKey = prefs.getString('auth_key');
+
+    const String url = 'https://graphql.anilist.co';
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authKey',
+      },
+      body: jsonEncode({
+        'query': '''
+        query {
+          Viewer {
+            mediaListOptions {
+              animeList {
+                customLists
+              }
+            }
+          }
+        }
+      ''',
+      }),
+    );
+
+    if (response.statusCode != 200) return [];
+
+    final data = jsonDecode(response.body);
+    final customLists = List<String>.from(
+      data['data']['Viewer']['mediaListOptions']['animeList']['customLists'],
+    );
+
+    final defaultLists = [
+      {'name': 'WATCHING', 'isCustom': false},
+      {'name': 'PLANNING', 'isCustom': false},
+      {'name': 'COMPLETED', 'isCustom': false},
+      {'name': 'DROPPED', 'isCustom': false},
+      {'name': 'PAUSED', 'isCustom': false},
+    ];
+
+    final custom = customLists.map((name) => {'name': name, 'isCustom': true});
+
+    return [...defaultLists, ...custom];
+  }
 }
