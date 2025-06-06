@@ -1,6 +1,7 @@
 import 'dart:convert';
 //import 'dart:js_interop';
 import 'package:flutter/material.dart';
+import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
 import 'package:metia/data/Library.dart';
 import 'package:metia/data/setting.dart';
@@ -507,6 +508,8 @@ query (\$type: MediaType!, \$userId: Int!) {
       headers: headers,
       body: body,
     );
+    print("added an anime to a list");
+
 
     if (response.statusCode != 200)
       print(
@@ -514,7 +517,7 @@ query (\$type: MediaType!, \$userId: Int!) {
       );
   }
 
-  static Future<void> createCustomList(String listName) async {
+  static Future<void> createCustomList(String listName, BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
 
@@ -555,6 +558,9 @@ query (\$type: MediaType!, \$userId: Int!) {
       },
       body: jsonEncode(body),
     );
+    print("created a custom list");
+    Tools.Toast(context, "created a custom list");
+
 
     if (response.statusCode == 200) {
       print('Custom list "$listName" added successfully.');
@@ -589,8 +595,12 @@ query (\$type: MediaType!, \$userId: Int!) {
       ''',
       }),
     );
+    print("got user anime list");
 
-    if (response.statusCode != 200) return [];
+    if (response.statusCode != 200) {
+      print(response.body);
+      return [];
+    }
 
     final data = jsonDecode(response.body);
     final customLists = List<String>.from(
@@ -607,6 +617,10 @@ query (\$type: MediaType!, \$userId: Int!) {
 
     final custom = customLists.map((name) => {'name': name, 'isCustom': true});
 
-    return [...defaultLists, ...custom];
+    final finalList = [...defaultLists, ...custom];
+
+    print(finalList);
+
+    return finalList;
   }
 }

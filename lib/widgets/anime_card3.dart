@@ -44,7 +44,6 @@ class Search_AnimeCardState extends State<SearchAnimeCard> {
 
   @override
   Widget build(BuildContext context) {
-    
     return GestureDetector(
       onTap: () {
         /*Tools.Toast(
@@ -259,6 +258,7 @@ class Search_AnimeCardState extends State<SearchAnimeCard> {
                                                           return;
                                                         await AnilistApi.createCustomList(
                                                           listName,
+                                                          context,
                                                         );
                                                         Navigator.of(
                                                           context,
