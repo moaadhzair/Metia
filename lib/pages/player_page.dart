@@ -376,7 +376,6 @@ class _PlayerPageState extends State<PlayerPage> {
                       if (isLeftSide) {
                       player.setRate(2.0);
                       _is2xRate = true;
-                      //print("object");
                       }
                     },
                     onLongPressEnd: (details) {

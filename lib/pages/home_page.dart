@@ -743,12 +743,24 @@ class _HomePageState extends State<HomePage>
                                   ? isSearching
                                       ? searchAnimeData.isEmpty
                                           ? const Center(
-                                            child: Text("No Anime Was Found!", style: TextStyle(color: MyColors.appbarTextColor, fontSize: 20),),
+                                            child: Text(
+                                              "No Anime Was Found!",
+                                              style: TextStyle(
+                                                color: MyColors.appbarTextColor,
+                                                fontSize: 20,
+                                              ),
+                                            ),
                                           )
                                           : _buildGrid()
                                       : popularAnimeData.isEmpty
                                       ? const Center(
-                                        child: Text("No Anime Was Found!", style: TextStyle(color: MyColors.appbarTextColor, fontSize: 20),),
+                                        child: Text(
+                                          "No Anime Was Found!",
+                                          style: TextStyle(
+                                            color: MyColors.appbarTextColor,
+                                            fontSize: 20,
+                                          ),
+                                        ),
                                       )
                                       : _buildGrid()
                                   : const Center(
@@ -895,8 +907,58 @@ class _HomePageState extends State<HomePage>
         childAspectRatio: 0.7,
       ),
       itemBuilder: (context, index) {
+        String listName = "";
+        bool isCustom = false;
+        var mediaListEntry =
+            isSearching
+                ? searchAnimeData[index]["mediaListEntry"]
+                : popularAnimeData[index]["mediaListEntry"];
+
+        if (mediaListEntry != null) {
+          // Check for customLists
+          final customLists = mediaListEntry["customLists"];
+          if (customLists != null && customLists is Map) {
+            // Get all custom list names where value is true
+            final trueLists =
+                customLists.entries
+                    .where((entry) => entry.value == true)
+                    .map((entry) => entry.key)
+                    .toList();
+
+            if (trueLists.isNotEmpty) {
+              isCustom = true;
+              // If multiple, join with new line, else just the name
+              listName = trueLists.join(',\n');
+            } else {
+              // Fallback to status if no custom list is true
+              listName = mediaListEntry["status"] ?? "";
+            }
+          } else {
+            // Fallback to status if no customLists
+            listName = mediaListEntry["status"] ?? "";
+          }
+        }
+
+        switch (listName) {
+          case "CURRENT":
+            listName = "Watching";
+            break;
+          case "COMPLETED":
+            listName = "Completed";
+            break;
+          case "PLANNING":
+            listName = "Planning";
+            break;
+          case "DROPPED":
+            listName = "Dropped";
+            break;
+          case "PAUSED":
+            listName = "Paused";
+            break;
+        }
+
         return SearchAnimeCard(
-          tabName: "Search",
+          listName: listName,
           index: index,
           data:
               isSearching

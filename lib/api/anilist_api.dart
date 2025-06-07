@@ -9,37 +9,117 @@ import 'package:metia/tools.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AnilistApi {
-  static Future<List<Map<String, dynamic>>> fetchPopularAnime() async {
+  static Future<bool> removeAnimeFromList(int id) async {
     final prefs = await SharedPreferences.getInstance();
-    final String? accessToken = prefs.getString('auth_key');
+    final String? authKey = prefs.getString('auth_key');
 
     const String url = 'https://graphql.anilist.co';
 
     Map<String, String> headers = {
       'Content-Type': 'application/json',
-      //'Authorization': 'Bearer $authKey',
+      'Authorization': 'Bearer $authKey',
+      'Accept': 'application/json',
+    };
+
+    // GraphQL mutation string
+    const String mutation = r'''
+      mutation($id: Int) {
+        DeleteMediaListEntry(id: $id) {
+          deleted
+        }
+      }
+    ''';
+
+    // Variables
+    Map<String, dynamic> variables = {'id': id};
+
+    // Construct body with mutation and variables
+    Map<String, dynamic> body = {'query': mutation, 'variables': variables};
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: headers,
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final deleted = jsonData['data']?['DeleteMediaListEntry']?['deleted'];
+        return deleted == true;
+      } else {
+        print('Failed to delete media list entry: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('Exception during deleteMediaListEntry: $e');
+      return false;
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchPopularAnime() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? authKey = prefs.getString('auth_key');
+
+    const String url = 'https://graphql.anilist.co';
+
+    Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $authKey',
       'Accept': 'application/json',
     };
 
     const String query = r'''
 query {
-  Page(perPage: 40) {
-    media(type: ANIME, sort: POPULARITY_DESC) {
-      averageScore
-      id
-      title {
-        romaji
-        english
-        native
-      }
-      coverImage {
-        extraLarge
-      }
-      popularity
-      episodes
-      genres
-      description(asHtml: false)
+  trending: Page(page: 1, perPage: 20) {
+    media(
+      sort: TRENDING_DESC,
+      type: ANIME,
+      isAdult: false
+    ) {
+      ...media
     }
+  }
+  popular: Page(page: 1, perPage: 20) {
+    media(
+      sort: POPULARITY_DESC,
+      type: ANIME,
+      isAdult: false
+    ) {
+      ...media
+    }
+  }
+  top: Page(page: 1, perPage: 20) {
+    media(
+      sort: SCORE_DESC,
+      type: ANIME,
+      isAdult: false
+    ) {
+      ...media
+    }
+  }
+}
+
+fragment media on Media {
+  id
+  title {
+    english
+    romaji
+    native
+  }
+  coverImage {
+    extraLarge
+    color
+  }
+  bannerImage
+  description
+  episodes
+  genres
+  averageScore
+  mediaListEntry {
+    id
+    status
   }
 }
 ''';
@@ -52,16 +132,23 @@ query {
       );
 
       if (response.statusCode == 200) {
-        print(response);
-        return List<Map<String, dynamic>>.from(
-          jsonDecode(response.body)["data"]["Page"]["media"],
+        final data = jsonDecode(response.body)["data"];
+        final trending = List<Map<String, dynamic>>.from(
+          data["trending"]["media"],
         );
+        final popular = List<Map<String, dynamic>>.from(
+          data["popular"]["media"],
+        );
+        final top = List<Map<String, dynamic>>.from(data["top"]["media"]);
+        // Combine all lists into one
+        return [...trending, ...popular, ...top];
       } else {
-        throw Exception('Failed to fetch anime list: ${response.statusCode}');
+        print('Failed to fetch anime list: ${response.statusCode}');
+        return [];
       }
     } catch (error) {
       // Rethrow the original exception without wrapping it
-      rethrow;
+      return [];
     }
   }
 
@@ -69,10 +156,12 @@ query {
     String keyword,
   ) async {
     const String url = 'https://graphql.anilist.co';
+    final prefs = await SharedPreferences.getInstance();
+    final String? authKey = prefs.getString('auth_key');
 
     Map<String, String> headers = {
       'Content-Type': 'application/json',
-      //'Authorization': 'Bearer $authKey',
+      'Authorization': 'Bearer $authKey',
       'Accept': 'application/json',
     };
 
@@ -80,6 +169,11 @@ query {
 query ($search: String) {
   Page(perPage: 1000) {
     media(search: $search, type: ANIME, sort: POPULARITY_DESC, isAdult: false) {
+    mediaListEntry{
+        id
+        status
+        customLists
+    }
       averageScore
       id
       title {
@@ -510,14 +604,16 @@ query (\$type: MediaType!, \$userId: Int!) {
     );
     print("added an anime to a list");
 
-
     if (response.statusCode != 200)
       print(
         "Error: error encountered in the addAnimToList function from AnilistApi",
       );
   }
 
-  static Future<void> createCustomList(String listName, BuildContext context) async {
+  static Future<void> createCustomList(
+    String listName,
+    BuildContext context,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
 
@@ -560,7 +656,6 @@ query (\$type: MediaType!, \$userId: Int!) {
     );
     print("created a custom list");
     Tools.Toast(context, "created a custom list");
-
 
     if (response.statusCode == 200) {
       print('Custom list "$listName" added successfully.');
