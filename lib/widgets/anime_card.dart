@@ -9,6 +9,16 @@ import 'package:metia/tools.dart';
 import 'dart:io';
 import 'package:pasteboard/pasteboard.dart';
 
+class CustomPageRoute extends MaterialPageRoute {
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 500);
+
+  @override
+  Duration get reverseTransitionDuration => const Duration(milliseconds: 500);
+
+  CustomPageRoute({builder}) : super(builder: builder);
+}
+
 class AnimeCard extends StatefulWidget {
   final String tabName;
   final int index;
@@ -38,14 +48,13 @@ class _AnimeCardState extends State<AnimeCard> {
         );*/
         Navigator.push(
           context,
-          PageRouteBuilder(
+          /*PageRouteBuilder(
             transitionDuration: const Duration(milliseconds: 500),
             pageBuilder: (_, __, ___) => AnimePage(animeData: widget.data),
-          ),
-          /*MaterialPageRoute(
-            
-            builder: (context) => AnimePage(animeData: widget.data),
           ),*/
+          CustomPageRoute(
+            builder: (context) => AnimePage(animeData: widget.data),
+          ),
         );
       },
       behavior: HitTestBehavior.translucent, // Ensures taps are registered
