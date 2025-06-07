@@ -75,6 +75,8 @@ class _PlayerPageState extends State<PlayerPage> {
 
   bool _isPlaying = true;
 
+  bool _is2xRate = false;
+
   String _formatDuration(Duration duration, {bool forceHours = false}) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     String twoDigitHours = twoDigits(duration.inHours);
@@ -367,7 +369,20 @@ class _PlayerPageState extends State<PlayerPage> {
                 controller: controller,
                 aspectRatio: 16.0 / 9.0,
                 controls: (state) {
-                  return GestureDetector(
+                  return GestureDetector  (
+                    onLongPressStart: (details) async {
+                      final screenWidth = MediaQuery.of(context).size.width;
+                      final isLeftSide = details.globalPosition.dx > screenWidth / 2;
+                      if (isLeftSide) {
+                      player.setRate(2.0);
+                      _is2xRate = true;
+                      //print("object");
+                      }
+                    },
+                    onLongPressEnd: (details) {
+                      player.setRate(1.0);
+                      _is2xRate = false;
+                    },
                     onDoubleTapDown: (details) {
                       _lastTapPosition = details.globalPosition;
                     },
@@ -443,6 +458,7 @@ class _PlayerPageState extends State<PlayerPage> {
                             height: double.infinity,
                           ),
                           // Seek indicator with fade animation
+                          
                           Positioned(
                             left:
                                 _seekSeconds < 0
@@ -476,403 +492,463 @@ class _PlayerPageState extends State<PlayerPage> {
                               ),
                             ),
                           ),
-                          AnimatedOpacity(
-                            opacity: _showControls ? 1.0 : 0.0,
-                            duration: const Duration(milliseconds: 300),
-                            child: Stack(
-                              children: [
-                                Container(
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.black.withOpacity(0.85), // Top
-                                        Colors.transparent, // Just above middle
-                                        Colors.transparent, // Just below middle
-                                        Colors.black.withOpacity(
-                                          0.85,
-                                        ), // Bottom
-                                      ],
-                                      stops: const [
-                                        0.0, // Top
-                                        0.45, // Fade to transparent
-                                        0.55, // Stay transparent
-                                        1.0, // Fade back to black
-                                      ],
-                                    ),
+                          Positioned(
+                            left:
+                                _seekSeconds < 0
+                                    ? MediaQuery.of(context).size.width * 0.25 -
+                                        50 // Subtract half of approximate container width
+                                    : MediaQuery.of(context).size.width * 0.75 -
+                                        50, // Subtract half of approximate container width
+                            top:
+                                MediaQuery.of(context).size.height * 0.5 -
+                                25, // Subtract half of approximate container height
+                            child: AnimatedOpacity(
+                              opacity: _is2xRate ? 1.0 : 0.0,
+                              duration: const Duration(milliseconds: 300),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.6),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  "2X speed",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    //top  => back icon, title. done
-                                    Container(
-                                      //height: MediaQuery.of(context).size.height * 0.3,
-                                      width: double.maxFinite,
-                                      padding: const EdgeInsets.all(12),
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          IconButton(
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                            icon: const Icon(
-                                              Icons.arrow_back,
-                                              color: MyColors.unselectedColor,
-                                            ),
-                                          ),
-                                          Container(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  extensionEpisodeData["name"]
-                                                      .toString(),
-                                                  style: const TextStyle(
-                                                    fontSize: 21,
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  extensionStreamData["title"]
-                                                      .toString(),
-                                                  style: const TextStyle(
-                                                    fontSize: 17,
-                                                    color:
-                                                        MyColors
-                                                            .unselectedColor,
-                                                    fontWeight: FontWeight.w800,
-                                                  ),
-                                                ),
+                              ),
+                            ),
+                          ),
+                          AnimatedSwitcher(
+                          reverseDuration: const Duration(milliseconds: 300),
+                            duration: const Duration(milliseconds: 300),
+                            child:
+                                _showControls
+                                    ? Stack(
+                                      children: [
+                                        Container(
+                                          width: double.infinity,
+                                          height: double.infinity,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                              colors: [
+                                                Colors.black.withOpacity(
+                                                  0.85,
+                                                ), // Top
+                                                Colors
+                                                    .transparent, // Just above middle
+                                                Colors
+                                                    .transparent, // Just below middle
+                                                Colors.black.withOpacity(
+                                                  0.85,
+                                                ), // Bottom
+                                              ],
+                                              stops: const [
+                                                0.0, // Top
+                                                0.45, // Fade to transparent
+                                                0.55, // Stay transparent
+                                                1.0, // Fade back to black
                                               ],
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                    //middle => play, pause, next episode, past episode. done
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: Center(
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          spacing: 40,
-                                          children: [
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                color: Colors.black.withOpacity(
-                                                  0.3,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                              ),
-                                              child: IconButton(
-                                                onPressed: () {
-                                                  _startHideTimer();
-                                                  if (episodeNumber == 1) {
-                                                    return;
-                                                  }
-                                                  pastEpisode();
-                                                },
-                                                icon: Icon(
-                                                  Icons.arrow_back,
-                                                  size: 40,
-                                                  color:
-                                                      episodeNumber == 1
-                                                          ? const Color.fromARGB(
-                                                            255,
-                                                            51,
-                                                            50,
-                                                            51,
-                                                          )
-                                                          : Colors.white,
-                                                ),
-                                              ),
-                                            ),
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                color: Colors.black.withOpacity(
-                                                  0.3,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                              ),
-                                              child: IconButton(
-                                                onPressed: () {
-                                                  if (player.state.playing) {
-                                                    player.pause();
-                                                  } else {
-                                                    player.play();
-                                                  }
-                                                },
-                                                icon: Icon(
-                                                  player.state.playing
-                                                      ? Icons.pause
-                                                      : Icons.play_arrow,
-                                                  size: 40,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ),
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                color: Colors.black.withOpacity(
-                                                  0.3,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                              ),
-                                              child: IconButton(
-                                                onPressed: () {
-                                                  if (episodeNumber ==
-                                                      episodeCount) {
-                                                    return;
-                                                  }
-                                                  nextEpisode();
-                                                  _startHideTimer();
-                                                },
-                                                icon: Icon(
-                                                  Icons.arrow_forward,
-                                                  size: 40,
-                                                  color:
-                                                      episodeNumber ==
-                                                              episodeCount
-                                                          ? const Color.fromARGB(
-                                                            255,
-                                                            51,
-                                                            50,
-                                                            51,
-                                                          )
-                                                          : Colors.white,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
                                         ),
-                                      ),
-                                    ),
-                                    //bottom => current time, seekbar, duration
-                                    Container(
-                                      alignment: Alignment.center,
-                                      width: double.infinity,
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 30,
-                                        ),
-                                        child: Row(
+                                        Column(
                                           mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          spacing: 10,
+                                              MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text(
-                                              currentTime,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                            // ...inside your build method...
-                                            Expanded(
-                                              child: SizedBox(
-                                                height: 30,
-                                                child: Stack(
-                                                  alignment:
-                                                      Alignment.centerLeft,
-                                                  children: [
-                                                    // Buffering bar (background)
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.symmetric(
-                                                            horizontal: 12,
-                                                          ),
-                                                      child: Stack(
-                                                        children: [
-                                                          Container(
-                                                            height: 4,
-                                                            decoration: BoxDecoration(
-                                                              color: MyColors
-                                                                  .coolPurple
-                                                                  .withOpacity(
-                                                                    0.3,
-                                                                  ),
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    2,
-                                                                  ),
-                                                            ),
-                                                          ),
-                                                          // Buffered progress
-                                                          FractionallySizedBox(
-                                                            widthFactor:
-                                                                player
-                                                                            .state
-                                                                            .duration
-                                                                            .inSeconds ==
-                                                                        0
-                                                                    ? 0
-                                                                    : player
-                                                                            .state
-                                                                            .buffer
-                                                                            .inSeconds /
-                                                                        player
-                                                                            .state
-                                                                            .duration
-                                                                            .inSeconds,
-                                                            child: Container(
-                                                              height: 4,
-                                                              decoration: BoxDecoration(
-                                                                color:
-                                                                    MyColors
-                                                                        .coolPurple,
-                                                                borderRadius:
-                                                                    BorderRadius.circular(
-                                                                      2,
-                                                                    ),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          // Playback progress (white)
-                                                          // Playback progress (white)
-                                                          FractionallySizedBox(
-                                                            widthFactor:
-                                                                player
-                                                                            .state
-                                                                            .duration
-                                                                            .inSeconds ==
-                                                                        0
-                                                                    ? 0
-                                                                    : (_dragValue ??
-                                                                            player.state.position.inSeconds
-                                                                                .toDouble()) /
-                                                                        player
-                                                                            .state
-                                                                            .duration
-                                                                            .inSeconds,
-                                                            child: Container(
-                                                              height: 4,
-                                                              decoration: BoxDecoration(
+                                            //top  => back icon, title. done
+                                            Container(
+                                              //height: MediaQuery.of(context).size.height * 0.3,
+                                              width: double.maxFinite,
+                                              padding: const EdgeInsets.all(12),
+                                              child: Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                children: [
+                                                  IconButton(
+                                                    onPressed: () {
+                                                      Navigator.of(
+                                                        context,
+                                                      ).pop();
+                                                    },
+                                                    icon: const Icon(
+                                                      Icons.arrow_back,
+                                                      color:
+                                                          MyColors
+                                                              .unselectedColor,
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          extensionEpisodeData["name"]
+                                                              .toString(),
+                                                          style:
+                                                              const TextStyle(
+                                                                fontSize: 21,
                                                                 color:
                                                                     Colors
                                                                         .white,
-                                                                borderRadius:
-                                                                    BorderRadius.circular(
-                                                                      2,
-                                                                    ),
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
                                                               ),
-                                                            ),
+                                                        ),
+                                                        Text(
+                                                          extensionStreamData["title"]
+                                                              .toString(),
+                                                          style: const TextStyle(
+                                                            fontSize: 17,
+                                                            color:
+                                                                MyColors
+                                                                    .unselectedColor,
+                                                            fontWeight:
+                                                                FontWeight.w800,
                                                           ),
-
-                                                          // Slider thumb (interactive)
-                                                        ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            //middle => play, pause, next episode, past episode. done
+                                            SizedBox(
+                                              width: double.infinity,
+                                              child: Center(
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  spacing: 40,
+                                                  children: [
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.black
+                                                            .withOpacity(0.3),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              50,
+                                                            ),
+                                                      ),
+                                                      child: IconButton(
+                                                        onPressed: () {
+                                                          _startHideTimer();
+                                                          if (episodeNumber ==
+                                                              1) {
+                                                            return;
+                                                          }
+                                                          pastEpisode();
+                                                        },
+                                                        icon: Icon(
+                                                          Icons.arrow_back,
+                                                          size: 40,
+                                                          color:
+                                                              episodeNumber == 1
+                                                                  ? const Color.fromARGB(
+                                                                    255,
+                                                                    51,
+                                                                    50,
+                                                                    51,
+                                                                  )
+                                                                  : Colors
+                                                                      .white,
+                                                        ),
                                                       ),
                                                     ),
-                                                    SliderTheme(
-                                                      data: SliderTheme.of(
-                                                        context,
-                                                      ).copyWith(
-                                                        trackHeight: 0,
-                                                        thumbShape:
-                                                            const RoundSliderThumbShape(
-                                                              enabledThumbRadius:
-                                                                  7,
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.black
+                                                            .withOpacity(0.3),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              50,
                                                             ),
-                                                        overlayShape:
-                                                            const RoundSliderOverlayShape(
-                                                              overlayRadius: 14,
-                                                            ),
-                                                        activeTrackColor:
-                                                            Colors.transparent,
-                                                        inactiveTrackColor:
-                                                            Colors.transparent,
                                                       ),
-                                                      child: Slider(
-                                                        min: 0,
-                                                        max:
-                                                            player
-                                                                .state
-                                                                .duration
-                                                                .inSeconds
-                                                                .toDouble(),
-                                                        value:
-                                                            _dragValue ??
-                                                            player
-                                                                .state
-                                                                .position
-                                                                .inSeconds
-                                                                .toDouble()
-                                                                .clamp(
-                                                                  0,
-                                                                  player
-                                                                      .state
-                                                                      .duration
-                                                                      .inSeconds
-                                                                      .toDouble(),
-                                                                ),
-                                                        onChanged: (value) {
-                                                          _startHideTimer();
-                                                          setState(() {
-                                                            _dragValue = value;
-                                                          });
+                                                      child: IconButton(
+                                                        onPressed: () {
+                                                          if (player
+                                                              .state
+                                                              .playing) {
+                                                            player.pause();
+                                                          } else {
+                                                            player.play();
+                                                          }
                                                         },
-                                                        onChangeEnd: (value) {
-                                                          setState(() {
-                                                            _dragValue = null;
-                                                          });
-                                                          player.seek(
-                                                            Duration(
-                                                              seconds:
-                                                                  value.toInt(),
+                                                        icon: Icon(
+                                                          player.state.playing
+                                                              ? Icons.pause
+                                                              : Icons
+                                                                  .play_arrow,
+                                                          size: 40,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.black
+                                                            .withOpacity(0.3),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              50,
                                                             ),
-                                                          );
+                                                      ),
+                                                      child: IconButton(
+                                                        onPressed: () {
+                                                          if (episodeNumber ==
+                                                              episodeCount) {
+                                                            return;
+                                                          }
+                                                          nextEpisode();
+                                                          _startHideTimer();
                                                         },
+                                                        icon: Icon(
+                                                          Icons.arrow_forward,
+                                                          size: 40,
+                                                          color:
+                                                              episodeNumber ==
+                                                                      episodeCount
+                                                                  ? const Color.fromARGB(
+                                                                    255,
+                                                                    51,
+                                                                    50,
+                                                                    51,
+                                                                  )
+                                                                  : Colors
+                                                                      .white,
+                                                        ),
                                                       ),
                                                     ),
                                                   ],
                                                 ),
                                               ),
                                             ),
-                                            Text(
-                                              totalTime,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w500,
+                                            //bottom => current time, seekbar, duration
+                                            Container(
+                                              alignment: Alignment.center,
+                                              width: double.infinity,
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 30,
+                                                    ),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  spacing: 10,
+                                                  children: [
+                                                    Text(
+                                                      currentTime,
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                    // ...inside your build method...
+                                                    Expanded(
+                                                      child: SizedBox(
+                                                        height: 30,
+                                                        child: Stack(
+                                                          alignment:
+                                                              Alignment
+                                                                  .centerLeft,
+                                                          children: [
+                                                            // Buffering bar (background)
+                                                            Padding(
+                                                              padding:
+                                                                  const EdgeInsets.symmetric(
+                                                                    horizontal:
+                                                                        12,
+                                                                  ),
+                                                              child: Stack(
+                                                                children: [
+                                                                  Container(
+                                                                    height: 4,
+                                                                    decoration: BoxDecoration(
+                                                                      color: MyColors
+                                                                          .coolPurple
+                                                                          .withOpacity(
+                                                                            0.3,
+                                                                          ),
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                            2,
+                                                                          ),
+                                                                    ),
+                                                                  ),
+                                                                  // Buffered progress
+                                                                  FractionallySizedBox(
+                                                                    widthFactor:
+                                                                        player.state.duration.inSeconds ==
+                                                                                0
+                                                                            ? 0
+                                                                            : player.state.buffer.inSeconds /
+                                                                                player.state.duration.inSeconds,
+                                                                    child: Container(
+                                                                      height: 4,
+                                                                      decoration: BoxDecoration(
+                                                                        color:
+                                                                            MyColors.coolPurple,
+                                                                        borderRadius:
+                                                                            BorderRadius.circular(
+                                                                              2,
+                                                                            ),
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                  // Playback progress (white)
+                                                                  // Playback progress (white)
+                                                                  FractionallySizedBox(
+                                                                    widthFactor:
+                                                                        player.state.duration.inSeconds ==
+                                                                                0
+                                                                            ? 0
+                                                                            : (_dragValue ??
+                                                                                    player.state.position.inSeconds.toDouble()) /
+                                                                                player.state.duration.inSeconds,
+                                                                    child: Container(
+                                                                      height: 4,
+                                                                      decoration: BoxDecoration(
+                                                                        color:
+                                                                            Colors.white,
+                                                                        borderRadius:
+                                                                            BorderRadius.circular(
+                                                                              2,
+                                                                            ),
+                                                                      ),
+                                                                    ),
+                                                                  ),
+
+                                                                  // Slider thumb (interactive)
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            SliderTheme(
+                                                              data: SliderTheme.of(
+                                                                context,
+                                                              ).copyWith(
+                                                                trackHeight: 0,
+                                                                thumbShape:
+                                                                    const RoundSliderThumbShape(
+                                                                      enabledThumbRadius:
+                                                                          7,
+                                                                    ),
+                                                                overlayShape:
+                                                                    const RoundSliderOverlayShape(
+                                                                      overlayRadius:
+                                                                          14,
+                                                                    ),
+                                                                activeTrackColor:
+                                                                    Colors
+                                                                        .transparent,
+                                                                inactiveTrackColor:
+                                                                    Colors
+                                                                        .transparent,
+                                                              ),
+                                                              child: Slider(
+                                                                min: 0,
+                                                                max:
+                                                                    player
+                                                                        .state
+                                                                        .duration
+                                                                        .inSeconds
+                                                                        .toDouble(),
+                                                                value:
+                                                                    _dragValue ??
+                                                                    player
+                                                                        .state
+                                                                        .position
+                                                                        .inSeconds
+                                                                        .toDouble()
+                                                                        .clamp(
+                                                                          0,
+                                                                          player
+                                                                              .state
+                                                                              .duration
+                                                                              .inSeconds
+                                                                              .toDouble(),
+                                                                        ),
+                                                                onChanged: (
+                                                                  value,
+                                                                ) {
+                                                                  _startHideTimer();
+                                                                  setState(() {
+                                                                    _dragValue =
+                                                                        value;
+                                                                  });
+                                                                },
+                                                                onChangeEnd: (
+                                                                  value,
+                                                                ) {
+                                                                  setState(() {
+                                                                    _dragValue =
+                                                                        null;
+                                                                  });
+                                                                  player.seek(
+                                                                    Duration(
+                                                                      seconds:
+                                                                          value
+                                                                              .toInt(),
+                                                                    ),
+                                                                  );
+                                                                },
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      totalTime,
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                    !(Platform.isIOS ||
+                                                            Platform.isAndroid)
+                                                        ? IconButton(
+                                                          icon: Icon(
+                                                            _isFullscreen
+                                                                ? Icons
+                                                                    .fullscreen_exit
+                                                                : Icons
+                                                                    .fullscreen,
+                                                            size: 30,
+                                                            color: Colors.white,
+                                                          ),
+                                                          onPressed:
+                                                              _toggleFullscreen,
+                                                        )
+                                                        : const SizedBox(),
+                                                  ],
+                                                ),
                                               ),
                                             ),
-                                            !(Platform.isIOS ||
-                                                    Platform.isAndroid)
-                                                ? IconButton(
-                                                  icon: Icon(
-                                                    _isFullscreen
-                                                        ? Icons.fullscreen_exit
-                                                        : Icons.fullscreen,
-                                                    size: 30,
-                                                    color: Colors.white,
-                                                  ),
-                                                  onPressed: _toggleFullscreen,
-                                                )
-                                                : const SizedBox(),
                                           ],
                                         ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                                      ],
+                                    )
+                                    : const SizedBox(),
                           ),
                         ],
                       ),
