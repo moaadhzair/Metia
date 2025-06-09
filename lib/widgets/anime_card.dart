@@ -24,8 +24,9 @@ class AnimeCard extends StatefulWidget {
   final String tabName;
   final int index;
   final Map<String, dynamic> data;
+  final VoidCallback? onLibraryChanged;
 
-  const AnimeCard({super.key, required this.tabName, required this.index, required this.data});
+  const AnimeCard({super.key, required this.tabName, required this.index, required this.data, this.onLibraryChanged});
 
   @override
   State<AnimeCard> createState() => _AnimeCardState();
@@ -278,6 +279,9 @@ class _AnimeCardState extends State<AnimeCard> {
                                                                     Navigator.of(context).pop();
                                                                     Tools.Toast(context, "added $title to ${userLists[index]["name"]}");
                                                                   }
+                                                                  if (widget.onLibraryChanged != null) {
+                                                                    widget.onLibraryChanged!();
+                                                                  }
                                                                 },
                                                                 child: Stack(
                                                                   children: [
@@ -356,6 +360,9 @@ class _AnimeCardState extends State<AnimeCard> {
                                     widget.data["id"],
                                     false,
                                   );
+                                }
+                                if (widget.onLibraryChanged != null) {
+                                  widget.onLibraryChanged!();
                                 }
 
                                 Navigator.of(context).pop();
