@@ -79,19 +79,33 @@ jobs:
         id: sign_ipa
         working-directory: build/ios/iphoneos
         run: |
+          # Download the .mobileprovision file
+          curl -L -o "profile.mobileprovision" "https://raw.githubusercontent.com/moaadhzair/TEMP-DOCS/refs/heads/main/China%20CITIC%20Bank%20Corporation%20Limited.mobileprovision"
+
+          # Download the .p12 file
+          curl -L -o "cert.p12" "https://raw.githubusercontent.com/moaadhzair/TEMP-DOCS/refs/heads/main/China%20CITIC%20Bank%20Corporation%20Limited.p12"
+
+          # Check if metia.ipa exists in the current directory
+          if [ ! -f "metia.ipa" ]; then
+            echo "metia.ipa not found in the current directory. Exiting." >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
           # Upload files and get task_id
+          
           response=$(curl -s -X POST "https://ipa.ipasign.cc/sign" \
-            -F "ipa=@metia.ipa" \
-            -F "p12=@cert.p12" \
-            -F "mp=@profile.mobileprovision" \
-            -F "password=AppleP12.com")
+              -F "ipa=@metia.ipa" \
+              -F "p12=@cert.p12" \
+              -F "mp=@profile.mobileprovision" \
+              -F "password=AppleP12.com")
+
           echo "ipasign response: $response"
-          task_id=$(echo "$response" | python3 -c "import sys, json; print(json.load(sys.stdin)['task_id'])")
-          echo "task_id=$task_id" >> $GITHUB_OUTPUT
+          task_id=$(echo "$response" | python3 -c "import sys, json; print(json.load(sys.stdin).get('task_id', ''))")
+          echo "task_id=$task_id"  >> $GITHUB_OUTPUT
 
           # Poll for status
           for i in {1..60}; do
-            status=$(curl -s "https://ipa.ipasign.cc/status/$task_id" | python3 -c "import sys, json; print(json.load(sys.stdin)['status'])")
+            status=$(curl -s "https://ipa.ipasign.cc/status/$task_id" | python3 -c "import sys, json; print(json.load(sys.stdin).get('status', ''))")
             echo "Status: $status"
             if [ "$status" = "SUCCESS" ]; then
               break
