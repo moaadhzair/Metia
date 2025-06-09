@@ -14,6 +14,7 @@ class AnilistApi {
     int mediaId,
     String customListName,
     String statusName,
+    int mediaListEntryId,
   ) async {
     Map<String, dynamic>? animeEntryData = await getAnimeLists(mediaId);
 
@@ -30,12 +31,16 @@ class AnilistApi {
               .map((e) => e.key)
               .toList();
     }
-    await addAnimeToList(
-      true,
-      mediaId,
-      animeEntryData!["customLists"],
-      statusName.isEmpty ? animeEntryData["status"] : statusName,
-    );
+    if (animeEntryData!["customLists"].isNotEmpty) {
+      await addAnimeToList(
+        true,
+        mediaId,
+        animeEntryData["customLists"],
+        statusName.isEmpty ? animeEntryData["status"] : statusName,
+      );
+    }else{
+      await deleteAnimeFromAll(mediaListEntryId);
+    }
     return true;
   }
 
@@ -104,7 +109,7 @@ class AnilistApi {
     }
   }
 
-    static Future<bool> deleteAnimeFromAll(int id) async {
+  static Future<bool> deleteAnimeFromAll(int mediaListEntryId) async {
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
 
@@ -126,7 +131,7 @@ class AnilistApi {
     ''';
 
     // Variables
-    Map<String, dynamic> variables = {'id': id};
+    Map<String, dynamic> variables = {'id': mediaListEntryId};
 
     // Construct body with mutation and variables
     Map<String, dynamic> body = {'query': mutation, 'variables': variables};
@@ -695,7 +700,9 @@ query (\$type: MediaType!, \$userId: Int!) {
               "mediaId": mediaId,
               if (listName.isNotEmpty)
                 "status":
-                    listName.toUpperCase() == "WATCHING" ? "CURRENT" : listName.toUpperCase(),
+                    listName.toUpperCase() == "WATCHING"
+                        ? "CURRENT"
+                        : listName.toUpperCase(),
               "customLists": customList,
               "hiddenFromStatusLists": listName.isEmpty,
               // statusList is your custom list name
@@ -1118,7 +1125,12 @@ query (\$type: MediaType!, \$userId: Int!) {
     String statusName,
   ) async {
     //await addAnimeToStatus(mediaId, statusName);
-    await removeAnimeFromCustomList(mediaId, customListName.toLowerCase(), statusName);
+    await removeAnimeFromCustomList(
+      mediaId,
+      customListName.toLowerCase(),
+      statusName,
+      0
+    );
   }
 
   static Future<void> changeFromStatusToCustomList(

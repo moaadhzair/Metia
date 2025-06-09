@@ -536,6 +536,7 @@ class _AnimeCardState extends State<AnimeCard> {
                                 widget.data["media"]["id"],
                                 widget.tabName.toLowerCase(),
                                 "",
+                                widget.data["id"]
                               );
                             }
 
