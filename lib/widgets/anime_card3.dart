@@ -1,16 +1,9 @@
-import 'dart:ui';
-
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/services.dart';
 import 'package:metia/api/anilist_api.dart';
 import 'package:metia/constants/Colors.dart';
 import 'package:metia/pages/anime_page.dart';
 import 'package:metia/tools.dart';
-import 'dart:io';
-import 'package:pasteboard/pasteboard.dart';
 
 class SearchAnimeCard extends StatefulWidget {
   final String listName;
@@ -21,7 +14,7 @@ class SearchAnimeCard extends StatefulWidget {
   const SearchAnimeCard({super.key, required this.listName, required this.index, required this.data, required this.onLibraryChanged});
 
   @override
-  State<SearchAnimeCard> createState() => Search_AnimeCardState();
+  State<SearchAnimeCard> createState() => searchAnimeCardState();
 }
 
 class CustomPageRoute extends MaterialPageRoute {
@@ -34,9 +27,13 @@ class CustomPageRoute extends MaterialPageRoute {
   CustomPageRoute({builder}) : super(builder: builder);
 }
 
-class Search_AnimeCardState extends State<SearchAnimeCard> {
+// ignore: camel_case_types
+class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliveClientMixin {
   final double _opacity = 0.0;
   late final title;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -50,6 +47,7 @@ class Search_AnimeCardState extends State<SearchAnimeCard> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return GestureDetector(
       onTap: () {
         Navigator.push(context, CustomPageRoute(builder: (context) => AnimePage(animeData: widget.data)));
@@ -103,7 +101,7 @@ class Search_AnimeCardState extends State<SearchAnimeCard> {
                         },
                         tag: '${widget.data["media"]["id"]}',
                         child: CachedNetworkImage(
-                          imageUrl: widget.data["media"]["coverImage"]["extraLarge"],
+                          imageUrl: widget.data["media"]["coverImage"]["medium"],
                           fit: BoxFit.cover,
                           placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                           errorWidget: (context, url, error) => const Icon(Icons.error),

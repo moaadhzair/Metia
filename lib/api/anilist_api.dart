@@ -174,6 +174,7 @@ fragment media on Media {
     native
   }
   coverImage {
+  medium
     extraLarge
     color
   }
@@ -233,6 +234,7 @@ query ($search: String) {
         native
       }
       coverImage {
+      medium
         extraLarge
       }
       episodes
@@ -351,6 +353,7 @@ query (\$type: MediaType!, \$userId: Int!) {
               averageScore
               coverImage {
                 extraLarge
+                medium
               }
               nextAiringEpisode {
                 airingAt
@@ -455,6 +458,7 @@ query (\$type: MediaType!, \$userId: Int!) {
                 episodes
                 averageScore
                 coverImage {
+                medium
                   extraLarge
                 }
               }

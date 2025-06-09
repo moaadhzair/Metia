@@ -106,12 +106,13 @@ class _AnimeCardState extends State<AnimeCard> {
                           },
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(12), // Customize radius here
-                            child: CachedNetworkImage(
-                              imageUrl: widget.data["media"]["coverImage"]["extraLarge"],
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                              errorWidget: (context, url, error) => const Icon(Icons.error),
-                            ),
+                            child:
+                                CachedNetworkImage(
+                                      imageUrl: widget.data["media"]["coverImage"]["medium"],
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                                      errorWidget: (context, url, error) => const Icon(Icons.error),
+                                    )
                           ),
                         );
                       },
