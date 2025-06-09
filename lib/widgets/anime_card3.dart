@@ -17,15 +17,20 @@ class SearchAnimeCard extends StatefulWidget {
   final int index;
   final Map<String, dynamic> data;
 
-  const SearchAnimeCard({
-    super.key,
-    required this.listName,
-    required this.index,
-    required this.data,
-  });
+  const SearchAnimeCard({super.key, required this.listName, required this.index, required this.data});
 
   @override
   State<SearchAnimeCard> createState() => Search_AnimeCardState();
+}
+
+class CustomPageRoute extends MaterialPageRoute {
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 500);
+
+  @override
+  Duration get reverseTransitionDuration => const Duration(milliseconds: 500);
+
+  CustomPageRoute({builder}) : super(builder: builder);
 }
 
 class Search_AnimeCardState extends State<SearchAnimeCard> {
@@ -46,13 +51,7 @@ class Search_AnimeCardState extends State<SearchAnimeCard> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          PageRouteBuilder(
-            transitionDuration: const Duration(milliseconds: 500),
-            pageBuilder: (_, __, ___) => AnimePage(animeData: widget.data),
-          ),
-        );
+        Navigator.push(context, CustomPageRoute(builder: (context) => AnimePage(animeData: widget.data)));
       },
       behavior: HitTestBehavior.translucent, // Ensures taps are registered
       child: Container(
@@ -71,50 +70,29 @@ class Search_AnimeCardState extends State<SearchAnimeCard> {
                     fit: StackFit.expand,
                     children: [
                       Hero(
-                        flightShuttleBuilder: (
-                          flightContext,
-                          animation,
-                          flightDirection,
-                          fromHeroContext,
-                          toHeroContext,
-                        ) {
+                        flightShuttleBuilder: (flightContext, animation, flightDirection, fromHeroContext, toHeroContext) {
                           return Stack(
                             fit: StackFit.expand,
                             children: [
                               CachedNetworkImage(
-                                imageUrl:
-                                    widget
-                                        .data["media"]["coverImage"]["extraLarge"],
+                                imageUrl: widget.data["media"]["coverImage"]["extraLarge"],
                                 fit: BoxFit.cover,
-                                placeholder:
-                                    (context, url) => const Center(
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    ),
-                                errorWidget:
-                                    (context, url, error) =>
-                                        const Icon(Icons.error),
+                                placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                                errorWidget: (context, url, error) => const Icon(Icons.error),
                               ),
                               AnimatedBuilder(
                                 animation: animation,
                                 builder: (context, child) {
                                   final double t = animation.value;
                                   // double t;// fade out
-                                  return Opacity(
-                                    opacity: t.clamp(0.0, 1.0),
-                                    child: child,
-                                  );
+                                  return Opacity(opacity: t.clamp(0.0, 1.0), child: child);
                                 },
                                 child: Container(
                                   decoration: const BoxDecoration(
                                     gradient: LinearGradient(
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.transparent,
-                                        MyColors.backgroundColor,
-                                      ],
+                                      colors: [Colors.transparent, MyColors.backgroundColor],
                                     ),
                                   ),
                                 ),
@@ -124,17 +102,10 @@ class Search_AnimeCardState extends State<SearchAnimeCard> {
                         },
                         tag: '${widget.data["media"]["id"]}',
                         child: CachedNetworkImage(
-                          imageUrl:
-                              widget.data["media"]["coverImage"]["extraLarge"],
+                          imageUrl: widget.data["media"]["coverImage"]["extraLarge"],
                           fit: BoxFit.cover,
-                          placeholder:
-                              (context, url) => const Center(
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                          errorWidget:
-                              (context, url, error) => const Icon(Icons.error),
+                          placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                          errorWidget: (context, url, error) => const Icon(Icons.error),
                         ),
                       ),
                       widget.listName.isEmpty
@@ -148,127 +119,49 @@ class Search_AnimeCardState extends State<SearchAnimeCard> {
                                     return StatefulBuilder(
                                       builder: (context, setModalState) {
                                         return ClipRRect(
-                                          borderRadius: const BorderRadius.only(
-                                            topLeft: Radius.circular(25),
-                                            topRight: Radius.circular(25),
-                                          ),
+                                          borderRadius: const BorderRadius.only(topLeft: Radius.circular(25), topRight: Radius.circular(25)),
                                           child: Scaffold(
                                             floatingActionButton: FloatingActionButton(
-                                              backgroundColor:
-                                                  MyColors.coolPurple,
-                                              child: const Icon(
-                                                Icons.add,
-                                                color: MyColors.backgroundColor,
-                                              ),
+                                              backgroundColor: MyColors.coolPurple,
+                                              child: const Icon(Icons.add, color: MyColors.backgroundColor),
                                               onPressed: () async {
                                                 final result = await showDialog(
                                                   context: context,
                                                   builder: (context) {
-                                                    TextEditingController
-                                                    listNameController =
-                                                        TextEditingController();
+                                                    TextEditingController listNameController = TextEditingController();
                                                     return AlertDialog(
-                                                      shape: RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              16,
-                                                            ),
-                                                      ),
-                                                      backgroundColor:
-                                                          MyColors
-                                                              .backgroundColor,
+                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                                      backgroundColor: MyColors.backgroundColor,
                                                       title: const Text(
                                                         "Create New List",
-                                                        style: TextStyle(
-                                                          color:
-                                                              MyColors
-                                                                  .appbarTextColor,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
+                                                        style: TextStyle(color: MyColors.appbarTextColor, fontWeight: FontWeight.w600),
                                                       ),
                                                       content: TextField(
-                                                        controller:
-                                                            listNameController,
+                                                        controller: listNameController,
                                                         decoration: const InputDecoration(
-                                                          hintText:
-                                                              "Enter List Name",
-                                                          hintStyle: TextStyle(
-                                                            color:
-                                                                MyColors
-                                                                    .unselectedColor,
-                                                          ),
-                                                          enabledBorder:
-                                                              UnderlineInputBorder(
-                                                                borderSide:
-                                                                    BorderSide(
-                                                                      color:
-                                                                          MyColors
-                                                                              .coolPurple,
-                                                                    ),
-                                                              ),
-                                                          focusedBorder:
-                                                              UnderlineInputBorder(
-                                                                borderSide:
-                                                                    BorderSide(
-                                                                      color:
-                                                                          MyColors
-                                                                              .coolPurple,
-                                                                    ),
-                                                              ),
+                                                          hintText: "Enter List Name",
+                                                          hintStyle: TextStyle(color: MyColors.unselectedColor),
+                                                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: MyColors.coolPurple)),
+                                                          focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: MyColors.coolPurple)),
                                                         ),
-                                                        style: const TextStyle(
-                                                          color:
-                                                              MyColors
-                                                                  .appbarTextColor,
-                                                        ),
+                                                        style: const TextStyle(color: MyColors.appbarTextColor),
                                                       ),
                                                       actions: [
                                                         TextButton(
                                                           onPressed: () {
-                                                            Navigator.of(
-                                                              context,
-                                                            ).pop();
+                                                            Navigator.of(context).pop();
                                                           },
-                                                          child: const Text(
-                                                            "Cancel",
-                                                            style: TextStyle(
-                                                              color:
-                                                                  MyColors
-                                                                      .unselectedColor,
-                                                            ),
-                                                          ),
+                                                          child: const Text("Cancel", style: TextStyle(color: MyColors.unselectedColor)),
                                                         ),
                                                         ElevatedButton(
-                                                          style: ElevatedButton.styleFrom(
-                                                            backgroundColor:
-                                                                MyColors
-                                                                    .coolPurple,
-                                                          ),
+                                                          style: ElevatedButton.styleFrom(backgroundColor: MyColors.coolPurple),
                                                           onPressed: () async {
-                                                            final listName =
-                                                                listNameController
-                                                                    .text
-                                                                    .trim();
-                                                            if (listName
-                                                                .isEmpty)
-                                                              return;
-                                                            await AnilistApi.createCustomList(
-                                                              listName,
-                                                              context,
-                                                            );
-                                                            Navigator.of(
-                                                              context,
-                                                            ).pop("refresh");
+                                                            final listName = listNameController.text.trim();
+                                                            if (listName.isEmpty) return;
+                                                            await AnilistApi.createCustomList(listName, context);
+                                                            Navigator.of(context).pop("refresh");
                                                           },
-                                                          child: const Text(
-                                                            "Add",
-                                                            style: TextStyle(
-                                                              color:
-                                                                  MyColors
-                                                                      .backgroundColor,
-                                                            ),
-                                                          ),
+                                                          child: const Text("Add", style: TextStyle(color: MyColors.backgroundColor)),
                                                         ),
                                                       ],
                                                     );
@@ -276,139 +169,70 @@ class Search_AnimeCardState extends State<SearchAnimeCard> {
                                                 );
 
                                                 if (result == "refresh") {
-                                                  setModalState(
-                                                    () {},
-                                                  ); // This will rebuild the FutureBuilder!
+                                                  setModalState(() {}); // This will rebuild the FutureBuilder!
                                                 }
                                               },
                                             ),
-                                            backgroundColor:
-                                                MyColors.backgroundColor,
+                                            backgroundColor: MyColors.backgroundColor,
                                             body: Padding(
-                                              padding: const EdgeInsets.only(
-                                                top: 16,
-                                                left: 16,
-                                                right: 16,
-                                              ),
+                                              padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
                                               child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
+                                                crossAxisAlignment: CrossAxisAlignment.start,
                                                 spacing: 16,
                                                 children: [
                                                   const Text(
                                                     "Add To List:",
-                                                    style: TextStyle(
-                                                      color:
-                                                          MyColors
-                                                              .appbarTextColor,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      fontSize: 16.5,
-                                                    ),
+                                                    style: TextStyle(color: MyColors.appbarTextColor, fontWeight: FontWeight.w600, fontSize: 16.5),
                                                   ),
                                                   Expanded(
                                                     child: FutureBuilder(
-                                                      future:
-                                                          AnilistApi.getUserAnimeLists(),
-                                                      builder: (
-                                                        context,
-                                                        snapshot,
-                                                      ) {
-                                                        if (snapshot
-                                                                .connectionState ==
-                                                            ConnectionState
-                                                                .waiting) {
-                                                          return const Center(
-                                                            child:
-                                                                CircularProgressIndicator(),
-                                                          );
+                                                      future: AnilistApi.getUserAnimeLists(),
+                                                      builder: (context, snapshot) {
+                                                        if (snapshot.connectionState == ConnectionState.waiting) {
+                                                          return const Center(child: CircularProgressIndicator());
                                                         }
-                                                        if (snapshot
-                                                                .connectionState ==
-                                                            ConnectionState
-                                                                .done) {
-                                                          List<
-                                                            Map<String, dynamic>
-                                                          >?
-                                                          userLists =
-                                                              snapshot.data;
+                                                        if (snapshot.connectionState == ConnectionState.done) {
+                                                          List<Map<String, dynamic>>? userLists = snapshot.data;
                                                           return ListView.separated(
-                                                            separatorBuilder: (
-                                                              context,
-                                                              index,
-                                                            ) {
-                                                              return const SizedBox(
-                                                                height: 12,
-                                                              );
+                                                            separatorBuilder: (context, index) {
+                                                              return const SizedBox(height: 12);
                                                             },
-                                                            itemBuilder: (
-                                                              context,
-                                                              index,
-                                                            ) {
+                                                            itemBuilder: (context, index) {
                                                               return GestureDetector(
-                                                                onTapUp: (
-                                                                  details,
-                                                                ) async {
-                                                                  userLists[index]["isCustom"] ==
-                                                                          true
+                                                                onTapUp: (details) async {
+                                                                  userLists[index]["isCustom"] == true
                                                                       ? await AnilistApi.addAnimeToCustomList(
-                                                                        widget
-                                                                            .data["media"]["id"],
+                                                                        widget.data["media"]["id"],
                                                                         userLists[index]["name"],
                                                                       )
                                                                       : await AnilistApi.addAnimeToStatus(
-                                                                        widget
-                                                                            .data["media"]["id"],
+                                                                        widget.data["media"]["id"],
                                                                         userLists[index]["name"],
                                                                       );
-                                                                  Navigator.of(
-                                                                    context,
-                                                                  ).pop();
-                                                                  Tools.Toast(
-                                                                    context,
-                                                                    "added $title to ${userLists[index]["name"]}",
-                                                                  );
+                                                                  Navigator.of(context).pop();
+                                                                  Tools.Toast(context, "added $title to ${userLists[index]["name"]}");
                                                                 },
                                                                 child: Container(
                                                                   decoration: BoxDecoration(
-                                                                    color:
-                                                                        MyColors
-                                                                            .coolPurple2,
-                                                                    borderRadius:
-                                                                        BorderRadius.circular(
-                                                                          12,
-                                                                        ),
+                                                                    color: MyColors.coolPurple2,
+                                                                    borderRadius: BorderRadius.circular(12),
                                                                   ),
-                                                                  width:
-                                                                      double
-                                                                          .infinity,
+                                                                  width: double.infinity,
                                                                   height: 60,
-                                                                  padding:
-                                                                      const EdgeInsets.all(
-                                                                        12,
-                                                                      ),
-                                                                  alignment:
-                                                                      Alignment
-                                                                          .center,
+                                                                  padding: const EdgeInsets.all(12),
+                                                                  alignment: Alignment.center,
                                                                   child: Text(
                                                                     userLists[index]["name"],
                                                                     style: const TextStyle(
-                                                                      color:
-                                                                          MyColors
-                                                                              .appbarTextColor,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w600,
-                                                                      fontSize:
-                                                                          16.5,
+                                                                      color: MyColors.appbarTextColor,
+                                                                      fontWeight: FontWeight.w600,
+                                                                      fontSize: 16.5,
                                                                     ),
                                                                   ),
                                                                 ),
                                                               );
                                                             },
-                                                            itemCount:
-                                                                userLists!
-                                                                    .length,
+                                                            itemCount: userLists!.length,
                                                           );
                                                         }
                                                         return Container();
@@ -432,14 +256,8 @@ class Search_AnimeCardState extends State<SearchAnimeCard> {
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(25),
                                   child: Container(
-                                    decoration: const BoxDecoration(
-                                      color: Color.fromARGB(178, 41, 41, 41),
-                                    ),
-                                    child: const Icon(
-                                      Icons.add,
-                                      color: Colors.white,
-                                      size: 25,
-                                    ),
+                                    decoration: const BoxDecoration(color: Color.fromARGB(178, 41, 41, 41)),
+                                    child: const Icon(Icons.add, color: Colors.white, size: 25),
                                   ),
                                 ),
                               ),
@@ -451,11 +269,7 @@ class Search_AnimeCardState extends State<SearchAnimeCard> {
                               child: Text(
                                 widget.listName,
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16.5,
-                                ),
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16.5),
                               ),
                             ),
                           ),
@@ -471,11 +285,7 @@ class Search_AnimeCardState extends State<SearchAnimeCard> {
                   title,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16.5,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16.5),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -490,23 +300,12 @@ class Search_AnimeCardState extends State<SearchAnimeCard> {
                     children: [
                       TextSpan(
                         text: "${widget.data["media"]["episodes"] ?? "?"} Ep",
-                        style: const TextStyle(
-                          color: MyColors.appbarTextColor,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: const TextStyle(color: MyColors.appbarTextColor, fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                      widget.data["media"]["nextAiringEpisode"].toString() !=
-                                  "null" &&
-                              widget.listName.startsWith("NEW EPISODE")
+                      widget.data["media"]["nextAiringEpisode"].toString() != "null" && widget.listName.startsWith("NEW EPISODE")
                           ? TextSpan(
-                            text:
-                                "\n${widget.data["media"]["nextAiringEpisode"]["episode"] - 1}",
-                            style: const TextStyle(
-                              color: Colors.orange,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            text: "\n${widget.data["media"]["nextAiringEpisode"]["episode"] - 1}",
+                            style: const TextStyle(color: Colors.orange, fontSize: 16, fontWeight: FontWeight.bold),
                           )
                           : const TextSpan(),
                     ],
@@ -517,16 +316,8 @@ class Search_AnimeCardState extends State<SearchAnimeCard> {
                     Text(
                       widget.data["media"]["averageScore"].toString() == "null"
                           ? "0.0"
-                          : Tools.insertAt(
-                            widget.data["media"]["averageScore"].toString(),
-                            ".",
-                            1,
-                          ),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.orange,
-                      ),
+                          : Tools.insertAt(widget.data["media"]["averageScore"].toString(), ".", 1),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange),
                     ),
                     const Icon(Icons.star, color: Colors.orange, size: 18),
                   ],

@@ -10,54 +10,29 @@ import 'package:metia/tools.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AnilistApi {
-  static Future<bool> removeAnimeFromCustomList(
-    int mediaId,
-    String customListName,
-    String statusName,
-    int mediaListEntryId,
-    bool isChanging,
-  ) async {
+  static Future<bool> removeAnimeFromCustomList(int mediaId, String customListName, String statusName, int mediaListEntryId, bool isChanging) async {
     Map<String, dynamic>? animeEntryData = await getAnimeLists(mediaId);
 
     // Set the value of the customListName key to false in the customLists map
     if (animeEntryData != null && animeEntryData["customLists"] is List) {
       // Convert the list to a map for easier manipulation
-      Map<String, bool> customListsMap = {
-        for (var name in animeEntryData["customLists"]) name: true,
-      };
+      Map<String, bool> customListsMap = {for (var name in animeEntryData["customLists"]) name: true};
       customListsMap[customListName] = false;
-      animeEntryData["customLists"] =
-          customListsMap.entries
-              .where((e) => e.value)
-              .map((e) => e.key)
-              .toList();
+      animeEntryData["customLists"] = customListsMap.entries.where((e) => e.value).map((e) => e.key).toList();
     }
     if (!isChanging) {
       if (animeEntryData!["customLists"].isNotEmpty) {
-        await addAnimeToList(
-          true,
-          mediaId,
-          animeEntryData["customLists"],
-          statusName.isEmpty ? animeEntryData["status"] : statusName,
-        );
+        await addAnimeToList(true, mediaId, animeEntryData["customLists"], statusName.isEmpty ? animeEntryData["status"] : statusName);
       } else {
         await deleteAnimeFromAll(mediaListEntryId);
       }
     } else {
-      await addAnimeToList(
-        true,
-        mediaId,
-        animeEntryData!["customLists"],
-        statusName.isEmpty ? animeEntryData["status"] : statusName,
-      );
+      await addAnimeToList(true, mediaId, animeEntryData!["customLists"], statusName.isEmpty ? animeEntryData["status"] : statusName);
     }
     return true;
   }
 
-  static Future<void> removeAnimeFromStatus(
-    int mediaId,
-    int mediaListEntryId,
-  ) async {
+  static Future<void> removeAnimeFromStatus(int mediaId, int mediaListEntryId) async {
     Map? data = await getAnimeLists(mediaId);
     if (data != null) {
       if (data["customLists"].isEmpty) {
@@ -76,11 +51,7 @@ class AnilistApi {
 
     const String url = 'https://graphql.anilist.co';
 
-    Map<String, String> headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $authKey',
-      'Accept': 'application/json',
-    };
+    Map<String, String> headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey', 'Accept': 'application/json'};
 
     // GraphQL mutation string
     const String mutation = r'''
@@ -98,11 +69,7 @@ class AnilistApi {
     Map<String, dynamic> body = {'query': mutation, 'variables': variables};
 
     try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: headers,
-        body: jsonEncode(body),
-      );
+      final response = await http.post(Uri.parse(url), headers: headers, body: jsonEncode(body));
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -125,11 +92,7 @@ class AnilistApi {
 
     const String url = 'https://graphql.anilist.co';
 
-    Map<String, String> headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $authKey',
-      'Accept': 'application/json',
-    };
+    Map<String, String> headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey', 'Accept': 'application/json'};
 
     // GraphQL mutation string
     const String mutation = r'''
@@ -147,11 +110,7 @@ class AnilistApi {
     Map<String, dynamic> body = {'query': mutation, 'variables': variables};
 
     try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: headers,
-        body: jsonEncode(body),
-      );
+      final response = await http.post(Uri.parse(url), headers: headers, body: jsonEncode(body));
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -174,11 +133,7 @@ class AnilistApi {
 
     const String url = 'https://graphql.anilist.co';
 
-    Map<String, String> headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $authKey',
-      'Accept': 'application/json',
-    };
+    Map<String, String> headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey', 'Accept': 'application/json'};
 
     const String query = r'''
 query {
@@ -235,20 +190,12 @@ fragment media on Media {
 ''';
 
     try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: headers,
-        body: jsonEncode({'query': query}),
-      );
+      final response = await http.post(Uri.parse(url), headers: headers, body: jsonEncode({'query': query}));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body)["data"];
-        final trending = List<Map<String, dynamic>>.from(
-          data["trending"]["media"],
-        );
-        final popular = List<Map<String, dynamic>>.from(
-          data["popular"]["media"],
-        );
+        final trending = List<Map<String, dynamic>>.from(data["trending"]["media"]);
+        final popular = List<Map<String, dynamic>>.from(data["popular"]["media"]);
         final top = List<Map<String, dynamic>>.from(data["top"]["media"]);
         // Combine all lists into one
         return [...trending, ...popular, ...top];
@@ -262,18 +209,12 @@ fragment media on Media {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> fetchSearchAnime(
-    String keyword,
-  ) async {
+  static Future<List<Map<String, dynamic>>> fetchSearchAnime(String keyword) async {
     const String url = 'https://graphql.anilist.co';
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
 
-    Map<String, String> headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $authKey',
-      'Accept': 'application/json',
-    };
+    Map<String, String> headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey', 'Accept': 'application/json'};
 
     const String query = r'''
 query ($search: String) {
@@ -306,17 +247,11 @@ query ($search: String) {
     Map variables = {"search": keyword};
 
     try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: headers,
-        body: jsonEncode({'query': query, "variables": variables}),
-      );
+      final response = await http.post(Uri.parse(url), headers: headers, body: jsonEncode({'query': query, "variables": variables}));
 
       if (response.statusCode == 200) {
         print(response);
-        return List<Map<String, dynamic>>.from(
-          jsonDecode(response.body)["data"]["Page"]["media"],
-        );
+        return List<Map<String, dynamic>>.from(jsonDecode(response.body)["data"]["Page"]["media"]);
       } else {
         throw Exception('Failed to fetch anime list: ${response.statusCode}');
       }
@@ -357,10 +292,7 @@ query ($search: String) {
 
     final response = await http.post(
       Uri.parse(url),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $accessToken'},
       body: jsonEncode({'query': mutation, 'variables': variables}),
     );
 
@@ -376,10 +308,7 @@ query ($search: String) {
     }
   }
 
-  static Future<Map<String, dynamic>> fetchUserAnimeList(
-    int userId,
-    bool signedIn,
-  ) async {
+  static Future<Map<String, dynamic>> fetchUserAnimeList(int userId, bool signedIn) async {
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
 
@@ -391,11 +320,7 @@ query ($search: String) {
     const String url = 'https://graphql.anilist.co';
     Map<String, String> headers;
     if (signedIn == true) {
-      headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $authKey',
-        'Accept': 'application/json',
-      };
+      headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey', 'Accept': 'application/json'};
     } else {
       headers = {
         'Content-Type': 'application/json',
@@ -443,11 +368,7 @@ query (\$type: MediaType!, \$userId: Int!) {
     });
 
     try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: headers,
-        body: body,
-      );
+      final response = await http.post(Uri.parse(url), headers: headers, body: body);
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -460,10 +381,7 @@ query (\$type: MediaType!, \$userId: Int!) {
     }
   }
 
-  static Future<List<AnimeState>> fetchAnimeListofID(
-    int userId,
-    bool signedIn,
-  ) async {
+  static Future<List<AnimeState>> fetchAnimeListofID(int userId, bool signedIn) async {
     //final defaultSearch = await Setting.getdefaultSearch();
     final result = await fetchUserAnimeList(userId, signedIn);
 
@@ -492,13 +410,7 @@ query (\$type: MediaType!, \$userId: Int!) {
       final Anime = AnimeState(state, element["entries"].reversed.toList());
       animeLib.addAnime(Anime);
     }
-    final stateOrder = {
-      'WATCHING': 0,
-      'COMPLETED': 1,
-      'PAUSED': 2,
-      'DROPPED': 3,
-      'PLANNING': 4,
-    };
+    final stateOrder = {'WATCHING': 0, 'COMPLETED': 1, 'PAUSED': 2, 'DROPPED': 3, 'PLANNING': 4};
     animeLib.lib.sort((a, b) {
       final aState = a.state.toUpperCase() ?? '';
       final bState = b.state.toUpperCase() ?? '';
@@ -510,9 +422,7 @@ query (\$type: MediaType!, \$userId: Int!) {
       if (state.state == "WATCHING") {
         for (var data in state.data) {
           if (data["media"]["nextAiringEpisode"] != null) {
-            int episode = int.parse(
-              data["media"]["nextAiringEpisode"]["episode"].toString(),
-            );
+            int episode = int.parse(data["media"]["nextAiringEpisode"]["episode"].toString());
             int progress = int.parse(data["progress"].toString());
             if (episode - 1 > progress) {
               //animes.add(AnimeState("NEW EPISODE", [data]));
@@ -535,9 +445,7 @@ query (\$type: MediaType!, \$userId: Int!) {
     final defaultSearch = await Setting.getdefaultSearch();
     final result = await searchAnime(defaultSearch.toString());
     Tools.Toast(context, defaultSearch.toString());
-    if (result.containsKey('data') &&
-        result['data'].containsKey('Page') &&
-        result['data']['Page'].containsKey('media')) {
+    if (result.containsKey('data') && result['data'].containsKey('Page') && result['data']['Page'].containsKey('media')) {
       return result['data']['Page']['media'] as List<dynamic>;
     } else {
       throw Exception('Failed to parse anime list from response');
@@ -546,10 +454,7 @@ query (\$type: MediaType!, \$userId: Int!) {
 
   static Future<Map<String, dynamic>> searchAnime(String animeName) async {
     const url = 'https://graphql.anilist.co';
-    const headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    };
+    const headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
 
     final body = jsonEncode({
       "query": """
@@ -574,11 +479,7 @@ query (\$type: MediaType!, \$userId: Int!) {
       "variables": {"search": animeName},
     });
 
-    final response = await http.post(
-      Uri.parse(url),
-      headers: headers,
-      body: body,
-    );
+    final response = await http.post(Uri.parse(url), headers: headers, body: body);
     print("a request to the graphql has been made!!!!");
 
     if (response.statusCode == 200) {
@@ -588,21 +489,12 @@ query (\$type: MediaType!, \$userId: Int!) {
     }
   }
 
-  static Future<void> addAnimeToList(
-    bool isCustomList,
-    int mediaId,
-    List<String> customList,
-    String listName,
-  ) async {
+  static Future<void> addAnimeToList(bool isCustomList, int mediaId, List<String> customList, String listName) async {
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
 
     const String url = 'https://graphql.anilist.co';
-    Map<String, String> headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $authKey',
-      'Accept': 'application/json',
-    };
+    Map<String, String> headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey', 'Accept': 'application/json'};
 
     final String query =
         isCustomList
@@ -708,49 +600,27 @@ query (\$type: MediaType!, \$userId: Int!) {
         isCustomList
             ? {
               "mediaId": mediaId,
-              if (listName.isNotEmpty)
-                "status":
-                    listName.toUpperCase() == "WATCHING"
-                        ? "CURRENT"
-                        : listName.toUpperCase(),
+              if (listName.isNotEmpty) "status": listName.toUpperCase() == "WATCHING" ? "CURRENT" : listName.toUpperCase(),
               "customLists": customList,
               "hiddenFromStatusLists": listName.isEmpty,
               // statusList is your custom list name
             }
-            : {
-              "mediaId": mediaId,
-              "status":
-                  listName == "WATCHING" ? "CURRENT" : listName.toUpperCase(),
-            };
+            : {"mediaId": mediaId, "status": listName == "WATCHING" ? "CURRENT" : listName.toUpperCase()};
 
     final String body = jsonEncode({'query': query, 'variables': variables});
 
-    final response = await http.post(
-      Uri.parse(url),
-      headers: headers,
-      body: body,
-    );
+    final response = await http.post(Uri.parse(url), headers: headers, body: body);
     print("added an anime to a list");
 
-    if (response.statusCode != 200)
-      print(
-        "Error: error encountered in the addAnimToList function from AnilistApi",
-      );
+    if (response.statusCode != 200) print("Error: error encountered in the addAnimToList function from AnilistApi");
   }
 
-  static Future<void> changedAnimeVisibilityInStatus(
-    int mediaId,
-    bool hidden,
-  ) async {
+  static Future<void> changedAnimeVisibilityInStatus(int mediaId, bool hidden) async {
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
 
     const String url = 'https://graphql.anilist.co';
-    Map<String, String> headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $authKey',
-      'Accept': 'application/json',
-    };
+    Map<String, String> headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey', 'Accept': 'application/json'};
 
     final Map<String, dynamic> body = {
       'query': '''
@@ -795,11 +665,7 @@ query (\$type: MediaType!, \$userId: Int!) {
       'variables': {'mediaId': mediaId, 'hiddenFromStatusLists': hidden},
     };
 
-    final response = await http.post(
-      Uri.parse(url),
-      headers: headers,
-      body: jsonEncode(body),
-    );
+    final response = await http.post(Uri.parse(url), headers: headers, body: jsonEncode(body));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -811,8 +677,7 @@ query (\$type: MediaType!, \$userId: Int!) {
 
   static Future<List<String>> getAnimeCustomLists(int mediaId) async {
     Map<String, dynamic>? animeEntryData = await getAnimeLists(mediaId);
-    List<String> customLists =
-        animeEntryData != null ? animeEntryData["customLists"] : [];
+    List<String> customLists = animeEntryData != null ? animeEntryData["customLists"] : [];
     return customLists;
   }
 
@@ -828,12 +693,7 @@ query (\$type: MediaType!, \$userId: Int!) {
         }
         changedAnimeVisibilityInStatus(mediaId, false);
       } else {
-        await addAnimeToList(
-          true,
-          mediaId,
-          animeEntryDetails["customLists"],
-          statusName,
-        );
+        await addAnimeToList(true, mediaId, animeEntryDetails["customLists"], statusName);
       }
     } else {
       await addAnimeToList(false, mediaId, [], statusName);
@@ -842,10 +702,7 @@ query (\$type: MediaType!, \$userId: Int!) {
     return true;
   }
 
-  static Future<void> addAnimeToCustomList(
-    int mediaId,
-    String customListName,
-  ) async {
+  static Future<void> addAnimeToCustomList(int mediaId, String customListName) async {
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
 
@@ -853,11 +710,7 @@ query (\$type: MediaType!, \$userId: Int!) {
     customLists.add(customListName);
 
     const String url = 'https://graphql.anilist.co';
-    Map<String, String> headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $authKey',
-      'Accept': 'application/json',
-    };
+    Map<String, String> headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey', 'Accept': 'application/json'};
 
     const String query = '''
         mutation (
@@ -945,47 +798,25 @@ query (\$type: MediaType!, \$userId: Int!) {
 }
       ''';
 
-    final Map<String, dynamic> variables = {
-      "mediaId": mediaId,
-      "customLists": customLists,
-      "hiddenFromStatusLists": true,
-    };
+    final Map<String, dynamic> variables = {"mediaId": mediaId, "customLists": customLists, "hiddenFromStatusLists": true};
 
     final String body = jsonEncode({'query': query, 'variables': variables});
 
-    final response = await http.post(
-      Uri.parse(url),
-      headers: headers,
-      body: body,
-    );
+    final response = await http.post(Uri.parse(url), headers: headers, body: body);
     print("added an anime to a list");
 
-    if (response.statusCode != 200)
-      print(
-        "Error: error encountered in the addAnimToList function from AnilistApi",
-      );
+    if (response.statusCode != 200) print("Error: error encountered in the addAnimToList function from AnilistApi");
   }
 
-  static Future<void> createCustomList(
-    String listName,
-    BuildContext context,
-  ) async {
+  static Future<void> createCustomList(String listName, BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
 
     const String url = 'https://graphql.anilist.co';
-    Map<String, String> headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $authKey',
-      'Accept': 'application/json',
-    };
 
     List userAnimeLists = await getUserAnimeLists();
     List<String> userAnimeCustomLists =
-        userAnimeLists
-            .where((list) => list['isCustom'] == true)
-            .map<String>((list) => list['name'] as String)
-            .toList();
+        userAnimeLists.where((list) => list['isCustom'] == true).map<String>((list) => list['name'] as String).toList();
 
     userAnimeCustomLists.add(listName);
 
@@ -1004,10 +835,7 @@ query (\$type: MediaType!, \$userId: Int!) {
 
     final response = await http.post(
       Uri.parse(url),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $authKey',
-      },
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey', 'Accept': 'application/json'},
       body: jsonEncode(body),
     );
     print("created a custom list");
@@ -1028,10 +856,7 @@ query (\$type: MediaType!, \$userId: Int!) {
 
     final response = await http.post(
       Uri.parse(url),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $authKey',
-      },
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey'},
       body: jsonEncode({
         'query': '''
         query {
@@ -1054,9 +879,7 @@ query (\$type: MediaType!, \$userId: Int!) {
     }
 
     final data = jsonDecode(response.body);
-    final customLists = List<String>.from(
-      data['data']['Viewer']['mediaListOptions']['animeList']['customLists'],
-    );
+    final customLists = List<String>.from(data['data']['Viewer']['mediaListOptions']['animeList']['customLists']);
 
     final defaultLists = [
       {'name': 'WATCHING', 'isCustom': false},
@@ -1083,10 +906,7 @@ query (\$type: MediaType!, \$userId: Int!) {
 
     final response = await http.post(
       Uri.parse(url),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $authKey',
-      },
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey'},
       body: jsonEncode({
         'query': '''
         query(\$mediaId: Int) {
@@ -1103,61 +923,30 @@ query (\$type: MediaType!, \$userId: Int!) {
       }),
     );
 
-    if (response.statusCode != 200)
-      throw Exception(
-        "the request didnt return a 200 status code in AnilistApi.getAnimeLists",
-      );
+    if (response.statusCode != 200) throw Exception("the request didnt return a 200 status code in AnilistApi.getAnimeLists");
 
     final json = jsonDecode(response.body);
     final entry = json['data']['Media']['mediaListEntry'];
     if (entry == null) return null;
 
     final status = entry['status'];
-    final customListsMap = Map<String, dynamic>.from(
-      entry['customLists'] ?? {},
-    );
-    final activeCustomLists =
-        customListsMap.entries
-            .where((e) => e.value == true)
-            .map((e) => e.key)
-            .toList();
+    final customListsMap = Map<String, dynamic>.from(entry['customLists'] ?? {});
+    final activeCustomLists = customListsMap.entries.where((e) => e.value == true).map((e) => e.key).toList();
 
-    return {
-      'status': status,
-      'customLists': activeCustomLists,
-      'hiddenFromStatusLists': entry['hiddenFromStatusLists'],
-    };
+    return {'status': status, 'customLists': activeCustomLists, 'hiddenFromStatusLists': entry['hiddenFromStatusLists']};
   }
 
-  static Future<void> changeFromCustomListToStatus(
-    int mediaId,
-    String customListName,
-    String statusName,
-  ) async {
+  static Future<void> changeFromCustomListToStatus(int mediaId, String customListName, String statusName) async {
     //await addAnimeToStatus(mediaId, statusName);
-    await removeAnimeFromCustomList(
-      mediaId,
-      customListName.toLowerCase(),
-      statusName,
-      0,
-      true,
-    );
+    await removeAnimeFromCustomList(mediaId, customListName.toLowerCase(), statusName, 0, true);
   }
 
-  static Future<void> changeFromStatusToCustomList(
-    int mediaId,
-    String customListName,
-  ) async {
+  static Future<void> changeFromStatusToCustomList(int mediaId, String customListName) async {
     await addAnimeToCustomList(mediaId, customListName);
     await changedAnimeVisibilityInStatus(mediaId, true);
   }
 
-  static Future<void> changeFromCustomListToCustomList(
-    int mediaId,
-    String firstcustomListName,
-    String secondCustomList,
-    int mediaListEntryId,
-  ) async {
+  static Future<void> changeFromCustomListToCustomList(int mediaId, String firstcustomListName, String secondCustomList, int mediaListEntryId) async {
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
 
@@ -1166,11 +955,7 @@ query (\$type: MediaType!, \$userId: Int!) {
     customLists.remove(firstcustomListName.toLowerCase());
 
     const String url = 'https://graphql.anilist.co';
-    Map<String, String> headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $authKey',
-      'Accept': 'application/json',
-    };
+    Map<String, String> headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey', 'Accept': 'application/json'};
 
     const String query = '''
         mutation (
@@ -1258,31 +1043,17 @@ query (\$type: MediaType!, \$userId: Int!) {
 }
       ''';
 
-    final Map<String, dynamic> variables = {
-      "mediaId": mediaId,
-      "customLists": customLists,
-      "hiddenFromStatusLists": true,
-    };
+    final Map<String, dynamic> variables = {"mediaId": mediaId, "customLists": customLists, "hiddenFromStatusLists": true};
 
     final String body = jsonEncode({'query': query, 'variables': variables});
 
-    final response = await http.post(
-      Uri.parse(url),
-      headers: headers,
-      body: body,
-    );
+    final response = await http.post(Uri.parse(url), headers: headers, body: body);
     print("added an anime to a list");
 
-    if (response.statusCode != 200)
-      print(
-        "Error: error encountered in the addAnimToList function from AnilistApi",
-      );
+    if (response.statusCode != 200) print("Error: error encountered in the addAnimToList function from AnilistApi");
   }
 
-  static Future<void> changeFromStatusToStatus(
-    int mediaId,
-    String secondStatus,
-  ) async {
+  static Future<void> changeFromStatusToStatus(int mediaId, String secondStatus) async {
     await addAnimeToStatus(mediaId, secondStatus);
     //await removeAnimeFromStatus(mediaId, mediaListEntryId);
   }
