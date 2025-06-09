@@ -15,6 +15,7 @@ class AnilistApi {
     String customListName,
     String statusName,
     int mediaListEntryId,
+    bool isChanging,
   ) async {
     Map<String, dynamic>? animeEntryData = await getAnimeLists(mediaId);
 
@@ -31,15 +32,24 @@ class AnilistApi {
               .map((e) => e.key)
               .toList();
     }
-    if (animeEntryData!["customLists"].isNotEmpty) {
+    if (!isChanging) {
+      if (animeEntryData!["customLists"].isNotEmpty) {
+        await addAnimeToList(
+          true,
+          mediaId,
+          animeEntryData["customLists"],
+          statusName.isEmpty ? animeEntryData["status"] : statusName,
+        );
+      } else {
+        await deleteAnimeFromAll(mediaListEntryId);
+      }
+    } else {
       await addAnimeToList(
         true,
         mediaId,
-        animeEntryData["customLists"],
+        animeEntryData!["customLists"],
         statusName.isEmpty ? animeEntryData["status"] : statusName,
       );
-    }else{
-      await deleteAnimeFromAll(mediaListEntryId);
     }
     return true;
   }
@@ -1129,7 +1139,8 @@ query (\$type: MediaType!, \$userId: Int!) {
       mediaId,
       customListName.toLowerCase(),
       statusName,
-      0
+      0,
+      true,
     );
   }
 
