@@ -382,62 +382,47 @@ query (\$type: MediaType!, \$userId: Int!) {
   }
 
   static Future<List<AnimeState>> fetchAnimeListofID(int userId, bool signedIn) async {
-    //final defaultSearch = await Setting.getdefaultSearch();
     final result = await fetchUserAnimeList(userId, signedIn);
 
-    //Tools.Toast(context, );
     var animeLib = AnimeLibrary();
-    //print(jsonEncode(result["data"]["MediaListCollection"]["lists"]));
+
+    // Collect all entries by list name
+    Map<String, List<dynamic>> entriesByList = {};
+
     for (var element in result["data"]["MediaListCollection"]["lists"]) {
-      //print(element["name"]);
-      String state = element["name"].toString().toUpperCase();
-
-      /*
-      switch (element["name"].toString()) {
-        case "Completed":
-          State = States.COMPLETED;
-        case "Watching":
-          State = States.WATCHING;
-        case "Dropped":
-          State = States.DROPPED;
-        case "Paused":
-          State = States.PAUSED;
-        case "Planning":
-          State = States.PLANNING;
-        default:
-          State = States.WATCHING;
-      }*/
-      final Anime = AnimeState(state, element["entries"].reversed.toList());
-      animeLib.addAnime(Anime);
+      String state = element["name"].toString();
+      entriesByList[state] = element["entries"].reversed.toList();
     }
-    final stateOrder = {'WATCHING': 0, 'COMPLETED': 1, 'PAUSED': 2, 'DROPPED': 3, 'PLANNING': 4};
-    animeLib.lib.sort((a, b) {
-      final aState = a.state.toUpperCase() ?? '';
-      final bState = b.state.toUpperCase() ?? '';
-      return (stateOrder[aState] ?? 999).compareTo(stateOrder[bState] ?? 999);
-    });
 
+    // Get all user lists (default + custom)
+    List<Map<String, dynamic>> allLists = await getUserAnimeLists();
+
+    // Add AnimeState for each list, even if empty
+    for (var list in allLists) {
+      String listName = list['name'];
+      var entries = entriesByList[listName] ?? [];
+      animeLib.addAnime(AnimeState(listName, entries));
+    }
+
+    // Add "New Episode" logic as before
     List animes = [];
     for (AnimeState state in animeLib.lib) {
-      if (state.state == "WATCHING") {
+      if (state.state == "Watching") {
         for (var data in state.data) {
           if (data["media"]["nextAiringEpisode"] != null) {
             int episode = int.parse(data["media"]["nextAiringEpisode"]["episode"].toString());
             int progress = int.parse(data["progress"].toString());
             if (episode - 1 > progress) {
-              //animes.add(AnimeState("NEW EPISODE", [data]));
               animes.add(data);
             }
           }
         }
       }
     }
-
     if (animes.isNotEmpty) {
-      animeLib.addAnimes(0, AnimeState("NEW EPISODE", animes));
+      animeLib.addAnimes(0, AnimeState("New Episode", animes));
     }
 
-    //print(animeLib.lib);
     return animeLib.lib;
   }
 
@@ -882,11 +867,11 @@ query (\$type: MediaType!, \$userId: Int!) {
     final customLists = List<String>.from(data['data']['Viewer']['mediaListOptions']['animeList']['customLists']);
 
     final defaultLists = [
-      {'name': 'WATCHING', 'isCustom': false},
-      {'name': 'PLANNING', 'isCustom': false},
-      {'name': 'COMPLETED', 'isCustom': false},
-      {'name': 'DROPPED', 'isCustom': false},
-      {'name': 'PAUSED', 'isCustom': false},
+      {'name': 'Watching', 'isCustom': false},
+      {'name': 'Planning', 'isCustom': false},
+      {'name': 'Completed', 'isCustom': false},
+      {'name': 'Dropped', 'isCustom': false},
+      {'name': 'Paused', 'isCustom': false},
     ];
 
     final custom = customLists.map((name) => {'name': name, 'isCustom': true});

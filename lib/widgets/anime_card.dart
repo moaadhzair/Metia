@@ -355,7 +355,7 @@ class _AnimeCardState extends State<AnimeCard> {
                                 } else {
                                   await AnilistApi.removeAnimeFromCustomList(
                                     widget.data["media"]["id"],
-                                    widget.tabName.toLowerCase(),
+                                    widget.tabName,
                                     "",
                                     widget.data["id"],
                                     false,

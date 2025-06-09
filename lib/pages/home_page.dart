@@ -244,8 +244,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
   Color _getTabBorderColor(int index) {
     if (_animeLibrary == null) return MyColors.appbarTextColor;
     final state = _animeLibrary![index].state;
-    if (state == "NEW EPISODE") return Colors.orange;
-    if (state == "WATCHING") return Colors.green;
+    if (state == "New Episode") return Colors.orange;
+    if (state == "Watching") return Colors.green;
     return MyColors.appbarTextColor;
   }
 
@@ -393,6 +393,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                         duration: kTabScrollDuration,
                         builder: (context, color, child) {
                           return TabBar(
+                            labelPadding: const EdgeInsets.symmetric(horizontal: 10),
                             controller: _tabController,
                             overlayColor: WidgetStateProperty.all(Colors.transparent),
                             indicator: UnderlineTabIndicator(
@@ -410,9 +411,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                       tabName,
                                       style: TextStyle(
                                         color:
-                                            tabName.startsWith("NEW EPISODE")
+                                            tabName.startsWith("New Episode")
                                                 ? Colors.orange
-                                                : tabName.startsWith("WATCHING")
+                                                : tabName.startsWith("Watching")
                                                 ? Colors.green
                                                 : null,
                                         fontSize: 16,
@@ -454,7 +455,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                                     MediaQuery.of(context).size.width,
                                                     itemWidth: 460 / 4,
                                                   ),
-                                                  mainAxisExtent: state.state == "NEW EPISODE" ? 260 : 245,
+                                                  mainAxisExtent: state.state == "New Episode" ? 260 : 245,
                                                   crossAxisSpacing: 10,
                                                   mainAxisSpacing: 10,
                                                   childAspectRatio: 0.7,
@@ -466,7 +467,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                                     tabName: state.state,
                                                     data: state.data[index],
                                                     onLibraryChanged: () {
-                                                      print("refreshed");
+                                                      print("a new anime is added or removed");
                                                       _fetchAnimeLibrary(false);
                                                     },
                                                   );
@@ -499,7 +500,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                                   MediaQuery.of(context).size.width,
                                                   itemWidth: 460 / 4,
                                                 ),
-                                                mainAxisExtent: state.state == "NEW EPISODE" ? 260 : 245,
+                                                mainAxisExtent: state.state == "New Episode" ? 260 : 245,
                                                 crossAxisSpacing: 10,
                                                 mainAxisSpacing: 10,
                                                 childAspectRatio: 0.7,
@@ -508,12 +509,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                               itemBuilder: (context, index) {
                                                 return AnimeCard(
                                                   key: ValueKey(state.data[index]["id"]),
-                                                    
+
                                                   index: index,
                                                   tabName: state.state,
                                                   data: state.data[index],
                                                   onLibraryChanged: () {
-                                                    print("refreshed");
+                                                    print("a new anime is added or removed");
                                                     _fetchAnimeLibrary(false);
                                                   },
                                                 );
@@ -750,6 +751,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
           listName: listName,
           index: index,
           data: isSearching ? {"media": searchAnimeData[index]} : {"media": popularAnimeData[index]},
+          onLibraryChanged: () {
+            print("a new anime is added or removed");
+            isSearching ? _fetchSearchAnime(_searchController.text) : _fetchPopularAnime();
+            _fetchAnimeLibrary(false);
+          },
         );
       },
     );

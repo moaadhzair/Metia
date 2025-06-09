@@ -16,8 +16,9 @@ class SearchAnimeCard extends StatefulWidget {
   final String listName;
   final int index;
   final Map<String, dynamic> data;
+  final VoidCallback? onLibraryChanged;
 
-  const SearchAnimeCard({super.key, required this.listName, required this.index, required this.data});
+  const SearchAnimeCard({super.key, required this.listName, required this.index, required this.data, required this.onLibraryChanged});
 
   @override
   State<SearchAnimeCard> createState() => Search_AnimeCardState();
@@ -209,6 +210,9 @@ class Search_AnimeCardState extends State<SearchAnimeCard> {
                                                                         widget.data["media"]["id"],
                                                                         userLists[index]["name"],
                                                                       );
+                                                                  if (widget.onLibraryChanged != null) {
+                                                                    widget.onLibraryChanged!();
+                                                                  }
                                                                   Navigator.of(context).pop();
                                                                   Tools.Toast(context, "added $title to ${userLists[index]["name"]}");
                                                                 },
