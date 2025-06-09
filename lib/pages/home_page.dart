@@ -105,7 +105,7 @@ class _HomePageState extends State<HomePage>
 
       if (oldLength == 1) newIndex = 0;
 
-      _tabController.index = newIndex;
+      //_tabController.index = newIndex;
 
       _tabController.addListener(() {
         setState(() {
