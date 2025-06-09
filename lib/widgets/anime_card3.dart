@@ -349,12 +349,18 @@ class Search_AnimeCardState extends State<SearchAnimeCard> {
                                                                 onTapUp: (
                                                                   details,
                                                                 ) async {
-                                                                  await AnilistApi.addAnimeToList(
-                                                                    userLists[index]["isCustom"],
-                                                                    widget
-                                                                        .data["media"]["id"],
-                                                                    userLists[index]["name"],
-                                                                  );
+                                                                  userLists[index]["isCustom"] ==
+                                                                          true
+                                                                      ? await AnilistApi.addAnimeToCustomList(
+                                                                        widget
+                                                                            .data["media"]["id"],
+                                                                        userLists[index]["name"],
+                                                                      )
+                                                                      : await AnilistApi.addAnimeToStatus(
+                                                                        widget
+                                                                            .data["media"]["id"],
+                                                                        userLists[index]["name"],
+                                                                      );
                                                                   Navigator.of(
                                                                     context,
                                                                   ).pop();

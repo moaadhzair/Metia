@@ -375,12 +375,67 @@ class _AnimeCardState extends State<AnimeCard> {
                                                             onTapUp: (
                                                               details,
                                                             ) async {
-                                                              await AnilistApi.addAnimeToList(
-                                                                userLists[index]["isCustom"],
-                                                                widget
-                                                                    .data["media"]["id"],
-                                                                userLists[index]["name"],
-                                                              );
+                                                              if (userLists[index]["isCustom"] ==
+                                                                  true) {
+                                                                if ([
+                                                                  "COMPLETED",
+                                                                  "WATCHING",
+                                                                  "PAUSED",
+                                                                  "DROPPED",
+                                                                  "PLANNING",
+                                                                ].contains(
+                                                                  widget.tabName
+                                                                      .toUpperCase(),
+                                                                )) {
+                                                                  //from status to custom
+                                                                  await AnilistApi.changeFromStatusToCustomList(
+                                                                    widget
+                                                                        .data["media"]["id"],
+                                                                    userLists[index]["name"],
+                                                                  );
+                                                                } else {
+                                                                  //from custom to custom
+                                                                  await AnilistApi.changeFromCustomListToCustomList(
+                                                                    widget
+                                                                        .data["media"]["id"],
+                                                                    widget
+                                                                        .tabName,
+                                                                    userLists[index]["name"]
+                                                                        .toString()
+                                                                        .toLowerCase(),
+                                                                    widget
+                                                                        .data["id"],
+                                                                  );
+                                                                }
+                                                              } else {
+                                                                if ([
+                                                                  "COMPLETED",
+                                                                  "WATCHING",
+                                                                  "PAUSED",
+                                                                  "DROPPED",
+                                                                  "PLANNING",
+                                                                ].contains(
+                                                                  widget.tabName
+                                                                      .toUpperCase(),
+                                                                )) {
+                                                                  //from status to status
+                                                                  await AnilistApi.changeFromStatusToStatus(
+                                                                    widget
+                                                                        .data["media"]["id"],
+                                                                    userLists[index]["name"],
+                                                                  );
+                                                                } else {
+                                                                  //from custom to status
+                                                                  AnilistApi.changeFromCustomListToStatus(
+                                                                    widget
+                                                                        .data["media"]["id"],
+                                                                    widget
+                                                                        .tabName,
+                                                                    userLists[index]["name"],
+                                                                  );
+                                                                }
+                                                              }
+
                                                               Navigator.of(
                                                                 context,
                                                               ).pop();
@@ -465,24 +520,29 @@ class _AnimeCardState extends State<AnimeCard> {
                           trailingIcon: CupertinoIcons.delete,
                           child: const Text("Remove From List"),
                           onPressed: () async {
-                            await AnilistApi.removeAnimeFromList(
-                              widget.data["id"],
-                            );
+                            if ([
+                              "COMPLETED",
+                              "WATCHING",
+                              "PAUSED",
+                              "DROPPED",
+                              "PLANNING",
+                            ].contains(widget.tabName.toUpperCase())) {
+                              await AnilistApi.removeAnimeFromStatus(
+                                widget.data["media"]["id"],
+                                widget.data["id"],
+                              );
+                            } else {
+                              await AnilistApi.removeAnimeFromCustomList(
+                                widget.data["media"]["id"],
+                                widget.tabName.toLowerCase(),
+                                "",
+                              );
+                            }
+
                             Navigator.of(context).pop();
                           },
                         ),
                       ],
-                      /*child: CachedNetworkImage(
-                        imageUrl:
-                            widget.data["media"]["coverImage"]["extraLarge"],
-                        fit: BoxFit.cover,
-                        placeholder:
-                            (context, url) => const Center(
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                        errorWidget:
-                            (context, url, error) => const Icon(Icons.error),
-                      ),*/
                     ),
                   ),
                 ),
