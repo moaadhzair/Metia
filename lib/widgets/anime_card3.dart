@@ -101,7 +101,7 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                         },
                         tag: '${widget.data["media"]["id"]}',
                         child: CachedNetworkImage(
-                          imageUrl: widget.data["media"]["coverImage"]["medium"],
+                          imageUrl: widget.data["media"]["coverImage"]["large"],
                           fit: BoxFit.cover,
                           placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                           errorWidget: (context, url, error) => const Icon(Icons.error),

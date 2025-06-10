@@ -174,6 +174,7 @@ fragment media on Media {
     native
   }
   coverImage {
+  large
   medium
     extraLarge
     color
@@ -234,6 +235,7 @@ query ($search: String) {
         native
       }
       coverImage {
+      large
       medium
         extraLarge
       }
@@ -352,6 +354,7 @@ query (\$type: MediaType!, \$userId: Int!) {
               episodes
               averageScore
               coverImage {
+              large
                 extraLarge
                 medium
               }
@@ -458,6 +461,7 @@ query (\$type: MediaType!, \$userId: Int!) {
                 episodes
                 averageScore
                 coverImage {
+                large
                 medium
                   extraLarge
                 }
@@ -554,6 +558,7 @@ query (\$type: MediaType!, \$userId: Int!) {
         userPreferred
       }
       coverImage {
+      
         large
       }
       type

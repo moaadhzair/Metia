@@ -66,7 +66,7 @@ class _AnimeCardState extends State<AnimeCard> {
                       fit: StackFit.expand,
                       children: [
                         CachedNetworkImage(
-                          imageUrl: widget.data["media"]["coverImage"]["extraLarge"],
+                          imageUrl: widget.data["media"]["coverImage"]["large"],
                           fit: BoxFit.cover,
                           placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                           errorWidget: (context, url, error) => const Icon(Icons.error),
@@ -108,7 +108,7 @@ class _AnimeCardState extends State<AnimeCard> {
                             borderRadius: BorderRadius.circular(12), // Customize radius here
                             child:
                                 CachedNetworkImage(
-                                      imageUrl: widget.data["media"]["coverImage"]["medium"],
+                                      imageUrl: widget.data["media"]["coverImage"]["large"],
                                       fit: BoxFit.cover,
                                       placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                                       errorWidget: (context, url, error) => const Icon(Icons.error),
@@ -401,7 +401,7 @@ class _AnimeCardState extends State<AnimeCard> {
                       text: "${widget.data["progress"]}/${widget.data["media"]["episodes"] ?? "?"}",
                       style: const TextStyle(color: MyColors.appbarTextColor, fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    widget.data["media"]["nextAiringEpisode"].toString() != "null" && widget.tabName.startsWith("NEW EPISODE")
+                    widget.data["media"]["nextAiringEpisode"].toString() != "null" && widget.tabName.startsWith("New Episode")
                         ? TextSpan(
                           text: "\n${widget.data["media"]["nextAiringEpisode"]["episode"] - 1}",
                           style: const TextStyle(color: Colors.orange, fontSize: 16, fontWeight: FontWeight.bold),
@@ -423,6 +423,7 @@ class _AnimeCardState extends State<AnimeCard> {
               ),
             ],
           ),
+          
         ],
       ),
     );
