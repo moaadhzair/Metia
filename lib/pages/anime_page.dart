@@ -19,7 +19,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AnimePage extends StatefulWidget {
   final Map<String, dynamic> animeData;
-  const AnimePage({super.key, required this.animeData});
+  final String tabName;
+
+  const AnimePage({super.key, required this.animeData, required this.tabName});
 
   @override
   State<AnimePage> createState() => _AnimePageState();
@@ -352,9 +354,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                     : Row(
                                       children: [
                                         Theme(
-                                          data: Theme.of(
-                                            context,
-                                          ).copyWith(splashColor: Colors.transparent, highlightColor: Colors.transparent),
+                                          data: Theme.of(context).copyWith(splashColor: Colors.transparent, highlightColor: Colors.transparent),
                                           child: PopupMenuButton<String>(
                                             splashRadius: 0,
                                             tooltip: "Select Extension",
@@ -386,10 +386,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                                   height: 24,
                                                                   child: ClipRRect(
                                                                     borderRadius: BorderRadius.circular(4),
-                                                                    child: CachedNetworkImage(
-                                                                      imageUrl: extension.iconUrl,
-                                                                      fit: BoxFit.contain,
-                                                                    ),
+                                                                    child: CachedNetworkImage(imageUrl: extension.iconUrl, fit: BoxFit.contain),
                                                                   ),
                                                                 ),
                                                                 const SizedBox(width: 8),
@@ -420,10 +417,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                     child:
                                                         currentExtension?.iconUrl == null
                                                             ? const Icon(Icons.extension, color: MyColors.coolPurple)
-                                                            : CachedNetworkImage(
-                                                              imageUrl: currentExtension?.iconUrl ?? "",
-                                                              fit: BoxFit.contain,
-                                                            ),
+                                                            : CachedNetworkImage(imageUrl: currentExtension?.iconUrl ?? "", fit: BoxFit.contain),
                                                   ),
                                                 ),
                                                 const Icon(Icons.arrow_drop_down, color: MyColors.coolPurple),
@@ -530,23 +524,16 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
 
                                                       if (snapshot.hasError) {
                                                         return Center(
-                                                          child: Text(
-                                                            'Error: ${snapshot.error}',
-                                                            style: const TextStyle(color: Colors.white),
-                                                          ),
+                                                          child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)),
                                                         );
                                                       }
 
-                                                      final searchResults =
-                                                          snapshot.data?.map((item) => item as Map<String, dynamic>).toList() ?? [];
+                                                      final searchResults = snapshot.data?.map((item) => item as Map<String, dynamic>).toList() ?? [];
 
                                                       return GridView.builder(
                                                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                                           crossAxisCount:
-                                                              Tools.getResponsiveCrossAxisVal(
-                                                                        MediaQuery.of(context).size.width,
-                                                                        itemWidth: 460 / 4,
-                                                                      ) >
+                                                              Tools.getResponsiveCrossAxisVal(MediaQuery.of(context).size.width, itemWidth: 460 / 4) >
                                                                       5
                                                                   ? 5
                                                                   : Tools.getResponsiveCrossAxisVal(
@@ -584,8 +571,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                                               Navigator.pop(context);
 
                                                               // Fetch episodes after closing the sheet
-                                                              EpisodeList =
-                                                                  await currentExtension?.getEpisodeList(clossestAnime["session"]) ?? [];
+                                                              EpisodeList = await currentExtension?.getEpisodeList(clossestAnime["session"]) ?? [];
 
                                                               prepareTabBarAndListView();
 
@@ -644,13 +630,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                         ? const Icon(Icons.play_arrow_outlined, size: 20)
                                         : const SizedBox(),
                                 onPressed: () async {
-                                  await showSourcePicker(
-                                    context,
-                                    currentExtension,
-                                    EpisodeList,
-                                    widget.animeData["progress"] ?? 0,
-                                    widget.animeData,
-                                  );
+                                  await showSourcePicker(context, currentExtension, EpisodeList, widget.animeData["progress"] ?? 0, widget.animeData);
                                 },
                               ),
                             ),
@@ -716,10 +696,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                   spacing: 20,
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Text(
-                      "Loading The Anime...",
-                      style: TextStyle(color: MyColors.appbarTextColor, fontSize: 30, fontWeight: FontWeight.w600),
-                    ),
+                    Text("Loading The Anime...", style: TextStyle(color: MyColors.appbarTextColor, fontSize: 30, fontWeight: FontWeight.w600)),
                     CircularProgressIndicator(color: MyColors.coolPurple),
                     SizedBox(height: 20),
                   ],
@@ -728,11 +705,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                   controller: _tabController,
                   children: List.generate(tabCount, (tabIndex) {
                     bool isLandscape = MediaQuery.orientationOf(context) == Orientation.landscape;
-                    EdgeInsetsGeometry padding = EdgeInsets.only(
-                      left: (isLandscape ? 20 : 0) + 12,
-                      right: (isLandscape ? 20 : 0) + 12,
-                      top: 12,
-                    );
+                    EdgeInsetsGeometry padding = EdgeInsets.only(left: (isLandscape ? 20 : 0) + 12, right: (isLandscape ? 20 : 0) + 12, top: 12);
                     int count = tabItemCounts[tabIndex];
                     int startIndex = (tabIndex == 0) ? 0 : firstTabCount + (tabIndex - 1) * eachItemForTab;
                     return count == 0
@@ -823,13 +796,7 @@ class _buildAnimeEpisodeListState extends State<_buildAnimeEpisodeList> {
   }
 }
 
-Future<void> showSourcePicker(
-  BuildContext context,
-  Extension? currentExtension,
-  List<dynamic> episodeList,
-  int episodeIndex,
-  animeData,
-) async {
+Future<void> showSourcePicker(BuildContext context, Extension? currentExtension, List<dynamic> episodeList, int episodeIndex, animeData) async {
   showModalBottomSheet(
     backgroundColor: MyColors.backgroundColor,
 
@@ -898,11 +865,7 @@ Future<void> showSourcePicker(
                                         child: Center(
                                           child: Text(
                                             "${snapshot.data?[index]["provider"].toString().toUpperCase()} - ${snapshot.data?[index]["sub"] ? "Sub" : "Dub"}",
-                                            style: const TextStyle(
-                                              color: MyColors.appbarTextColor,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 16.5,
-                                            ),
+                                            style: const TextStyle(color: MyColors.appbarTextColor, fontWeight: FontWeight.w600, fontSize: 16.5),
                                           ),
                                         ),
                                       ),
@@ -926,8 +889,7 @@ Future<void> showSourcePicker(
 }
 
 class _buildAnimeCoverSliverAppBar extends StatelessWidget {
-  const _buildAnimeCoverSliverAppBar({super.key, required bool isCollapsed, required this.title, required this.widget})
-    : _isCollapsed = isCollapsed;
+  const _buildAnimeCoverSliverAppBar({super.key, required bool isCollapsed, required this.title, required this.widget}) : _isCollapsed = isCollapsed;
 
   final bool _isCollapsed;
   final dynamic title;
@@ -948,7 +910,7 @@ class _buildAnimeCoverSliverAppBar extends StatelessWidget {
       expandedHeight: (MediaQuery.of(context).size.height) * 0.7,
       stretch: true,
       flexibleSpace: FlexibleSpaceBar(
-        background: AnimeCover(animeData: widget.animeData),
+        background: AnimeCover(animeData: widget.animeData, tabName: widget.tabName),
         //stretchModes: const [StretchMode.blurBackground, StretchMode.zoomBackground],
       ),
     );
@@ -1089,10 +1051,7 @@ class AnimeEpisode extends StatelessWidget {
                   borderRadius: const BorderRadius.only(topRight: Radius.circular(12), bottomLeft: Radius.circular(12)),
                 ),
                 padding: const EdgeInsets.only(left: 15, right: 15),
-                child: Text(
-                  "${index + 1}",
-                  style: const TextStyle(letterSpacing: 2, fontWeight: FontWeight.w500, color: Colors.white, fontSize: 18),
-                ),
+                child: Text("${index + 1}", style: const TextStyle(letterSpacing: 2, fontWeight: FontWeight.w500, color: Colors.white, fontSize: 18)),
               ),
             ),
           ],
@@ -1103,14 +1062,17 @@ class AnimeEpisode extends StatelessWidget {
 }
 
 class AnimeCover extends StatefulWidget {
-  const AnimeCover({super.key, required this.animeData});
+  const AnimeCover({super.key, required this.animeData, required this.tabName});
   final dynamic animeData;
+  final String tabName;
 
   @override
   State<AnimeCover> createState() => _AnimeCoverState();
 }
 
-class _AnimeCoverState extends State<AnimeCover> {
+class _AnimeCoverState extends State<AnimeCover> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   double _opacity = 0.0;
 
   String processHtml(String htmlContent) {
@@ -1123,6 +1085,7 @@ class _AnimeCoverState extends State<AnimeCover> {
 
   @override
   Widget build(BuildContext context) {
+    print(widget.animeData["media"]["id"].toString() + widget.tabName);
     final imageUrl = widget.animeData["media"]["coverImage"]["extraLarge"];
     final description = processHtml(widget.animeData["media"]["description"]);
     final List<dynamic> genres = widget.animeData["media"]["genres"];
@@ -1136,7 +1099,7 @@ class _AnimeCoverState extends State<AnimeCover> {
       fit: StackFit.expand,
       children: [
         Hero(
-          tag: '${widget.animeData["media"]["id"]}',
+          tag: widget.animeData["media"]["id"].toString() + widget.tabName,
           child: AspectRatio(
             aspectRatio: 16 / 9,
             child: CachedNetworkImage(
@@ -1155,6 +1118,17 @@ class _AnimeCoverState extends State<AnimeCover> {
             ),
           ),
         ),
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.center,
+              colors: [MyColors.backgroundColor.withOpacity(0.8), Colors.transparent],
+              stops: const [0, 0.3], // control where each color stops
+            ),
+          ),
+        ),
+
         Transform.translate(
           offset: const Offset(0, 4),
           child: Container(
@@ -1172,46 +1146,95 @@ class _AnimeCoverState extends State<AnimeCover> {
           duration: const Duration(milliseconds: 500),
           curve: Curves.easeIn,
 
-          child: Align(
-            alignment: Alignment.bottomLeft,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 16.0, bottom: 16.0, right: 16.0),
-              child: SingleChildScrollView(
-                physics: const NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.symmetric(horizontal: MediaQuery.orientationOf(context) == Orientation.landscape ? 20 : 0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w400)),
-                    const SizedBox(height: 4),
-                    Text(genres.join(' • '), style: const TextStyle(color: Color(0xFFA9A7A7), fontSize: 15, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          widget.animeData["media"]["averageScore"].toString() == "null"
-                              ? "0.0"
-                              : Tools.insertAt(widget.animeData["media"]["averageScore"].toString(), ".", 1),
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange),
-                        ),
-                        const Icon(Icons.star, color: Colors.orange, size: 18),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    const Text("Synopsis", style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      maxLines: 8,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(height: 1.1, fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFFA9A7A7)),
-                    ),
-                  ],
+          child: Stack(
+            children: [
+              Align(
+                alignment: Alignment.topCenter,
+                child: Container(
+                  height: kToolbarHeight,
+                  alignment: Alignment.center,
+                  child: Builder(
+                    builder: (context) {
+                      final nextAiring = widget.animeData["media"]["nextAiringEpisode"];
+                      if (nextAiring == null) {
+                        return const SizedBox();
+                      }
+                      final int airingAt = nextAiring["airingAt"] ?? 0;
+                      final int episode = nextAiring["episode"] ?? 0;
+                      final Duration diff = DateTime.fromMillisecondsSinceEpoch(airingAt * 1000).difference(DateTime.now());
+                      if (diff.isNegative) return const SizedBox();
+
+                      final int days = diff.inDays;
+                      final int hours = diff.inHours % 24;
+                      final int minutes = diff.inMinutes % 60;
+
+                      String timeString = '';
+                      if (days > 0) timeString += '${days}d ';
+                      if (hours > 0 || days > 0) timeString += '${hours}h ';
+                      timeString += '${minutes}m';
+
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Padding(padding: EdgeInsets.only(top: 4.0), child: Icon(Icons.schedule, color: Colors.orange, size: 22)),
+                          Text(
+                            ' Episode $episode: $timeString',
+                            style: const TextStyle(
+                              color: Colors.orange,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              //shadows: [Shadow(blurRadius: 4, color: Colors.black)],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16.0, bottom: 16.0, right: 16.0),
+                  child: SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.symmetric(horizontal: MediaQuery.orientationOf(context) == Orientation.landscape ? 20 : 0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title, style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w400)),
+                        const SizedBox(height: 4),
+                        Text(genres.join(' • '), style: const TextStyle(color: Color(0xFFA9A7A7), fontSize: 15, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              widget.animeData["media"]["averageScore"].toString() == "null"
+                                  ? "0.0"
+                                  : Tools.insertAt(widget.animeData["media"]["averageScore"].toString(), ".", 1),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange),
+                            ),
+                            const Icon(Icons.star, color: Colors.orange, size: 18),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        const Text("Synopsis", style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 4),
+                        Text(
+                          description,
+                          maxLines: 8,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(height: 1.1, fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFFA9A7A7)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],

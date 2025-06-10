@@ -10,8 +10,9 @@ class SearchAnimeCard extends StatefulWidget {
   final int index;
   final Map<String, dynamic> data;
   final VoidCallback? onLibraryChanged;
+  final String tabName;
 
-  const SearchAnimeCard({super.key, required this.listName, required this.index, required this.data, required this.onLibraryChanged});
+  const SearchAnimeCard({super.key, required this.listName, required this.index, required this.data, required this.onLibraryChanged, required this.tabName});
 
   @override
   State<SearchAnimeCard> createState() => searchAnimeCardState();
@@ -50,7 +51,7 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
     super.build(context);
     return GestureDetector(
       onTap: () {
-        Navigator.push(context, CustomPageRoute(builder: (context) => AnimePage(animeData: widget.data)));
+        Navigator.push(context, CustomPageRoute(builder: (context) => AnimePage(animeData: widget.data, tabName: "Search",)));
       },
       behavior: HitTestBehavior.translucent, // Ensures taps are registered
       child: Container(
@@ -99,7 +100,7 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                             ],
                           );
                         },
-                        tag: '${widget.data["media"]["id"]}',
+                        tag: widget.data["media"]["id"].toString() + widget.tabName,
                         child: CachedNetworkImage(
                           imageUrl: widget.data["media"]["coverImage"]["large"],
                           fit: BoxFit.cover,

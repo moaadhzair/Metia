@@ -791,6 +791,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
         }
 
         return SearchAnimeCard(
+          tabName: "Search",
           listName: listName,
           index: index,
           data: isSearching ? {"media": searchAnimeData[index]} : {"media": popularAnimeData[index]},
