@@ -41,7 +41,7 @@ class Tools
         content: Center(
           child: Text(
             message,
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               color: MyColors.appbarTextColor,
               fontSize: 16,

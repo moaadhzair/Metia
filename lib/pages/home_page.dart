@@ -536,7 +536,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                                         crossAxisCount: Tools.getResponsiveCrossAxisVal(
                                                           MediaQuery.of(context).size.width,
-                                                          itemWidth: 460 / 4,
+                                                          itemWidth: 115,
                                                         ),
                                                         mainAxisExtent: state.state == "New Episode" ? 260 : 245,
                                                         crossAxisSpacing: 10,
