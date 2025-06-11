@@ -179,6 +179,7 @@ fragment media on Media {
     extraLarge
     color
   }
+  duration
   bannerImage
   description
   episodes
@@ -239,6 +240,7 @@ query ($search: String) {
       medium
         extraLarge
       }
+      duration
       episodes
       genres
       description(asHtml: false)
@@ -358,6 +360,7 @@ query (\$type: MediaType!, \$userId: Int!) {
                 extraLarge
                 medium
               }
+              duration
               nextAiringEpisode {
                 airingAt
                 episode
@@ -452,6 +455,7 @@ query (\$type: MediaType!, \$userId: Int!) {
           query (\$search: String) {
             Page(page: 1, perPage: 30) {
               media(search: \$search, type: ANIME) {
+                duration
                 id
                 title {
                   romaji
@@ -465,6 +469,7 @@ query (\$type: MediaType!, \$userId: Int!) {
                 medium
                   extraLarge
                 }
+                duration
               }
             }
           }
@@ -561,6 +566,7 @@ query (\$type: MediaType!, \$userId: Int!) {
       
         large
       }
+      duration
       type
       format
       status
@@ -775,6 +781,7 @@ query (\$type: MediaType!, \$userId: Int!) {
       coverImage {
         large
       }
+      duration
       type
       format
       status
@@ -1020,6 +1027,7 @@ query (\$type: MediaType!, \$userId: Int!) {
       coverImage {
         large
       }
+      duration
       type
       format
       status
