@@ -1230,7 +1230,7 @@ class _AnimeCoverState extends State<AnimeCover> with AutomaticKeepAliveClientMi
               begin: Alignment.topCenter,
               end: Alignment.center,
               colors: [MyColors.backgroundColor.withOpacity(0.8), Colors.transparent],
-              stops: const [0, 0.3], // control where each color stops
+              stops: const [0, 0.4], // control where each color stops
             ),
           ),
         ),
@@ -1254,11 +1254,9 @@ class _AnimeCoverState extends State<AnimeCover> with AutomaticKeepAliveClientMi
 
           child: Stack(
             children: [
-              Align(
-                alignment: Alignment.topCenter,
-                child: Container(
+              SafeArea(
+                child: SizedBox(
                   height: kToolbarHeight,
-                  alignment: Alignment.center,
                   child: Builder(
                     builder: (context) {
                       final nextAiring = widget.animeData["media"]["nextAiringEpisode"];
@@ -1269,31 +1267,33 @@ class _AnimeCoverState extends State<AnimeCover> with AutomaticKeepAliveClientMi
                       final int episode = nextAiring["episode"] ?? 0;
                       final Duration diff = DateTime.fromMillisecondsSinceEpoch(airingAt * 1000).difference(DateTime.now());
                       if (diff.isNegative) return const SizedBox();
-
+                              
                       final int days = diff.inDays;
                       final int hours = diff.inHours % 24;
                       final int minutes = diff.inMinutes % 60;
-
+                              
                       String timeString = '';
                       if (days > 0) timeString += '${days}d ';
                       if (hours > 0 || days > 0) timeString += '${hours}h ';
                       timeString += '${minutes}m';
-
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Padding(padding: EdgeInsets.only(top: 4.0), child: Icon(Icons.schedule, color: Colors.orange, size: 22)),
-                          Text(
-                            ' Episode $episode: $timeString',
-                            style: const TextStyle(
-                              color: Colors.orange,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              //shadows: [Shadow(blurRadius: 4, color: Colors.black)],
+                              
+                      return SafeArea(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.schedule, color: Colors.orange, size: 22),
+                            Text(
+                              ' Episode $episode: $timeString',
+                              style: const TextStyle(
+                                color: Colors.orange,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                //shadows: [Shadow(blurRadius: 4, color: Colors.black)],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       );
                     },
                   ),
