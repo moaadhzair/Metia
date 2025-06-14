@@ -12,7 +12,14 @@ class SearchAnimeCard extends StatefulWidget {
   final VoidCallback? onLibraryChanged;
   final String tabName;
 
-  const SearchAnimeCard({super.key, required this.listName, required this.index, required this.data, required this.onLibraryChanged, required this.tabName});
+  const SearchAnimeCard({
+    super.key,
+    required this.listName,
+    required this.index,
+    required this.data,
+    required this.onLibraryChanged,
+    required this.tabName,
+  });
 
   @override
   State<SearchAnimeCard> createState() => searchAnimeCardState();
@@ -36,6 +43,8 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
   @override
   bool get wantKeepAlive => true;
 
+  Future<List<Map<String, dynamic>>>? _userAnimeListsFuture;
+
   @override
   void initState() {
     super.initState();
@@ -57,7 +66,7 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
             width: 115,
             child: GestureDetector(
               onTap: () {
-                Navigator.push(context, CustomPageRoute(builder: (context) => AnimePage(animeData: widget.data, tabName: "Search",)));
+                Navigator.push(context, CustomPageRoute(builder: (context) => AnimePage(animeData: widget.data, tabName: "Search")));
               },
               behavior: HitTestBehavior.translucent, // Ensures taps are registered
               child: Container(
@@ -119,6 +128,8 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                                     alignment: Alignment.bottomRight,
                                     child: GestureDetector(
                                       onTapUp: (details) {
+                                        _userAnimeListsFuture ??= AnilistApi.getUserAnimeLists();
+
                                         showModalBottomSheet(
                                           context: context,
                                           builder: (context) {
@@ -147,8 +158,12 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                                                                 decoration: const InputDecoration(
                                                                   hintText: "Enter List Name",
                                                                   hintStyle: TextStyle(color: MyColors.unselectedColor),
-                                                                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: MyColors.coolPurple)),
-                                                                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: MyColors.coolPurple)),
+                                                                  enabledBorder: UnderlineInputBorder(
+                                                                    borderSide: BorderSide(color: MyColors.coolPurple),
+                                                                  ),
+                                                                  focusedBorder: UnderlineInputBorder(
+                                                                    borderSide: BorderSide(color: MyColors.coolPurple),
+                                                                  ),
                                                                 ),
                                                                 style: const TextStyle(color: MyColors.appbarTextColor),
                                                               ),
@@ -173,7 +188,7 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                                                             );
                                                           },
                                                         );
-            
+
                                                         if (result == "refresh") {
                                                           setModalState(() {}); // This will rebuild the FutureBuilder!
                                                         }
@@ -188,11 +203,15 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                                                         children: [
                                                           const Text(
                                                             "Add To List:",
-                                                            style: TextStyle(color: MyColors.appbarTextColor, fontWeight: FontWeight.w600, fontSize: 16.5),
+                                                            style: TextStyle(
+                                                              color: MyColors.appbarTextColor,
+                                                              fontWeight: FontWeight.w600,
+                                                              fontSize: 16.5,
+                                                            ),
                                                           ),
                                                           Expanded(
                                                             child: FutureBuilder(
-                                                              future: AnilistApi.getUserAnimeLists(),
+                                                              future: _userAnimeListsFuture,
                                                               builder: (context, snapshot) {
                                                                 if (snapshot.connectionState == ConnectionState.waiting) {
                                                                   return const Center(child: CircularProgressIndicator());
