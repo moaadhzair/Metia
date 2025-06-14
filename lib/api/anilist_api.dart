@@ -477,7 +477,7 @@ query (\$type: MediaType!, \$userId: Int!) {
     });
 
     final response = await http.post(Uri.parse(url), headers: headers, body: body);
-    
+
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -608,7 +608,7 @@ query (\$type: MediaType!, \$userId: Int!) {
     final String body = jsonEncode({'query': query, 'variables': variables});
 
     final response = await http.post(Uri.parse(url), headers: headers, body: body);
-    
+
     if (response.statusCode != 200) print("Error: error encountered in the addAnimToList function from AnilistApi");
   }
 
@@ -666,7 +666,6 @@ query (\$type: MediaType!, \$userId: Int!) {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      
     } else {
       throw Exception('Failed to change visibility: ${response.body}');
     }
@@ -801,8 +800,46 @@ query (\$type: MediaType!, \$userId: Int!) {
     final String body = jsonEncode({'query': query, 'variables': variables});
 
     final response = await http.post(Uri.parse(url), headers: headers, body: body);
-    
+
     if (response.statusCode != 200) print("Error: error encountered in the addAnimToList function from AnilistApi");
+  }
+
+  static Future<void> deleteCustomList(String listName) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? authKey = prefs.getString('auth_key');
+
+    const String url = 'https://graphql.anilist.co';
+
+    List userAnimeLists = await getUserAnimeLists();
+    await Future.delayed(const Duration(seconds: 1));
+    List<String> userAnimeCustomLists =
+        userAnimeLists.where((list) => list['isCustom'] == true).map<String>((list) => list['name'] as String).toList();
+
+    userAnimeCustomLists.remove(listName);
+
+    final Map<String, dynamic> body = {
+      'query': '''
+      mutation(\$animeListOptions: MediaListOptionsInput) {
+        UpdateUser(animeListOptions: \$animeListOptions) {
+          id
+        }
+      }
+    ''',
+      'variables': {
+        'animeListOptions': {'customLists': userAnimeCustomLists},
+      },
+    };
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey', 'Accept': 'application/json'},
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+    } else {
+      print('Failed to add custom list: ${response.body}');
+    }
   }
 
   static Future<void> createCustomList(String listName, BuildContext context) async {
@@ -836,9 +873,8 @@ query (\$type: MediaType!, \$userId: Int!) {
       headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey', 'Accept': 'application/json'},
       body: jsonEncode(body),
     );
-    
+
     if (response.statusCode == 200) {
-      
     } else {
       print('Failed to add custom list: ${response.body}');
     }
@@ -867,7 +903,7 @@ query (\$type: MediaType!, \$userId: Int!) {
       ''',
       }),
     );
-    
+
     if (response.statusCode != 200) {
       print(response.body);
       return [];
@@ -888,7 +924,6 @@ query (\$type: MediaType!, \$userId: Int!) {
 
     final finalList = [...defaultLists, ...custom];
 
-    
     return finalList;
   }
 
@@ -1043,7 +1078,7 @@ query (\$type: MediaType!, \$userId: Int!) {
     final String body = jsonEncode({'query': query, 'variables': variables});
 
     final response = await http.post(Uri.parse(url), headers: headers, body: body);
-   
+
     if (response.statusCode != 200) print("Error: error encountered in the addAnimToList function from AnilistApi");
   }
 

@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:metia/api/anilist_api.dart';
 import 'package:metia/constants/Colors.dart';
 import 'package:metia/pages/anime_page.dart';
@@ -128,6 +130,7 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                                     alignment: Alignment.bottomRight,
                                     child: GestureDetector(
                                       onTapUp: (details) {
+                                        _userAnimeListsFuture = null;
                                         _userAnimeListsFuture ??= AnilistApi.getUserAnimeLists();
 
                                         showModalBottomSheet(
@@ -180,6 +183,7 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                                                                     final listName = listNameController.text.trim();
                                                                     if (listName.isEmpty) return;
                                                                     await AnilistApi.createCustomList(listName, context);
+                                                                    _userAnimeListsFuture = AnilistApi.getUserAnimeLists();
                                                                     Navigator.of(context).pop("refresh");
                                                                   },
                                                                   child: const Text("Add", style: TextStyle(color: MyColors.backgroundColor)),
@@ -223,42 +227,45 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                                                                       return const SizedBox(height: 12);
                                                                     },
                                                                     itemBuilder: (context, index) {
-                                                                      return GestureDetector(
-                                                                        onTapUp: (details) async {
-                                                                          userLists[index]["isCustom"] == true
-                                                                              ? await AnilistApi.addAnimeToCustomList(
-                                                                                widget.data["media"]["id"],
-                                                                                userLists[index]["name"],
-                                                                              )
-                                                                              : await AnilistApi.addAnimeToStatus(
-                                                                                widget.data["media"]["id"],
-                                                                                userLists[index]["name"],
-                                                                              );
-                                                                          if (widget.onLibraryChanged != null) {
-                                                                            widget.onLibraryChanged!();
-                                                                          }
-                                                                          Navigator.of(context).pop();
-                                                                          Tools.Toast(context, "added $title to ${userLists[index]["name"]}");
-                                                                        },
-                                                                        child: Container(
-                                                                          decoration: BoxDecoration(
-                                                                            color: MyColors.coolPurple2,
-                                                                            borderRadius: BorderRadius.circular(12),
-                                                                          ),
-                                                                          width: double.infinity,
-                                                                          height: 60,
-                                                                          padding: const EdgeInsets.all(12),
-                                                                          alignment: Alignment.center,
-                                                                          child: Text(
-                                                                            userLists[index]["name"],
-                                                                            style: const TextStyle(
-                                                                              color: MyColors.appbarTextColor,
-                                                                              fontWeight: FontWeight.w600,
-                                                                              fontSize: 16.5,
+                                                                      bool isPrimary = false;
+                                                                      if (5 > index) isPrimary = true;
+                                                                      return Slidable(
+                                                                            key: ValueKey(userLists[index]["name"]),
+                                                                            endActionPane: ActionPane(
+                                                                              motion: const DrawerMotion(),
+                                                                              children: [
+                                                                                isPrimary ? SlidableAction(
+                                                                                  onPressed: (context) {
+                                                                                  },
+                                                                                  backgroundColor: Colors.transparent,
+                                                                                  icon: Icons.warning,
+                                                                                  foregroundColor: MyColors.unselectedColor,
+                                                                                  label: "You Can't Remove Primary List!!",
+                                                                                ) :SlidableAction(
+                                                                                  onPressed: (context) async {
+                                                                                    if (userLists[index]["isCustom"] == true) {
+                                                                                      await AnilistApi.deleteCustomList(userLists[index]["name"]);
+                                                                                      //Tools.Toast(context, "Deleted ${userLists[index]["name"]}");
+                                                                                      //Navigator.of(context).pop("refresh");
+                                                                                      userLists.removeAt(index); // Remove from the list
+                                                                                      setModalState(() {}); // Rebuild the modal to update the list
+                                                                                    }
+                                                                                  },
+                                                                                  backgroundColor: Colors.transparent,
+                                                                                  icon: CupertinoIcons.delete,
+                                                                                  foregroundColor: Colors.red,
+                                                                                  label: "Delete",
+                                                                                ),
+                                                                              ],
                                                                             ),
-                                                                          ),
-                                                                        ),
-                                                                      );
+
+                                                                            child: ListTiles(
+                                                                              userLists: userLists,
+                                                                              widget: widget,
+                                                                              title: title,
+                                                                              index: index,
+                                                                            ),
+                                                                          );
                                                                     },
                                                                     itemCount: userLists!.length,
                                                                   );
@@ -359,6 +366,44 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
           ),
         ),
       ],
+    );
+  }
+}
+
+class ListTiles extends StatelessWidget {
+  const ListTiles({super.key, required this.userLists, required this.widget, required this.title, required this.index});
+
+  final List<Map<String, dynamic>>? userLists;
+  final SearchAnimeCard widget;
+  final dynamic title;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    bool isPrimary = false;
+    if (5 > index) isPrimary = true;
+    return GestureDetector(
+      onTapUp: (details) async {
+        userLists?[index]["isCustom"] == true
+            ? await AnilistApi.addAnimeToCustomList(widget.data["media"]["id"], userLists?[index]["name"])
+            : await AnilistApi.addAnimeToStatus(widget.data["media"]["id"], userLists?[index]["name"]);
+        if (widget.onLibraryChanged != null) {
+          widget.onLibraryChanged!();
+        }
+        Navigator.of(context).pop();
+        Tools.Toast(context, "added $title to ${userLists?[index]["name"]}");
+      },
+      child: Container(
+        decoration: BoxDecoration(color: isPrimary ? MyColors.coolPurple2 : MyColors.coolPurple, borderRadius: BorderRadius.circular(12)),
+        width: double.infinity,
+        height: 60,
+        padding: const EdgeInsets.all(12),
+        alignment: Alignment.center,
+        child: Text(
+          userLists?[index]["name"],
+          style: TextStyle(color: isPrimary ? MyColors.coolPurple : MyColors.coolPurple2, fontWeight: FontWeight.w600, fontSize: 22),
+        ),
+      ),
     );
   }
 }
