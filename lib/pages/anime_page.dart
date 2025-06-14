@@ -1191,7 +1191,7 @@ class _AnimeCoverState extends State<AnimeCover> with AutomaticKeepAliveClientMi
 
   @override
   Widget build(BuildContext context) {
-    print(widget.animeData["media"]["id"].toString() + widget.tabName);
+    
     final imageUrl = widget.animeData["media"]["coverImage"]["extraLarge"];
     final description = processHtml(widget.animeData["media"]["description"]);
     final List<dynamic> genres = widget.animeData["media"]["genres"];

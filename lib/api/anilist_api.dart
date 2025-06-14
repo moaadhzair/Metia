@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-//import 'dart:js_interop';
 import 'package:flutter/material.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
@@ -10,6 +9,37 @@ import 'package:metia/tools.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AnilistApi {
+  // --- REQUEST QUEUE SYSTEM ---
+  static final List<Future Function()> _requestQueue = [];
+  static bool _isProcessingQueue = false;
+  static const Duration _delayBetweenRequests = Duration(milliseconds: 1000);
+
+  static Future<T> queueRequest<T>(Future<T> Function() request) async {
+    final completer = Completer<T>();
+    _requestQueue.add(() async {
+      try {
+        final result = await request();
+        completer.complete(result);
+      } catch (e, st) {
+        completer.completeError(e, st);
+      }
+    });
+    _processQueue();
+    return completer.future;
+  }
+
+  static void _processQueue() async {
+    if (_isProcessingQueue) return;
+    _isProcessingQueue = true;
+    while (_requestQueue.isNotEmpty) {
+      final req = _requestQueue.removeAt(0);
+      await req();
+      await Future.delayed(_delayBetweenRequests);
+    }
+    _isProcessingQueue = false;
+  }
+  // --- END QUEUE SYSTEM ---
+
   static Future<bool> removeAnimeFromCustomList(int mediaId, String customListName, String statusName, int mediaListEntryId, bool isChanging) async {
     Map<String, dynamic>? animeEntryData = await getAnimeLists(mediaId);
 
@@ -69,7 +99,7 @@ class AnilistApi {
     Map<String, dynamic> body = {'query': mutation, 'variables': variables};
 
     try {
-      final response = await http.post(Uri.parse(url), headers: headers, body: jsonEncode(body));
+      final response = await queueRequest(() => http.post(Uri.parse(url), headers: headers, body: jsonEncode(body)));
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -110,7 +140,7 @@ class AnilistApi {
     Map<String, dynamic> body = {'query': mutation, 'variables': variables};
 
     try {
-      final response = await http.post(Uri.parse(url), headers: headers, body: jsonEncode(body));
+      final response = await queueRequest(() => http.post(Uri.parse(url), headers: headers, body: jsonEncode(body)));
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -170,7 +200,7 @@ fragment media on Media {
   id
   title {
     english
-    romaji
+    romaji  
     native
   }
   coverImage {
@@ -193,7 +223,7 @@ fragment media on Media {
 ''';
 
     try {
-      final response = await http.post(Uri.parse(url), headers: headers, body: jsonEncode({'query': query}));
+      final response = await queueRequest(() => http.post(Uri.parse(url), headers: headers, body: jsonEncode({'query': query})));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body)["data"];
@@ -253,7 +283,9 @@ query ($search: String) {
     Map variables = {"search": keyword};
 
     try {
-      final response = await http.post(Uri.parse(url), headers: headers, body: jsonEncode({'query': query, "variables": variables}));
+      final response = await queueRequest(
+        () => http.post(Uri.parse(url), headers: headers, body: jsonEncode({'query': query, "variables": variables})),
+      );
 
       if (response.statusCode == 200) {
         print(response);
@@ -296,10 +328,12 @@ query ($search: String) {
       if (score != null) 'score': score,
     };
 
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $accessToken'},
-      body: jsonEncode({'query': mutation, 'variables': variables}),
+    final response = await queueRequest(
+      () => http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $accessToken'},
+        body: jsonEncode({'query': mutation, 'variables': variables}),
+      ),
     );
 
     if (response.statusCode == 200) {
@@ -377,7 +411,7 @@ query (\$type: MediaType!, \$userId: Int!) {
     });
 
     try {
-      final response = await http.post(Uri.parse(url), headers: headers, body: body);
+      final response = await queueRequest(() => http.post(Uri.parse(url), headers: headers, body: body));
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -477,7 +511,7 @@ query (\$type: MediaType!, \$userId: Int!) {
       "variables": {"search": animeName},
     });
 
-    final response = await http.post(Uri.parse(url), headers: headers, body: body);
+    final response = await queueRequest(() => http.post(Uri.parse(url), headers: headers, body: body));
     print("a request to the graphql has been made!!!!");
 
     if (response.statusCode == 200) {
@@ -605,11 +639,11 @@ query (\$type: MediaType!, \$userId: Int!) {
               "hiddenFromStatusLists": listName.isEmpty,
               // statusList is your custom list name
             }
-            : {"mediaId": mediaId, "status": listName == "WATCHING" ? "CURRENT" : listName.toUpperCase()};
+            : {"mediaId": mediaId, "status": listName.toUpperCase() == "WATCHING" ? "CURRENT" : listName.toUpperCase()};
 
     final String body = jsonEncode({'query': query, 'variables': variables});
 
-    final response = await http.post(Uri.parse(url), headers: headers, body: body);
+    final response = await queueRequest(() => http.post(Uri.parse(url), headers: headers, body: body));
     print("added an anime to a list");
 
     if (response.statusCode != 200) print("Error: error encountered in the addAnimToList function from AnilistApi");
@@ -665,7 +699,7 @@ query (\$type: MediaType!, \$userId: Int!) {
       'variables': {'mediaId': mediaId, 'hiddenFromStatusLists': hidden},
     };
 
-    final response = await http.post(Uri.parse(url), headers: headers, body: jsonEncode(body));
+    final response = await queueRequest(() => http.post(Uri.parse(url), headers: headers, body: jsonEncode(body)));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -803,7 +837,7 @@ query (\$type: MediaType!, \$userId: Int!) {
 
     final String body = jsonEncode({'query': query, 'variables': variables});
 
-    final response = await http.post(Uri.parse(url), headers: headers, body: body);
+    final response = await queueRequest(() => http.post(Uri.parse(url), headers: headers, body: body));
     print("added an anime to a list");
 
     if (response.statusCode != 200) print("Error: error encountered in the addAnimToList function from AnilistApi");
@@ -834,10 +868,12 @@ query (\$type: MediaType!, \$userId: Int!) {
       },
     };
 
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey', 'Accept': 'application/json'},
-      body: jsonEncode(body),
+    final response = await queueRequest(
+      () => http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey', 'Accept': 'application/json'},
+        body: jsonEncode(body),
+      ),
     );
     print("created a custom list");
     Tools.Toast(context, "created a custom list");
@@ -855,11 +891,12 @@ query (\$type: MediaType!, \$userId: Int!) {
 
     const String url = 'https://graphql.anilist.co';
 
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey'},
-      body: jsonEncode({
-        'query': '''
+    final response = await queueRequest(
+      () => http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey'},
+        body: jsonEncode({
+          'query': '''
         query {
           Viewer {
             mediaListOptions {
@@ -870,7 +907,8 @@ query (\$type: MediaType!, \$userId: Int!) {
           }
         }
       ''',
-      }),
+        }),
+      ),
     );
     print("got user anime list");
 
@@ -905,11 +943,12 @@ query (\$type: MediaType!, \$userId: Int!) {
 
     const String url = 'https://graphql.anilist.co';
 
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey'},
-      body: jsonEncode({
-        'query': '''
+    final response = await queueRequest(
+      () => http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey'},
+        body: jsonEncode({
+          'query': '''
         query(\$mediaId: Int) {
           Media(id: \$mediaId) {
             mediaListEntry {
@@ -920,8 +959,9 @@ query (\$type: MediaType!, \$userId: Int!) {
           }
         }
       ''',
-        'variables': {'mediaId': mediaId},
-      }),
+          'variables': {'mediaId': mediaId},
+        }),
+      ),
     );
 
     if (response.statusCode != 200) throw Exception("the request didnt return a 200 status code in AnilistApi.getAnimeLists");
@@ -1049,7 +1089,7 @@ query (\$type: MediaType!, \$userId: Int!) {
 
     final String body = jsonEncode({'query': query, 'variables': variables});
 
-    final response = await http.post(Uri.parse(url), headers: headers, body: body);
+    final response = await queueRequest(() => http.post(Uri.parse(url), headers: headers, body: body));
     print("added an anime to a list");
 
     if (response.statusCode != 200) print("Error: error encountered in the addAnimToList function from AnilistApi");

@@ -79,6 +79,8 @@ class _PlayerPageState extends State<PlayerPage> {
 
   bool _is2xRate = false;
 
+  
+
 
   Duration parseDuration(String timeString) {
   final parts = timeString.split(':').map(int.parse).toList();
