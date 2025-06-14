@@ -462,7 +462,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                   );
                                 },
                               ),
-            
+
                               Expanded(
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
@@ -486,7 +486,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                                       ),
                                                       SliverGrid(
                                                         key: PageStorageKey('library ${state.state}'),
-            
+
                                                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                                           crossAxisCount: Tools.getResponsiveCrossAxisVal(
                                                             MediaQuery.of(context).size.width,
@@ -503,10 +503,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                                             index: index,
                                                             tabName: state.state,
                                                             data: state.data[index],
-                                                            
+
                                                             onLibraryChanged: () {
                                                               print("a new anime is added or removed");
                                                               _fetchAnimeLibrary(false);
+                                                              isSearching ? _fetchSearchAnime(_searchController.text) : _fetchPopularAnime();
                                                             },
                                                           );
                                                         }, childCount: state.data.length),
@@ -530,7 +531,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                                     padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
                                                     child: GridView.builder(
                                                       key: PageStorageKey('library ${state.state}'),
-            
+
                                                       controller: _scrollController,
                                                       cacheExtent: 500,
                                                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -547,14 +548,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                                       itemBuilder: (context, index) {
                                                         return AnimeCard(
                                                           key: ValueKey(state.data[index]["id"]),
-            
+
                                                           index: index,
                                                           tabName: state.state,
                                                           data: state.data[index],
-                                                          
+
                                                           onLibraryChanged: () {
                                                             print("a new anime is added or removed");
                                                             _fetchAnimeLibrary(false);
+                                                            isSearching ? _fetchSearchAnime(_searchController.text) : _fetchPopularAnime();
                                                           },
                                                         );
                                                       },
@@ -630,7 +632,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                           ? isSearching
                                               ? searchAnimeData.isEmpty
                                                   ? const Center(
-                                                    child: Text("No Anime Was Found!", style: TextStyle(color: MyColors.appbarTextColor, fontSize: 20)),
+                                                    child: Text(
+                                                      "No Anime Was Found!",
+                                                      style: TextStyle(color: MyColors.appbarTextColor, fontSize: 20),
+                                                    ),
                                                   )
                                                   : _buildGrid()
                                               : popularAnimeData.isEmpty
@@ -668,7 +673,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                               setState(() {
                                                 _searchEnded = false;
                                               });
-            
+
                                               Future.delayed(const Duration(milliseconds: 500), () {
                                                 if (keyword.isNotEmpty) {
                                                   _searchEnded = false;
@@ -796,9 +801,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
           index: index,
           data: isSearching ? {"media": searchAnimeData[index]} : {"media": popularAnimeData[index]},
           onLibraryChanged: () {
-            print("a new anime is added or removed");
-            isSearching ? _fetchSearchAnime(_searchController.text) : _fetchPopularAnime();
-            _fetchAnimeLibrary(false);
+            setState(() {
+              print("a new anime is added or removed");
+              isSearching ? _fetchSearchAnime(_searchController.text) : _fetchPopularAnime();
+              _fetchAnimeLibrary(false);
+            });
           },
         );
       },

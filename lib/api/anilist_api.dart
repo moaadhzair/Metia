@@ -603,7 +603,7 @@ query (\$type: MediaType!, \$userId: Int!) {
               "hiddenFromStatusLists": listName.isEmpty,
               // statusList is your custom list name
             }
-            : {"mediaId": mediaId, "status": listName == "WATCHING" ? "CURRENT" : listName.toUpperCase()};
+            : {"mediaId": mediaId, "status": listName.toUpperCase() == "WATCHING" ? "CURRENT" : listName.toUpperCase()};
 
     final String body = jsonEncode({'query': query, 'variables': variables});
 
@@ -920,7 +920,7 @@ query (\$type: MediaType!, \$userId: Int!) {
       {'name': 'Paused', 'isCustom': false},
     ];
 
-    final custom = customLists.map((name) => {'name': name, 'isCustom': true});
+    final custom = customLists.map((name) => {'name': name[0].toUpperCase() + name.substring(1), 'isCustom': true});
 
     final finalList = [...defaultLists, ...custom];
 
@@ -967,7 +967,7 @@ query (\$type: MediaType!, \$userId: Int!) {
 
   static Future<void> changeFromCustomListToStatus(int mediaId, String customListName, String statusName) async {
     //await addAnimeToStatus(mediaId, statusName);
-    await removeAnimeFromCustomList(mediaId, customListName.toLowerCase(), statusName, 0, true);
+    await removeAnimeFromCustomList(mediaId, customListName, statusName, 0, true);
   }
 
   static Future<void> changeFromStatusToCustomList(int mediaId, String customListName) async {

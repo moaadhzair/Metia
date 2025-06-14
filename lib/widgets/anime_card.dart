@@ -266,7 +266,7 @@ class _AnimeCardState extends State<AnimeCard> {
                                                                             );
                                                                           } else {
                                                                             //from custom to status
-                                                                            AnilistApi.changeFromCustomListToStatus(
+                                                                            await AnilistApi.changeFromCustomListToStatus(
                                                                               widget.data["media"]["id"],
                                                                               widget.tabName,
                                                                               userLists[index]["name"],
