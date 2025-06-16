@@ -55,7 +55,7 @@ class _AnimeCardState extends State<AnimeCard> {
           child: SizedBox(
             width: 115,
             child: Padding(
-             padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
+              padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -70,7 +70,10 @@ class _AnimeCardState extends State<AnimeCard> {
                           builder: (BuildContext context, Animation<double> animation) {
                             return GestureDetector(
                               onTap: () {
-                                Navigator.push(context, CustomPageRoute(builder: (context) => AnimePage(animeData: widget.data, tabName: widget.tabName)));
+                                Navigator.push(
+                                  context,
+                                  CustomPageRoute(builder: (context) => AnimePage(animeData: widget.data, tabName: widget.tabName)),
+                                );
                               },
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
@@ -105,7 +108,7 @@ class _AnimeCardState extends State<AnimeCard> {
                                       ],
                                     );
                                   },
-            
+
                                   child: CachedNetworkImage(
                                     imageUrl: widget.data["media"]["coverImage"]["large"],
                                     fit: BoxFit.cover,
@@ -121,7 +124,10 @@ class _AnimeCardState extends State<AnimeCard> {
                             CupertinoContextMenuAction(
                               onPressed: () {
                                 Navigator.of(context).pop();
-                                Navigator.push(context, MaterialPageRoute(builder: (context) => AnimePage(animeData: widget.data, tabName: widget.tabName)));
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => AnimePage(animeData: widget.data, tabName: widget.tabName)),
+                                );
                               },
                               trailingIcon: CupertinoIcons.play,
                               child: const Text("Watch"),
@@ -196,7 +202,7 @@ class _AnimeCardState extends State<AnimeCard> {
                                                         );
                                                       },
                                                     );
-            
+
                                                     if (result == "refresh") {
                                                       setModalState(() {});
                                                     }
@@ -210,7 +216,11 @@ class _AnimeCardState extends State<AnimeCard> {
                                                     children: [
                                                       const Text(
                                                         "Add To List:",
-                                                        style: TextStyle(color: MyColors.appbarTextColor, fontWeight: FontWeight.w600, fontSize: 16.5),
+                                                        style: TextStyle(
+                                                          color: MyColors.appbarTextColor,
+                                                          fontWeight: FontWeight.w600,
+                                                          fontSize: 16.5,
+                                                        ),
                                                       ),
                                                       Expanded(
                                                         child: FutureBuilder(
@@ -228,7 +238,8 @@ class _AnimeCardState extends State<AnimeCard> {
                                                                 itemBuilder: (context, index) {
                                                                   return GestureDetector(
                                                                     onTapUp: (details) async {
-                                                                      if (widget.tabName.toLowerCase() != userLists[index]["name"].toString().toLowerCase()) {
+                                                                      if (widget.tabName.toLowerCase() !=
+                                                                          userLists[index]["name"].toString().toLowerCase()) {
                                                                         if (userLists[index]["isCustom"] == true) {
                                                                           if ([
                                                                             "COMPLETED",
@@ -273,7 +284,7 @@ class _AnimeCardState extends State<AnimeCard> {
                                                                             );
                                                                           }
                                                                         }
-            
+
                                                                         Navigator.of(context).pop();
                                                                         Navigator.of(context).pop();
                                                                         Tools.Toast(context, "added $title to ${userLists[index]["name"]}");
@@ -302,7 +313,8 @@ class _AnimeCardState extends State<AnimeCard> {
                                                                             ),
                                                                           ),
                                                                         ),
-                                                                        widget.tabName.toLowerCase() == userLists[index]["name"].toString().toLowerCase()
+                                                                        widget.tabName.toLowerCase() ==
+                                                                                userLists[index]["name"].toString().toLowerCase()
                                                                             ? Container(
                                                                               height: 60,
                                                                               decoration: BoxDecoration(
@@ -311,7 +323,8 @@ class _AnimeCardState extends State<AnimeCard> {
                                                                               ),
                                                                             )
                                                                             : const SizedBox(),
-                                                                        widget.tabName.toLowerCase() == userLists[index]["name"].toString().toLowerCase()
+                                                                        widget.tabName.toLowerCase() ==
+                                                                                userLists[index]["name"].toString().toLowerCase()
                                                                             ? Container(
                                                                               height: 60,
                                                                               alignment: Alignment.centerRight,
@@ -352,12 +365,18 @@ class _AnimeCardState extends State<AnimeCard> {
                                     if (["COMPLETED", "WATCHING", "PAUSED", "DROPPED", "PLANNING"].contains(widget.tabName.toUpperCase())) {
                                       await AnilistApi.removeAnimeFromStatus(widget.data["media"]["id"], widget.data["id"]);
                                     } else {
-                                      await AnilistApi.removeAnimeFromCustomList(widget.data["media"]["id"], widget.tabName, "", widget.data["id"], false);
+                                      await AnilistApi.removeAnimeFromCustomList(
+                                        widget.data["media"]["id"],
+                                        widget.tabName,
+                                        "",
+                                        widget.data["id"],
+                                        false,
+                                      );
                                     }
                                     if (widget.onLibraryChanged != null) {
                                       widget.onLibraryChanged!();
                                     }
-            
+
                                     Navigator.of(context).pop();
                                   },
                                 )
@@ -381,7 +400,9 @@ class _AnimeCardState extends State<AnimeCard> {
                   ),
                   const SizedBox(height: 2),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    spacing: 5,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       RichText(
                         textAlign: TextAlign.left,
@@ -393,24 +414,26 @@ class _AnimeCardState extends State<AnimeCard> {
                             ),
                             widget.data["media"]["nextAiringEpisode"].toString() != "null" && widget.tabName.startsWith("New Episode")
                                 ? TextSpan(
-                                  text: "\n${widget.data["media"]["nextAiringEpisode"]["episode"] - 1}",
+                                  text: "\n${widget.data["media"]["nextAiringEpisode"]["episode"] - 1} Ep",
                                   style: const TextStyle(color: Colors.orange, fontSize: 16, fontWeight: FontWeight.bold),
                                 )
                                 : const TextSpan(),
                           ],
                         ),
                       ),
-                      Row(
-                        children: [
-                          Text(
-                            widget.data["media"]["averageScore"].toString() == "null"
-                                ? "0.0"
-                                : Tools.insertAt(widget.data["media"]["averageScore"].toString(), ".", 1),
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange),
+                      widget.data["media"]["nextAiringEpisode"].toString() != "null" && widget.tabName.startsWith("New Episode")
+                          ? const Icon(Icons.notifications_active, color: Colors.orange, size: 16)
+                          : Row(
+                            children: [
+                              Text(
+                                widget.data["media"]["averageScore"].toString() == "null"
+                                    ? "0.0"
+                                    : Tools.insertAt(widget.data["media"]["averageScore"].toString(), ".", 1),
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange),
+                              ),
+                              const Icon(Icons.star, color: Colors.orange, size: 18),
+                            ],
                           ),
-                          const Icon(Icons.star, color: Colors.orange, size: 18),
-                        ],
-                      ),
                     ],
                   ),
                 ],

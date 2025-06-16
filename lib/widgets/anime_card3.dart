@@ -184,6 +184,10 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                                                                     if (listName.isEmpty) return;
                                                                     await AnilistApi.createCustomList(listName, context);
                                                                     _userAnimeListsFuture = AnilistApi.getUserAnimeLists();
+                                                                    await Future.delayed(const Duration(milliseconds: 500));
+                                                                    if (widget.onLibraryChanged != null) {
+                                                                      widget.onLibraryChanged!();
+                                                                    }
                                                                     Navigator.of(context).pop("refresh");
                                                                   },
                                                                   child: const Text("Add", style: TextStyle(color: MyColors.backgroundColor)),
@@ -230,21 +234,26 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                                                                       bool isPrimary = false;
                                                                       if (5 > index) isPrimary = true;
                                                                       return Slidable(
-                                                                            key: ValueKey(userLists[index]["name"]),
-                                                                            endActionPane: ActionPane(
-                                                                              motion: const DrawerMotion(),
-                                                                              children: [
-                                                                                isPrimary ? SlidableAction(
-                                                                                  onPressed: (context) {
-                                                                                  },
+                                                                        key: ValueKey(userLists[index]["name"]),
+                                                                        endActionPane: ActionPane(
+                                                                          motion: const DrawerMotion(),
+                                                                          children: [
+                                                                            isPrimary
+                                                                                ? SlidableAction(
+                                                                                  onPressed: (context) {},
                                                                                   backgroundColor: Colors.transparent,
                                                                                   icon: Icons.warning,
                                                                                   foregroundColor: MyColors.unselectedColor,
                                                                                   label: "You Can't Remove Primary List!!",
-                                                                                ) :SlidableAction(
+                                                                                )
+                                                                                : SlidableAction(
                                                                                   onPressed: (context) async {
                                                                                     if (userLists[index]["isCustom"] == true) {
                                                                                       await AnilistApi.deleteCustomList(userLists[index]["name"]);
+                                                                                      await Future.delayed(const Duration(milliseconds: 500));
+                                                                                      if (widget.onLibraryChanged != null) {
+                                                                                        widget.onLibraryChanged!();
+                                                                                      }
                                                                                       //Tools.Toast(context, "Deleted ${userLists[index]["name"]}");
                                                                                       //Navigator.of(context).pop("refresh");
                                                                                       userLists.removeAt(index); // Remove from the list
@@ -256,16 +265,16 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                                                                                   foregroundColor: Colors.red,
                                                                                   label: "Delete",
                                                                                 ),
-                                                                              ],
-                                                                            ),
+                                                                          ],
+                                                                        ),
 
-                                                                            child: ListTiles(
-                                                                              userLists: userLists,
-                                                                              widget: widget,
-                                                                              title: title,
-                                                                              index: index,
-                                                                            ),
-                                                                          );
+                                                                        child: ListTiles(
+                                                                          userLists: userLists,
+                                                                          widget: widget,
+                                                                          title: title,
+                                                                          index: index,
+                                                                        ),
+                                                                      );
                                                                     },
                                                                     itemCount: userLists!.length,
                                                                   );
@@ -337,7 +346,7 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                                 text: "${widget.data["media"]["episodes"] ?? "?"} Ep",
                                 style: const TextStyle(color: MyColors.appbarTextColor, fontSize: 16, fontWeight: FontWeight.bold),
                               ),
-                              widget.data["media"]["nextAiringEpisode"].toString() != "null" && widget.listName.startsWith("NEW EPISODE")
+                              widget.data["media"]["nextAiringEpisode"].toString() != "null" && widget.listName.toUpperCase().startsWith("NEW EPISODE")
                                   ? TextSpan(
                                     text: "\n${widget.data["media"]["nextAiringEpisode"]["episode"] - 1}",
                                     style: const TextStyle(color: Colors.orange, fontSize: 16, fontWeight: FontWeight.bold),
@@ -387,6 +396,7 @@ class ListTiles extends StatelessWidget {
         userLists?[index]["isCustom"] == true
             ? await AnilistApi.addAnimeToCustomList(widget.data["media"]["id"], userLists?[index]["name"])
             : await AnilistApi.addAnimeToStatus(widget.data["media"]["id"], userLists?[index]["name"]);
+        await Future.delayed(const Duration(milliseconds: 500));
         if (widget.onLibraryChanged != null) {
           widget.onLibraryChanged!();
         }
