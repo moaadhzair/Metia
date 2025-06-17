@@ -611,115 +611,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                             ),
                           )),
                       // search page
-                      Stack(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(right: 4.0, left: 4.0, top: 20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              spacing: 8,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                                  child: Text(
-                                    searchTabHeaderText,
-                                    style: const TextStyle(color: MyColors.appbarTextColor, fontWeight: FontWeight.w600, fontSize: 18),
-                                  ),
-                                ),
-                                Expanded(
-                                  child:
-                                      _searchEnded == true
-                                          ? isSearching
-                                              ? searchAnimeData.isEmpty
-                                                  ? const Center(
-                                                    child: Text(
-                                                      "No Anime Was Found!",
-                                                      style: TextStyle(color: MyColors.appbarTextColor, fontSize: 20),
-                                                    ),
-                                                  )
-                                                  : _buildGrid()
-                                              : popularAnimeData.isEmpty
-                                              ? const Center(
-                                                child: Text("No Anime Was Found!", style: TextStyle(color: MyColors.appbarTextColor, fontSize: 20)),
-                                              )
-                                              : _buildGrid()
-                                          : const Center(child: CircularProgressIndicator()),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Container(
-                              margin: const EdgeInsets.all(12),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(25),
-                                child: BackdropFilter(
-                                  filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                                  child: Container(
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                      color: MyColors.coolPurple2.withOpacity(0.40),
-                                      borderRadius: BorderRadius.circular(25),
-                                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8, offset: const Offset(0, 2))],
-                                      border: Border.all(color: Colors.white.withOpacity(0.18), width: 1.2),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: TextField(
-                                            onChanged: (keyword) async {
-                                              if (_searchEnded == false) return;
-                                              setState(() {
-                                                _searchEnded = false;
-                                              });
-
-                                              Future.delayed(const Duration(milliseconds: 500), () {
-                                                if (keyword.isNotEmpty) {
-                                                  _searchEnded = false;
-                                                  _fetchSearchAnime(keyword);
-                                                } else {
-                                                  _fetchPopularAnime();
-                                                  _searchEnded = true;
-                                                  isSearching = false;
-                                                }
-                                              });
-                                            },
-                                            controller: _searchController,
-                                            decoration: InputDecoration(
-                                              hintText: "Search anime...",
-                                              hintStyle: TextStyle(color: Colors.grey[500]),
-                                              border: InputBorder.none,
-                                              contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                                            ),
-                                            style: const TextStyle(fontSize: 16, color: Colors.white),
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                                          child: IconButton(
-                                            icon: const Icon(Icons.search, color: MyColors.appbarTextColor, size: 28),
-                                            onPressed: () {
-                                              if (_searchController.text.isNotEmpty) {
-                                                _searchEnded = false;
-                                                _fetchSearchAnime(_searchController.text);
-                                              } else {
-                                                _fetchPopularAnime();
-                                                _searchEnded = true;
-                                                isSearching = false;
-                                              }
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                      _buildExplorerPage(),
                     ],
                   ),
                 ),
@@ -734,6 +626,112 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
             opacity: _blurOpacity,
             duration: _isPopupMenuOpen ? const Duration(milliseconds: 333) : const Duration(milliseconds: 533),
             child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30), child: Container(color: Colors.black.withOpacity(0.2))),
+          ),
+        ),
+      ],
+    );
+  }
+
+  _buildExplorerPage() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 24),
+      child: CustomScrollView(
+        slivers: [
+          const SliverPadding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            sliver: SliverToBoxAdapter(
+              child: Text("Explorer", style: TextStyle(color: MyColors.unselectedColor, fontSize: 25, fontWeight: FontWeight.w600)),
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 28)),
+          SliverToBoxAdapter(
+            child: Container(
+              width: double.maxFinite,
+              decoration: BoxDecoration(color: MyColors.coolPurple, borderRadius: BorderRadius.circular(12)),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 7),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text("Search", style: TextStyle(color: MyColors.coolPurple2, fontSize: 25, fontWeight: FontWeight.w600)),
+                    Icon(Icons.search, color: MyColors.coolPurple2, weight: 700, size: 30),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 29)),
+          SliverToBoxAdapter(child: _buildTrending()),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          SliverToBoxAdapter(child: _buildPopular()),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          SliverToBoxAdapter(child: _buildUpcoming()),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          SliverToBoxAdapter(child: _buildPopular()),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        ],
+      ),
+    );
+  }
+
+  _buildTrending() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Trending", style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 200,
+          child: ListView.separated(
+            separatorBuilder: (context, index) => const SizedBox(width: 10,),
+            scrollDirection: Axis.horizontal,
+            itemBuilder: (context, index) {
+              return SearchAnimeCard(listName: "Search", index: index, data: _animeLibrary![0].data[0], onLibraryChanged: (){}, tabName: "Search");
+            },
+            itemCount: 5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  _buildPopular() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Popular This Season", style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 200,
+          child: ListView.separated(
+            separatorBuilder: (context, index) => const SizedBox(width: 10,),
+            scrollDirection: Axis.horizontal,
+            itemBuilder: (context, index) {
+              return SearchAnimeCard(listName: "Search", index: index, data: _animeLibrary![0].data[0], onLibraryChanged: (){}, tabName: "Search");
+            },
+            itemCount: 5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  _buildUpcoming() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Upcoming Next Season", style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 200,
+          child: ListView.separated(
+            separatorBuilder: (context, index) => const SizedBox(width: 10,),
+            scrollDirection: Axis.horizontal,
+            itemBuilder: (context, index) {
+              return SearchAnimeCard(listName: "Search", index: index, data: _animeLibrary![0].data[0], onLibraryChanged: (){}, tabName: "Search");
+            },
+            itemCount: 5,
           ),
         ),
       ],
