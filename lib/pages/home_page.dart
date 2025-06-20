@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -220,10 +221,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
         isSearching = false;
         searchTabHeaderText = "Popular right now:";
       });
+      _precachePopularImages(); // <-- Call here, after setState
     });
   }
-
-  
 
   Color _getTabBorderColor(int index) {
     if (_animeLibrary == null) return MyColors.appbarTextColor;
@@ -622,6 +622,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
     );
   }
 
+  void _precachePopularImages() {
+    if (!mounted) return;
+    final ctx = context;
+    for (final key in ["trending", "season", "nextSeason"]) {
+      final mediaList = popularAnimeData[key]?["media"];
+      if (mediaList != null) {
+        for (var anime in mediaList) {
+          final url = anime["coverImage"]?["extraLarge"];
+          if (url != null) {
+            precacheImage(CachedNetworkImageProvider(url), ctx);
+          }
+        }
+      }
+    }
+  }
+
   _buildExplorerPage() {
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 24),
@@ -638,14 +654,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
             child: GestureDetector(
               onTap: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder:
-                        (context) => SearchPage(
+                  PageRouteBuilder(
+                    pageBuilder:
+                        (context, animation, secondaryAnimation) => SearchPage(
                           onLibraryChanged: () {
                             _fetchAnimeLibrary(false);
                             _fetchPopularAnime();
                           },
                         ),
+                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                      return FadeTransition(opacity: animation, child: child);
+                    },
+                    transitionDuration: const Duration(milliseconds: 300),
+                    opaque: false, // This allows the previous page to show through if you want
                   ),
                 );
               },
@@ -702,7 +723,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                   index: index,
                   data: {"media": popularAnimeData["trending"]!["media"][index]},
                   onLibraryChanged: _fetchPopularAnime,
-                  tabName: "Search",
+                  tabName: "trending",
                 );
               },
               itemCount: count,
@@ -735,7 +756,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                   index: index,
                   data: {"media": popularAnimeData["season"]!["media"][index]},
                   onLibraryChanged: _fetchPopularAnime,
-                  tabName: "Search",
+                  tabName: "season",
                 );
               },
               itemCount: count,
@@ -768,7 +789,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                   index: index,
                   data: {"media": popularAnimeData["nextSeason"]!["media"][index]},
                   onLibraryChanged: _fetchPopularAnime,
-                  tabName: "Search",
+                  tabName: "nextSeason",
                 );
               },
               itemCount: count,

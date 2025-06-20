@@ -61,52 +61,55 @@ class _SearchPageState extends State<SearchPage> {
                   Expanded(
                     child: Hero(
                       tag: 'searchField',
-                      child: Container(
-                        width: double.maxFinite,
-                        decoration: BoxDecoration(color: MyColors.coolPurple, borderRadius: BorderRadius.circular(12)),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  onSubmitted: (value) {
-                                    if (value.trim().isEmpty) {
+                      child: Material(
+                        color: Colors.transparent, // Keep your background color from the Container
+
+                        child: Container(
+                          decoration: BoxDecoration(color: MyColors.coolPurple, borderRadius: BorderRadius.circular(12)),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    onSubmitted: (value) {
+                                      if (value.trim().isEmpty) {
+                                        setState(() {
+                                          _isDefault = true;
+                                        });
+                                      } else {
+                                        _fetchSearchAnime(value.trim());
+                                      }
+                                    },
+                                    controller: _searchController,
+                                    focusNode: _searchFocusNode,
+                                    style: const TextStyle(color: MyColors.coolPurple2, fontSize: 25, fontWeight: FontWeight.w600),
+                                    decoration: const InputDecoration(
+                                      hintText: "Search",
+                                      hintStyle: TextStyle(color: MyColors.coolPurple2, fontSize: 25, fontWeight: FontWeight.w600),
+                                      border: InputBorder.none,
+                                      isCollapsed: true,
+                                      contentPadding: EdgeInsets.zero,
+                                    ),
+                                    cursorColor: MyColors.coolPurple2,
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    if (_searchController.text.trim().isEmpty) {
                                       setState(() {
                                         _isDefault = true;
                                       });
                                     } else {
-                                      _fetchSearchAnime(value.trim());
+                                      _fetchSearchAnime(_searchController.text.trim());
                                     }
                                   },
-                                  controller: _searchController,
-                                  focusNode: _searchFocusNode,
-                                  style: const TextStyle(color: MyColors.coolPurple2, fontSize: 25, fontWeight: FontWeight.w600),
-                                  decoration: const InputDecoration(
-                                    hintText: "Search",
-                                    hintStyle: TextStyle(color: MyColors.coolPurple2, fontSize: 25, fontWeight: FontWeight.w600),
-                                    border: InputBorder.none,
-                                    isCollapsed: true,
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  cursorColor: MyColors.coolPurple2,
+                                  child: const Icon(Icons.search, color: MyColors.coolPurple2, weight: 700, size: 30),
                                 ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.search, color: MyColors.coolPurple2, weight: 700, size: 30),
-                                onPressed: () {
-                                  if (_searchController.text.trim().isEmpty) {
-                                    setState(() {
-                                      _isDefault = true;
-                                    });
-                                  } else {
-                                    _fetchSearchAnime(_searchController.text.trim());
-                                  }
-                                },
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),

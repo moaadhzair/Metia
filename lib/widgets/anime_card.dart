@@ -10,14 +10,17 @@ import 'package:metia/tools.dart';
 import 'dart:io';
 import 'package:pasteboard/pasteboard.dart';
 
-class CustomPageRoute extends MaterialPageRoute {
-  @override
-  Duration get transitionDuration => const Duration(milliseconds: 500);
+class CustomPageRoute extends PageRouteBuilder {
+  final WidgetBuilder builder;
 
-  @override
-  Duration get reverseTransitionDuration => const Duration(milliseconds: 500);
-
-  CustomPageRoute({builder}) : super(builder: builder);
+  CustomPageRoute({required this.builder})
+    : super(
+        pageBuilder: (context, animation, secondaryAnimation) => builder(context),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        opaque: true, // Allows previous page to show through if needed
+      );
 }
 
 class AnimeCard extends StatefulWidget {

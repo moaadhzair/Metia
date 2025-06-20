@@ -27,14 +27,17 @@ class SearchAnimeCard extends StatefulWidget {
   State<SearchAnimeCard> createState() => searchAnimeCardState();
 }
 
-class CustomPageRoute extends MaterialPageRoute {
-  @override
-  Duration get transitionDuration => const Duration(milliseconds: 500);
+class CustomPageRoute extends PageRouteBuilder {
+  final WidgetBuilder builder;
 
-  @override
-  Duration get reverseTransitionDuration => const Duration(milliseconds: 500);
-
-  CustomPageRoute({builder}) : super(builder: builder);
+  CustomPageRoute({required this.builder})
+    : super(
+        pageBuilder: (context, animation, secondaryAnimation) => builder(context),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        opaque: true, // Allows previous page to show through if needed
+      );
 }
 
 // ignore: camel_case_types
@@ -59,6 +62,9 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
 
   @override
   Widget build(BuildContext context) {
+    // Pre-cache the cover image to improve loading performance
+    precacheImage(CachedNetworkImageProvider(widget.data["media"]["coverImage"]["large"]), context);
+
     super.build(context);
     return Stack(
       children: [
@@ -68,7 +74,7 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
             width: 115,
             child: GestureDetector(
               onTap: () {
-                Navigator.push(context, CustomPageRoute(builder: (context) => AnimePage(animeData: widget.data, tabName: "Search")));
+                Navigator.push(context, CustomPageRoute(builder: (context) => AnimePage(animeData: widget.data, tabName: widget.tabName)));
               },
               behavior: HitTestBehavior.translucent, // Ensures taps are registered
               child: Container(
@@ -346,7 +352,8 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                                 text: "${widget.data["media"]["episodes"] ?? "?"} Ep",
                                 style: const TextStyle(color: MyColors.appbarTextColor, fontSize: 16, fontWeight: FontWeight.bold),
                               ),
-                              widget.data["media"]["nextAiringEpisode"].toString() != "null" && widget.listName.toUpperCase().startsWith("NEW EPISODE")
+                              widget.data["media"]["nextAiringEpisode"].toString() != "null" &&
+                                      widget.listName.toUpperCase().startsWith("NEW EPISODE")
                                   ? TextSpan(
                                     text: "\n${widget.data["media"]["nextAiringEpisode"]["episode"] - 1}",
                                     style: const TextStyle(color: Colors.orange, fontSize: 16, fontWeight: FontWeight.bold),
