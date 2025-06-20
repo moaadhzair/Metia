@@ -10,6 +10,7 @@ import 'package:metia/constants/Colors.dart';
 import 'package:metia/data/Library.dart';
 import 'package:metia/data/setting.dart';
 import 'package:metia/pages/extensions_page.dart';
+import 'package:metia/pages/search_page.dart';
 import 'package:metia/pages/settings_page.dart';
 import 'package:metia/pages/user_page.dart';
 import 'package:metia/tools.dart';
@@ -57,7 +58,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
   List<Map<String, dynamic>> searchAnimeData = [];
   Map<String, Map<String, dynamic>> popularAnimeData = {};
   bool isSearching = false;
-  bool _searchEnded = true;
+  final bool _searchEnded = true;
   String searchTabHeaderText = "Popular right now:";
 
   @override
@@ -222,19 +223,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
     });
   }
 
-  Future<void> _fetchSearchAnime(String keyword) async {
-    setState(() {
-      _searchEnded = false;
-      searchTabHeaderText = "Search Resaults:";
-    });
-    AnilistApi.fetchSearchAnime(keyword).then((data) {
-      setState(() {
-        searchAnimeData = data;
-        isSearching = true;
-        _searchEnded = true;
-      });
-    });
-  }
+  
 
   Color _getTabBorderColor(int index) {
     if (_animeLibrary == null) return MyColors.appbarTextColor;
@@ -508,7 +497,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                                             onLibraryChanged: () {
                                                               print("a new anime is added or removed");
                                                               _fetchAnimeLibrary(false);
-                                                              isSearching ? _fetchSearchAnime(_searchController.text) : _fetchPopularAnime();
+                                                              _fetchPopularAnime();
                                                             },
                                                           );
                                                         }, childCount: state.data.length),
@@ -557,7 +546,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                                           onLibraryChanged: () {
                                                             print("a new anime is added or removed");
                                                             _fetchAnimeLibrary(false);
-                                                            isSearching ? _fetchSearchAnime(_searchController.text) : _fetchPopularAnime();
+                                                            _fetchPopularAnime();
                                                           },
                                                         );
                                                       },
@@ -646,18 +635,36 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 28)),
           SliverToBoxAdapter(
-            child: Container(
-              width: double.maxFinite,
-              decoration: BoxDecoration(color: MyColors.coolPurple, borderRadius: BorderRadius.circular(12)),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 7),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text("Search", style: TextStyle(color: MyColors.coolPurple2, fontSize: 25, fontWeight: FontWeight.w600)),
-                    Icon(Icons.search, color: MyColors.coolPurple2, weight: 700, size: 30),
-                  ],
+            child: GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder:
+                        (context) => SearchPage(
+                          onLibraryChanged: () {
+                            _fetchAnimeLibrary(false);
+                            _fetchPopularAnime();
+                          },
+                        ),
+                  ),
+                );
+              },
+              child: Hero(
+                tag: 'searchField',
+                child: Container(
+                  width: double.maxFinite,
+                  decoration: BoxDecoration(color: MyColors.coolPurple, borderRadius: BorderRadius.circular(12)),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 18, vertical: 7),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text("Search", style: TextStyle(color: MyColors.coolPurple2, fontSize: 25, fontWeight: FontWeight.w600)),
+                        Icon(Icons.search, color: MyColors.coolPurple2, weight: 700, size: 30),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -676,44 +683,29 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
 
   _buildTrending() {
     int count = popularAnimeData["trending"] == null ? 0 : popularAnimeData["trending"]!["media"].length;
-    final ScrollController trendingScrollController = ScrollController();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text("Trending", style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w600)),
         const SizedBox(height: 16),
         SizedBox(
-          height: 200,
-          child: Listener(
-            onPointerSignal: (event) {
-              if (event is PointerScrollEvent) {
-                // Apply vertical scroll delta to horizontal controller
-                trendingScrollController.jumpTo(trendingScrollController.offset + event.scrollDelta.dy);
-              }
-            },
-            child: ScrollConfiguration(
-              behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
-              child: Scrollbar(
-                controller: trendingScrollController,
-                thumbVisibility: true,
-                interactive: true,
-                child: ListView.separated(
-                  controller: trendingScrollController,
-                  separatorBuilder: (context, index) => const SizedBox(width: 10),
-                  scrollDirection: Axis.horizontal,
-                  itemBuilder: (context, index) {
-                    var mediaListEntry = popularAnimeData["trending"]!["media"][index]["mediaListEntry"];
-                    return SearchAnimeCard(
-                      listName: getistNameFromMediaListEntry(mediaListEntry),
-                      index: index,
-                      data: {"media": popularAnimeData["trending"]!["media"][index]},
-                      onLibraryChanged: () {},
-                      tabName: "Search",
-                    );
-                  },
-                  itemCount: count,
-                ),
-              ),
+          height: 245,
+          child: ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
+            child: ListView.separated(
+              separatorBuilder: (context, index) => const SizedBox(width: 10),
+              scrollDirection: Axis.horizontal,
+              itemBuilder: (context, index) {
+                var mediaListEntry = popularAnimeData["trending"]!["media"][index]["mediaListEntry"];
+                return SearchAnimeCard(
+                  listName: getistNameFromMediaListEntry(mediaListEntry),
+                  index: index,
+                  data: {"media": popularAnimeData["trending"]!["media"][index]},
+                  onLibraryChanged: _fetchPopularAnime,
+                  tabName: "Search",
+                );
+              },
+              itemCount: count,
             ),
           ),
         ),
@@ -729,7 +721,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
         const Text("Popular This Season", style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w600)),
         const SizedBox(height: 16),
         SizedBox(
-          height: 200,
+          height: 245,
           child: ScrollConfiguration(
             behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
             child: ListView.separated(
@@ -742,7 +734,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                   listName: getistNameFromMediaListEntry(mediaListEntry),
                   index: index,
                   data: {"media": popularAnimeData["season"]!["media"][index]},
-                  onLibraryChanged: () {},
+                  onLibraryChanged: _fetchPopularAnime,
                   tabName: "Search",
                 );
               },
@@ -762,7 +754,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
         const Text("Upcoming Next Season", style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w600)),
         const SizedBox(height: 16),
         SizedBox(
-          height: 200,
+          height: 245,
           child: ScrollConfiguration(
             behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
             child: ListView.separated(
@@ -775,7 +767,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                   listName: getistNameFromMediaListEntry(mediaListEntry),
                   index: index,
                   data: {"media": popularAnimeData["nextSeason"]!["media"][index]},
-                  onLibraryChanged: () {},
+                  onLibraryChanged: _fetchPopularAnime,
                   tabName: "Search",
                 );
               },

@@ -246,12 +246,11 @@ fragment media on Media {
         return {};
       }
     } catch (error) {
-      
       return {};
     }
   }
 
-  static Future<List<Map<String, dynamic>>> fetchSearchAnime(String keyword) async {
+  static Future<Map<String, dynamic>> fetchSearchAnime(String keyword) async {
     const String url = 'https://graphql.anilist.co';
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
@@ -295,7 +294,10 @@ query ($search: String) {
       final response = await http.post(Uri.parse(url), headers: headers, body: jsonEncode({'query': query, "variables": variables}));
 
       if (response.statusCode == 200) {
-        return List<Map<String, dynamic>>.from(jsonDecode(response.body)["data"]["Page"]["media"]);
+        return {
+          "success": List<Map<String, dynamic>>.from(jsonDecode(response.body)["data"]["Page"]["media"]).isNotEmpty,
+          "data": List<Map<String, dynamic>>.from(jsonDecode(response.body)["data"]["Page"]["media"]),
+        };
       } else {
         throw Exception('Failed to fetch anime list: ${response.statusCode}');
       }
