@@ -1019,7 +1019,7 @@ class _AnimeEpisodeState extends State<AnimeEpisode> {
         progress = int.parse(prefss[1]);
       }
 
-      episodeDuration = Duration(minutes: widget.animeData["media"]["duration"]).inMilliseconds;
+      episodeDuration = Duration(minutes: widget.animeData["media"]["duration"]?? 0).inMilliseconds;
 
       if (lastPos > 0 && episodeDuration > 0) {
         progress = ((lastPos / episodeDuration) * 100).clamp(0, 100).toInt();
