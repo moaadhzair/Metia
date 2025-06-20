@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
 import 'dart:io';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -54,7 +55,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
   int currentIndex = 0;
 
   List<Map<String, dynamic>> searchAnimeData = [];
-  List<Map<String, dynamic>> popularAnimeData = [];
+  Map<String, Map<String, dynamic>> popularAnimeData = {};
   bool isSearching = false;
   bool _searchEnded = true;
   String searchTabHeaderText = "Popular right now:";
@@ -668,14 +669,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
           SliverToBoxAdapter(child: _buildUpcoming()),
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
-          SliverToBoxAdapter(child: _buildPopular()),
-          const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
       ),
     );
   }
 
   _buildTrending() {
+    int count = popularAnimeData["trending"] == null ? 0 : popularAnimeData["trending"]!["media"].length;
+    final ScrollController trendingScrollController = ScrollController();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -683,13 +684,37 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
         const SizedBox(height: 16),
         SizedBox(
           height: 200,
-          child: ListView.separated(
-            separatorBuilder: (context, index) => const SizedBox(width: 10,),
-            scrollDirection: Axis.horizontal,
-            itemBuilder: (context, index) {
-              return SearchAnimeCard(listName: "Search", index: index, data: _animeLibrary![0].data[0], onLibraryChanged: (){}, tabName: "Search");
+          child: Listener(
+            onPointerSignal: (event) {
+              if (event is PointerScrollEvent) {
+                // Apply vertical scroll delta to horizontal controller
+                trendingScrollController.jumpTo(trendingScrollController.offset + event.scrollDelta.dy);
+              }
             },
-            itemCount: 5,
+            child: ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
+              child: Scrollbar(
+                controller: trendingScrollController,
+                thumbVisibility: true,
+                interactive: true,
+                child: ListView.separated(
+                  controller: trendingScrollController,
+                  separatorBuilder: (context, index) => const SizedBox(width: 10),
+                  scrollDirection: Axis.horizontal,
+                  itemBuilder: (context, index) {
+                    var mediaListEntry = popularAnimeData["trending"]!["media"][index]["mediaListEntry"];
+                    return SearchAnimeCard(
+                      listName: getistNameFromMediaListEntry(mediaListEntry),
+                      index: index,
+                      data: {"media": popularAnimeData["trending"]!["media"][index]},
+                      onLibraryChanged: () {},
+                      tabName: "Search",
+                    );
+                  },
+                  itemCount: count,
+                ),
+              ),
+            ),
           ),
         ),
       ],
@@ -697,6 +722,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
   }
 
   _buildPopular() {
+    int count = popularAnimeData["season"] == null ? 0 : popularAnimeData["season"]!["media"].length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -704,13 +730,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
         const SizedBox(height: 16),
         SizedBox(
           height: 200,
-          child: ListView.separated(
-            separatorBuilder: (context, index) => const SizedBox(width: 10,),
-            scrollDirection: Axis.horizontal,
-            itemBuilder: (context, index) {
-              return SearchAnimeCard(listName: "Search", index: index, data: _animeLibrary![0].data[0], onLibraryChanged: (){}, tabName: "Search");
-            },
-            itemCount: 5,
+          child: ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
+            child: ListView.separated(
+              separatorBuilder: (context, index) => const SizedBox(width: 10),
+              scrollDirection: Axis.horizontal,
+              itemBuilder: (context, index) {
+                var mediaListEntry = popularAnimeData["season"]!["media"][index]["mediaListEntry"];
+
+                return SearchAnimeCard(
+                  listName: getistNameFromMediaListEntry(mediaListEntry),
+                  index: index,
+                  data: {"media": popularAnimeData["season"]!["media"][index]},
+                  onLibraryChanged: () {},
+                  tabName: "Search",
+                );
+              },
+              itemCount: count,
+            ),
           ),
         ),
       ],
@@ -718,6 +755,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
   }
 
   _buildUpcoming() {
+    int count = popularAnimeData["nextSeason"] == null ? 0 : popularAnimeData["nextSeason"]!["media"].length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -725,20 +763,73 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
         const SizedBox(height: 16),
         SizedBox(
           height: 200,
-          child: ListView.separated(
-            separatorBuilder: (context, index) => const SizedBox(width: 10,),
-            scrollDirection: Axis.horizontal,
-            itemBuilder: (context, index) {
-              return SearchAnimeCard(listName: "Search", index: index, data: _animeLibrary![0].data[0], onLibraryChanged: (){}, tabName: "Search");
-            },
-            itemCount: 5,
+          child: ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
+            child: ListView.separated(
+              separatorBuilder: (context, index) => const SizedBox(width: 10),
+              scrollDirection: Axis.horizontal,
+              itemBuilder: (context, index) {
+                var mediaListEntry = popularAnimeData["nextSeason"]!["media"][index]["mediaListEntry"];
+
+                return SearchAnimeCard(
+                  listName: getistNameFromMediaListEntry(mediaListEntry),
+                  index: index,
+                  data: {"media": popularAnimeData["nextSeason"]!["media"][index]},
+                  onLibraryChanged: () {},
+                  tabName: "Search",
+                );
+              },
+              itemCount: count,
+            ),
           ),
         ),
       ],
     );
   }
 
-  _buildGrid() {
+  String getistNameFromMediaListEntry(mediaListEntry) {
+    String listName = "";
+    if (mediaListEntry != null) {
+      // Check for customLists
+      final customLists = mediaListEntry["customLists"];
+      if (customLists != null && customLists is Map) {
+        // Get all custom list names where value is true
+        final trueLists = customLists.entries.where((entry) => entry.value == true).map((entry) => entry.key).toList();
+
+        if (trueLists.isNotEmpty) {
+          // If multiple, join with new line, else just the name
+          listName = trueLists.join(',\n');
+        } else {
+          // Fallback to status if no custom list is true
+          listName = mediaListEntry["status"] ?? "";
+        }
+      } else {
+        // Fallback to status if no customLists
+        listName = mediaListEntry["status"] ?? "";
+      }
+    }
+
+    switch (listName) {
+      case "CURRENT":
+        listName = "Watching";
+        break;
+      case "COMPLETED":
+        listName = "Completed";
+        break;
+      case "PLANNING":
+        listName = "Planning";
+        break;
+      case "DROPPED":
+        listName = "Dropped";
+        break;
+      case "PAUSED":
+        listName = "Paused";
+        break;
+    }
+    return listName;
+  }
+
+  /*_buildGrid() {
     return GridView.builder(
       key: const PageStorageKey('searchResults'),
       itemCount: isSearching ? searchAnimeData.length : popularAnimeData.length,
@@ -809,7 +900,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
       },
     );
   }
-
+*/
   Future<void> _launchUrl(Uri url) async {
     if (!await launchUrl(url)) {
       throw Exception('Could not launch $url');

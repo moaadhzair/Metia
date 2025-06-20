@@ -127,7 +127,7 @@ class AnilistApi {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> fetchPopularAnime() async {
+  static Future<Map<String, Map<String, dynamic>>> fetchPopularAnime() async {
     final prefs = await SharedPreferences.getInstance();
     final String? authKey = prefs.getString('auth_key');
 
@@ -136,8 +136,13 @@ class AnilistApi {
     Map<String, String> headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer $authKey', 'Accept': 'application/json'};
 
     const String query = r'''
-query {
-  trending: Page(page: 1, perPage: 20) {
+query (
+  $season: MediaSeason,
+  $seasonYear: Int,
+  $nextSeason: MediaSeason,
+  $nextYear: Int
+) {
+  trending: Page(page: 1, perPage: 30) {
     media(
       sort: TRENDING_DESC,
       type: ANIME,
@@ -146,7 +151,32 @@ query {
       ...media
     }
   }
-  popular: Page(page: 1, perPage: 20) {
+  
+  season: Page(page: 1, perPage: 30) {
+    media(
+      season: $season,
+      seasonYear: $seasonYear,
+      sort: POPULARITY_DESC,
+      type: ANIME,
+      isAdult: false
+    ) {
+      ...media
+    }
+  }
+  
+  nextSeason: Page(page: 1, perPage: 30) {
+    media(
+      season: $nextSeason,
+      seasonYear: $nextYear,
+      sort: POPULARITY_DESC,
+      type: ANIME,
+      isAdult: false
+    ) {
+      ...media
+    }
+  }
+  
+  popular: Page(page: 1, perPage: 30) {
     media(
       sort: POPULARITY_DESC,
       type: ANIME,
@@ -155,7 +185,8 @@ query {
       ...media
     }
   }
-  top: Page(page: 1, perPage: 20) {
+  
+  top: Page(page: 1, perPage: 10) {
     media(
       sort: SCORE_DESC,
       type: ANIME,
@@ -179,7 +210,6 @@ fragment media on Media {
     extraLarge
     color
   }
-  duration
   bannerImage
   description
   episodes
@@ -190,25 +220,34 @@ fragment media on Media {
     status
   }
 }
+
 ''';
 
     try {
-      final response = await http.post(Uri.parse(url), headers: headers, body: jsonEncode({'query': query}));
+      final response = await http.post(
+        Uri.parse(url),
+        headers: headers,
+        body: jsonEncode({
+          'query': query,
+          'variables': {"type": "ANIME", "season": "SPRING", "seasonYear": 2025, "nextSeason": "SUMMER", "nextYear": 2025},
+        }),
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body)["data"];
-        final trending = List<Map<String, dynamic>>.from(data["trending"]["media"]);
-        final popular = List<Map<String, dynamic>>.from(data["popular"]["media"]);
-        final top = List<Map<String, dynamic>>.from(data["top"]["media"]);
+        final trending = Map<String, dynamic>.from(data["trending"]);
+        final season = Map<String, dynamic>.from(data["season"]);
+        final nextSeason = Map<String, dynamic>.from(data["nextSeason"]);
+        final popular = Map<String, dynamic>.from(data["popular"]);
         // Combine all lists into one
-        return [...trending, ...popular, ...top];
+        return {"trending": trending, "popular": popular, "season": season, "nextSeason": nextSeason};
       } else {
         print('Failed to fetch anime list: ${response.statusCode}');
-        return [];
+        return {};
       }
     } catch (error) {
-      // Rethrow the original exception without wrapping it
-      return [];
+      
+      return {};
     }
   }
 
