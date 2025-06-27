@@ -456,8 +456,10 @@ query (\$type: MediaType!, \$userId: Int!) {
     // Add "New Episode" logic as before
     List animes = [];
     for (AnimeState state in animeLib.lib) {
-      if (state.state == "Watching") {
+      if (!['Paused', 'Completed', 'Dropped'].contains(state.state)) {
         for (var data in state.data) {
+          print("${state.state} is the state of ${data["media"]["title"]}");
+
           if (data["media"]["nextAiringEpisode"] != null) {
             int episode = int.parse(data["media"]["nextAiringEpisode"]["episode"].toString());
             int progress = int.parse(data["progress"].toString());
