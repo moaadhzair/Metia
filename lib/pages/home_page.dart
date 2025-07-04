@@ -480,9 +480,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                                           crossAxisCount: Tools.getResponsiveCrossAxisVal(
                                                             MediaQuery.of(context).size.width,
-                                                            itemWidth: 460 / 4,
+                                                            itemWidth: 135,
                                                           ),
-                                                          mainAxisExtent: state.state == "New Episode" ? 260 : 245,
+                                                          mainAxisExtent: state.state == "New Episode" ? 283 : 268,
                                                           crossAxisSpacing: 10,
                                                           mainAxisSpacing: 10,
                                                           childAspectRatio: 0.7,
@@ -687,14 +687,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                               animation: animation,
                               builder: (context, child) {
                                 final double fontSize = lerpDouble(25, 20, animation.value)!;
-                                return Text(
-                                  "Search",
-                                  style: TextStyle(
-                                    color: MyColors.coolPurple2,
-                                    fontSize: fontSize,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                );
+                                return Text("Search", style: TextStyle(color: MyColors.coolPurple2, fontSize: fontSize, fontWeight: FontWeight.w600));
                               },
                             ),
                             const Icon(Icons.search, color: MyColors.coolPurple2, weight: 700, size: 30),
