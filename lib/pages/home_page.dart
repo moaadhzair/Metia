@@ -527,9 +527,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                                         crossAxisCount: Tools.getResponsiveCrossAxisVal(
                                                           MediaQuery.of(context).size.width,
-                                                          itemWidth: 115,
+                                                          itemWidth: 135,
                                                         ),
-                                                        mainAxisExtent: state.state == "New Episode" ? 260 : 245,
+                                                        mainAxisExtent: state.state == "New Episode" ? 283 : 268,
                                                         crossAxisSpacing: 10,
                                                         mainAxisSpacing: 10,
                                                         childAspectRatio: 0.7,
@@ -671,6 +671,39 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                 );
               },
               child: Hero(
+                flightShuttleBuilder: (flightContext, animation, flightDirection, fromHeroContext, toHeroContext) {
+                  return Material(
+                    type: MaterialType.transparency,
+                    child: Container(
+                      width: double.maxFinite,
+                      decoration: BoxDecoration(color: MyColors.coolPurple, borderRadius: BorderRadius.circular(12)),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            AnimatedBuilder(
+                              animation: animation,
+                              builder: (context, child) {
+                                final double fontSize = lerpDouble(25, 20, animation.value)!;
+                                return Text(
+                                  "Search",
+                                  style: TextStyle(
+                                    color: MyColors.coolPurple2,
+                                    fontSize: fontSize,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                );
+                              },
+                            ),
+                            const Icon(Icons.search, color: MyColors.coolPurple2, weight: 700, size: 30),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
                 tag: 'searchField',
                 child: Container(
                   width: double.maxFinite,
@@ -710,7 +743,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
         const Text("Trending", style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w600)),
         const SizedBox(height: 16),
         SizedBox(
-          height: 245,
+          height: 295,
           child: ScrollConfiguration(
             behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
             child: ListView.separated(
@@ -742,7 +775,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
         const Text("Popular This Season", style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w600)),
         const SizedBox(height: 16),
         SizedBox(
-          height: 245,
+          height: 295,
           child: ScrollConfiguration(
             behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
             child: ListView.separated(
@@ -775,7 +808,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
         const Text("Upcoming Next Season", style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w600)),
         const SizedBox(height: 16),
         SizedBox(
-          height: 245,
+          height: 295,
           child: ScrollConfiguration(
             behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
             child: ListView.separated(

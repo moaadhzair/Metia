@@ -204,7 +204,10 @@ fragment media on Media {
     romaji
     native
   }
-  coverImage {
+  
+season
+seasonYear
+coverImage {
   large
   medium
     extraLarge
@@ -216,6 +219,7 @@ fragment media on Media {
   genres
   averageScore
   mediaListEntry {
+    customLists
     id
     status
   }
@@ -273,7 +277,9 @@ query ($search: String) {
         english
         native
       }
-      coverImage {
+      season
+seasonYear
+coverImage {
       large
       medium
         extraLarge
@@ -395,7 +401,9 @@ query (\$type: MediaType!, \$userId: Int!) {
               }
               episodes
               averageScore
-              coverImage {
+              season
+seasonYear
+coverImage {
               large
                 extraLarge
                 medium
@@ -506,7 +514,9 @@ query (\$type: MediaType!, \$userId: Int!) {
                 }
                 episodes
                 averageScore
-                coverImage {
+                season
+seasonYear
+coverImage {
                 large
                 medium
                   extraLarge
@@ -603,7 +613,9 @@ query (\$type: MediaType!, \$userId: Int!) {
       title {
         userPreferred
       }
-      coverImage {
+      season
+seasonYear
+coverImage {
       
         large
       }
@@ -817,7 +829,9 @@ query (\$type: MediaType!, \$userId: Int!) {
       title {
         userPreferred
       }
-      coverImage {
+      season
+seasonYear
+coverImage {
         large
       }
       duration
@@ -1095,7 +1109,9 @@ query (\$type: MediaType!, \$userId: Int!) {
       title {
         userPreferred
       }
-      coverImage {
+      season
+seasonYear
+coverImage {
         large
       }
       duration

@@ -56,7 +56,7 @@ class Tools
   }
 
   static getResponsiveCrossAxisVal(double width, {required double itemWidth}) {
-    return (width / itemWidth).floor().clamp(1, 17);
+    return (width / itemWidth).round();
   }
 
   static String insertAt(String original, String toInsert, int index) {

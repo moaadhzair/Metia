@@ -56,15 +56,15 @@ class _AnimeCardState extends State<AnimeCard> {
         Align(
           alignment: Alignment.center,
           child: SizedBox(
-            width: 115,
+            width: 135,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SizedBox(
-                    height: 160,
-                    width: 115,
+                    height: 183,
+                    width: 135,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: CupertinoTheme(
@@ -111,12 +111,17 @@ class _AnimeCardState extends State<AnimeCard> {
                                       ],
                                     );
                                   },
-
-                                  child: CachedNetworkImage(
-                                    imageUrl: widget.data["media"]["coverImage"]["large"],
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                                    errorWidget: (context, url, error) => const Icon(Icons.error),
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      CachedNetworkImage(
+                                        imageUrl: widget.data["media"]["coverImage"]["large"],
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                                        errorWidget: (context, url, error) => const Icon(Icons.error),
+                                      ),
+                                      _buildEpAiring(widget.data["media"]["nextAiringEpisode"]),
+                                    ],
                                   ),
                                 ),
                               ),
@@ -445,6 +450,67 @@ class _AnimeCardState extends State<AnimeCard> {
           ),
         ),
       ],
+    );
+  }
+
+  _buildEpAiring(nextAiring) {
+    if (nextAiring == null) {
+      return const SizedBox();
+    }
+    final int airingAt = nextAiring["airingAt"] ?? 0;
+    final int episode = nextAiring["episode"] ?? 0;
+    final Duration diff = DateTime.fromMillisecondsSinceEpoch(airingAt * 1000).difference(DateTime.now());
+    if (diff.isNegative) return const SizedBox();
+    if (episode > 1) return const SizedBox();
+    
+
+    final int days = diff.inDays;
+    final int hours = diff.inHours % 24;
+    final int minutes = diff.inMinutes % 60;
+
+    String timeString = '';
+    if (days > 0) timeString = '${days}d';
+    if (days == 0) timeString = '${hours}h';
+    if (hours == 0) timeString = '${minutes}s';
+
+    timeString += ' left';
+
+    /*String timeString = '';
+    if (days > 0) timeString += '${days}d ';
+    if (hours > 0 || days > 0) timeString += '${hours}h ';
+    timeString += '${minutes}m';*/
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.center,
+          colors: [MyColors.backgroundColor.withOpacity(0.8), Colors.transparent],
+          stops: const [0, 1], // control where each color stops
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.schedule, color: Colors.orange, size: 22),
+            Material(
+              type: MaterialType.transparency,
+              child: Text(
+                ' $timeString',
+                style: const TextStyle(
+                  color: Colors.orange,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  //shadows: [Shadow(blurRadius: 4, color: Colors.black)],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

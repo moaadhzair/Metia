@@ -48,97 +48,96 @@ class _SearchPageState extends State<SearchPage> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
-          child: Column(
-            spacing: 16,
-            children: [
-              Row(
-                spacing: 16,
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back, color: MyColors.unselectedColor, size: 27),
-                  ),
-                  Expanded(
-                    child: Hero(
-                      tag: 'searchField',
-                      child: Material(
-                        color: Colors.transparent, // Keep your background color from the Container
-
-                        child: Container(
-                          decoration: BoxDecoration(color: MyColors.coolPurple, borderRadius: BorderRadius.circular(12)),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    onSubmitted: (value) {
-                                      if (value.trim().isEmpty) {
-                                        setState(() {
-                                          _isDefault = true;
-                                        });
-                                      } else {
-                                        _fetchSearchAnime(value.trim());
-                                      }
-                                    },
-                                    controller: _searchController,
-                                    focusNode: _searchFocusNode,
-                                    style: const TextStyle(color: MyColors.coolPurple2, fontSize: 25, fontWeight: FontWeight.w600),
-                                    decoration: const InputDecoration(
-                                      hintText: "Search",
-                                      hintStyle: TextStyle(color: MyColors.coolPurple2, fontSize: 25, fontWeight: FontWeight.w600),
-                                      border: InputBorder.none,
-                                      isCollapsed: true,
-                                      contentPadding: EdgeInsets.zero,
-                                    ),
-                                    cursorColor: MyColors.coolPurple2,
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () {
-                                    if (_searchController.text.trim().isEmpty) {
-                                      setState(() {
-                                        _isDefault = true;
-                                      });
-                                    } else {
-                                      _fetchSearchAnime(_searchController.text.trim());
-                                    }
-                                  },
-                                  child: const Icon(Icons.search, color: MyColors.coolPurple2, weight: 700, size: 30),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              _isDefault
-                  ? const Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Search for something...",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: MyColors.unselectedColor, fontSize: 25),
-                          ),
-                          Text("example: The Apothecary Diaries.", style: TextStyle(color: MyColors.unselectedColor, fontSize: 15)),
-                        ],
-                      ),
-                    ),
-                  )
-                  : _buildBody(),
-            ],
-          ),
+          child: Column(spacing: 16, children: [_buildSearchArea(), _isDefault ? _buildEmptyBody() : _buildBody()]),
         ),
       ),
+    );
+  }
+
+  _buildEmptyBody() {
+    return const Expanded(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text("Search for something...", textAlign: TextAlign.center, style: TextStyle(color: MyColors.unselectedColor, fontSize: 25)),
+            Text("example: The Apothecary Diaries.", style: TextStyle(color: MyColors.unselectedColor, fontSize: 15)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  _buildSearchArea() {
+    return Row(
+      spacing: 16,
+      children: [
+        IconButton(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.arrow_back, color: MyColors.unselectedColor, size: 27)),
+        Expanded(
+          child: Hero(
+            tag: 'searchField',
+            child: Material(
+              color: MyColors.coolPurple, // <-- Change this to your desired color
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        onSubmitted: (value) {
+                          if (value.trim().isEmpty) {
+                            setState(() {
+                              _isDefault = true;
+                            });
+                          } else {
+                            _fetchSearchAnime(value.trim());
+                          }
+                        },
+                        controller: _searchController,
+                        focusNode: _searchFocusNode,
+                        style: const TextStyle(
+                          color: Colors.black, // <-- Change text color if needed
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: "Search",
+                          hintStyle: TextStyle(
+                            color: Colors.black54, // <-- Change hint color if needed
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          isCollapsed: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        cursorColor: Colors.black, // <-- Change cursor color if needed
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        if (_searchController.text.trim().isEmpty) {
+                          setState(() {
+                            _isDefault = true;
+                          });
+                        } else {
+                          _fetchSearchAnime(_searchController.text.trim());
+                        }
+                      },
+                      child: const Icon(Icons.search, color: Colors.black, weight: 700, size: 30), // <-- Change icon color if needed
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -148,8 +147,8 @@ class _SearchPageState extends State<SearchPage> {
         key: const PageStorageKey('searchResults'),
         itemCount: searchAnimeData["data"].length,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: Tools.getResponsiveCrossAxisVal(MediaQuery.of(context).size.width, itemWidth: 460 / 4),
-          mainAxisExtent: 245,
+          crossAxisCount: Tools.getResponsiveCrossAxisVal(MediaQuery.of(context).size.width, itemWidth: 130),
+          mainAxisExtent: 295,
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
           childAspectRatio: 0.7,

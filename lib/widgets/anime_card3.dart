@@ -71,7 +71,7 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
         Align(
           alignment: Alignment.center,
           child: SizedBox(
-            width: 115,
+            width: 135,
             child: GestureDetector(
               onTap: () {
                 Navigator.push(context, CustomPageRoute(builder: (context) => AnimePage(animeData: widget.data, tabName: widget.tabName)));
@@ -83,7 +83,7 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     SizedBox(
-                      height: 160,
+                      height: 183,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         clipBehavior: Clip.hardEdge,
@@ -339,6 +339,15 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                           textAlign: TextAlign.center,
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      widget.data["media"]["seasonYear"] == null
+                          ? "Not Aired Yet"
+                          : "${widget.data["media"]["season"]} ${widget.data["media"]["seasonYear"]}",
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: MyColors.unselectedColor, fontWeight: FontWeight.w600, fontSize: 16.5),
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 2),
                     Row(
