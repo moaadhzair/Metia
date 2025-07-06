@@ -508,7 +508,7 @@ timestring += ', left.';
             Material(
               type: MaterialType.transparency,
               child: Text(
-                ' $timeString',
+                ' $timestring',
                 style: const TextStyle(
                   color: Colors.orange,
                   fontSize: 16,
