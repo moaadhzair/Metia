@@ -468,12 +468,21 @@ class _AnimeCardState extends State<AnimeCard> {
     final int hours = diff.inHours % 24;
     final int minutes = diff.inMinutes % 60;
 
-    String timeString = '';
-    if (days > 0) timeString = '${days}d';
-    if (days == 0) timeString = '${hours}h';
-    if (hours == 0) timeString = '${minutes}s';
+    String timestring = '';
 
-    timeString += ' left';
+if (days < 0 || hours < 0) {
+  timestring = '';
+} else if (days > 0) {
+  timestring = '${days}d';
+} else if (hours > 0) {
+  timestring = '${hours}h';
+} else if (minutes > 0) {
+  timestring = '${minutes}m';
+} else {
+  timestring = '';
+}
+
+timestring += ', left.';
 
     /*String timeString = '';
     if (days > 0) timeString += '${days}d ';
