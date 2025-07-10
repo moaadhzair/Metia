@@ -407,48 +407,50 @@ class _AnimeCardState extends State<AnimeCard> {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    spacing: 5,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      RichText(
-                        textAlign: TextAlign.left,
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: "${widget.data["progress"]}/${widget.data["media"]["episodes"] ?? "?"}",
-                              style: const TextStyle(color: MyColors.appbarTextColor, fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            widget.data["media"]["nextAiringEpisode"].toString() != "null" && widget.tabName.startsWith("New Episode")
-                                ? TextSpan(
-                                  text: "\n${widget.data["media"]["nextAiringEpisode"]["episode"] - 1} Ep",
-                                  style: const TextStyle(color: Colors.orange, fontSize: 16, fontWeight: FontWeight.bold),
-                                )
-                                : const TextSpan(),
-                          ],
-                        ),
-                      ),
-                      widget.data["media"]["nextAiringEpisode"].toString() != "null" && widget.tabName.startsWith("New Episode")
-                          ? const Icon(Icons.notifications_active, color: Colors.orange, size: 16)
-                          : Row(
-                            children: [
-                              Text(
-                                widget.data["media"]["averageScore"].toString() == "null"
-                                    ? "0.0"
-                                    : Tools.insertAt(widget.data["media"]["averageScore"].toString(), ".", 1),
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange),
-                              ),
-                              const Icon(Icons.star, color: Colors.orange, size: 18),
-                            ],
-                          ),
-                    ],
-                  ),
+                  _buildBottomText(),
                 ],
               ),
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  _buildBottomText() {
+    bool isNewEpisodeTab = widget.data["media"]["nextAiringEpisode"].toString() != "null" && widget.tabName.startsWith("New Episode");
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          isNewEpisodeTab ? "Airing":"${widget.data["progress"]}/${widget.data["media"]["episodes"] ?? "?"}",
+          style: const TextStyle(color: MyColors.appbarTextColor, fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        isNewEpisodeTab
+            ? Row(
+                spacing: 2,
+                crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  "${widget.data["media"]["nextAiringEpisode"]["episode"] - 1} Ep",
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange),
+                ),
+                const Icon(Icons.notifications_active, color: Colors.orange, size: 18),
+              ],
+            )
+            : Row(
+              spacing: 2,
+              children: [
+                Text(
+                  widget.data["media"]["averageScore"].toString() == "null"
+                      ? "0.0"
+                      : Tools.insertAt(widget.data["media"]["averageScore"].toString(), ".", 1),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange),
+                ),
+                const Icon(Icons.star, color: Colors.orange, size: 18),
+              ],
+            ),
       ],
     );
   }
@@ -462,7 +464,6 @@ class _AnimeCardState extends State<AnimeCard> {
     final Duration diff = DateTime.fromMillisecondsSinceEpoch(airingAt * 1000).difference(DateTime.now());
     if (diff.isNegative) return const SizedBox();
     if (episode > 1) return const SizedBox();
-    
 
     final int days = diff.inDays;
     final int hours = diff.inHours % 24;
@@ -470,19 +471,19 @@ class _AnimeCardState extends State<AnimeCard> {
 
     String timestring = '';
 
-if (days < 0 || hours < 0) {
-  timestring = '';
-} else if (days > 0) {
-  timestring = '${days}d';
-} else if (hours > 0) {
-  timestring = '${hours}h';
-} else if (minutes > 0) {
-  timestring = '${minutes}m';
-} else {
-  timestring = '';
-}
+    if (days < 0 || hours < 0) {
+      timestring = '';
+    } else if (days > 0) {
+      timestring = '${days}d';
+    } else if (hours > 0) {
+      timestring = '${hours}h';
+    } else if (minutes > 0) {
+      timestring = '${minutes}m';
+    } else {
+      timestring = '';
+    }
 
-timestring += ', left.';
+    timestring += ', left.';
 
     /*String timeString = '';
     if (days > 0) timeString += '${days}d ';

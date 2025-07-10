@@ -341,49 +341,7 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      widget.data["media"]["seasonYear"] == null
-                          ? "Not Aired Yet"
-                          : "${widget.data["media"]["season"]} ${widget.data["media"]["seasonYear"]}",
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: MyColors.unselectedColor, fontWeight: FontWeight.w600, fontSize: 16.5),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        RichText(
-                          textAlign: TextAlign.left,
-                          text: TextSpan(
-                            children: [
-                              TextSpan(
-                                text: "${widget.data["media"]["episodes"] ?? "?"} Ep",
-                                style: const TextStyle(color: MyColors.appbarTextColor, fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                              widget.data["media"]["nextAiringEpisode"].toString() != "null" &&
-                                      widget.listName.toUpperCase().startsWith("NEW EPISODE")
-                                  ? TextSpan(
-                                    text: "\n${widget.data["media"]["nextAiringEpisode"]["episode"] - 1}",
-                                    style: const TextStyle(color: Colors.orange, fontSize: 16, fontWeight: FontWeight.bold),
-                                  )
-                                  : const TextSpan(),
-                            ],
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              widget.data["media"]["averageScore"].toString() == "null"
-                                  ? "0.0"
-                                  : Tools.insertAt(widget.data["media"]["averageScore"].toString(), ".", 1),
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange),
-                            ),
-                            const Icon(Icons.star, color: Colors.orange, size: 18),
-                          ],
-                        ),
-                      ],
-                    ),
+                    _buildBottomText(widget),
                   ],
                 ),
               ),
@@ -393,6 +351,32 @@ class searchAnimeCardState extends State<SearchAnimeCard> with AutomaticKeepAliv
       ],
     );
   }
+}
+
+_buildBottomText(widget) {
+  String year = widget.data["media"]["seasonYear"] != null ? widget.data["media"]["seasonYear"].toString() : "Not Aired Yet";
+
+  return Column(
+    children: [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(year, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: MyColors.appbarTextColor)),
+          Row(
+            children: [
+              Text(
+                widget.data["media"]["averageScore"].toString() == "null"
+                    ? "0.0"
+                    : Tools.insertAt(widget.data["media"]["averageScore"].toString(), ".", 1),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange),
+              ),
+              const Icon(Icons.star, color: Colors.orange, size: 18),
+            ],
+          ),
+        ],
+      ),
+    ],
+  );
 }
 
 class ListTiles extends StatelessWidget {

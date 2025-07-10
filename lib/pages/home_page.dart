@@ -482,7 +482,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                                             MediaQuery.of(context).size.width,
                                                             itemWidth: 135,
                                                           ),
-                                                          mainAxisExtent: state.state == "New Episode" ? 283 : 268,
+                                                          mainAxisExtent: /*state.state == "New Episode" ? 283 :*/ 268,
                                                           crossAxisSpacing: 10,
                                                           mainAxisSpacing: 10,
                                                           childAspectRatio: 0.7,
@@ -529,7 +529,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                                                           MediaQuery.of(context).size.width,
                                                           itemWidth: 135,
                                                         ),
-                                                        mainAxisExtent: state.state == "New Episode" ? 283 : 268,
+                                                        mainAxisExtent:
+                                                            /*state.state == "New Episode" ? 283 : */
+                                                            268,
                                                         crossAxisSpacing: 10,
                                                         mainAxisSpacing: 10,
                                                         childAspectRatio: 0.7,
@@ -736,7 +738,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
         const Text("Trending", style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w600)),
         const SizedBox(height: 16),
         SizedBox(
-          height: 295,
+          height: 268,
           child: ScrollConfiguration(
             behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
             child: ListView.separated(
@@ -768,7 +770,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
         const Text("Popular This Season", style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w600)),
         const SizedBox(height: 16),
         SizedBox(
-          height: 295,
+          height: 268,
           child: ScrollConfiguration(
             behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
             child: ListView.separated(
@@ -801,7 +803,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
         const Text("Upcoming Next Season", style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w600)),
         const SizedBox(height: 16),
         SizedBox(
-          height: 295,
+          height: 268,
           child: ScrollConfiguration(
             behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
             child: ListView.separated(

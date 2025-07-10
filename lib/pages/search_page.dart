@@ -148,7 +148,7 @@ class _SearchPageState extends State<SearchPage> {
         itemCount: searchAnimeData["data"].length,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: Tools.getResponsiveCrossAxisVal(MediaQuery.of(context).size.width, itemWidth: 130),
-          mainAxisExtent: 295,
+          mainAxisExtent: 268,
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
           childAspectRatio: 0.7,
