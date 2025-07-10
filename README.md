@@ -81,6 +81,12 @@ Please follow best practices and ensure tests pass before submitting.
 
 ---
 
+## 👏 Special Thanks
+
+- [@JaLalSaa](https://github.com/JaLalSaa) — for contributing to the app design.
+
+---
+
 ## ⚠️ Disclaimer
 
 Metia is intended solely for educational and personal use. The app does not host or stream any content on its own. It relies on third-party community extensions. Users are solely responsible for any content they access through those extensions. The developers are not responsible for any misuse or legal issues arising from third-party content.
