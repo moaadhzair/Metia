@@ -12,6 +12,7 @@ import 'package:metia/api/extension.dart';
 import 'dart:async';
 
 import 'package:metia/constants/Colors.dart';
+import 'package:metia/tools.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -25,10 +26,8 @@ class PlayerPage extends StatefulWidget {
     required this.episodeCount,
     required this.currentExtension,
     required this.episodeList,
-    
   });
 
-  
   final dynamic extensionStreamData;
   final dynamic anilistData;
   final int episodeNumber;
@@ -79,21 +78,17 @@ class _PlayerPageState extends State<PlayerPage> {
 
   bool _is2xRate = false;
 
-  
-
-
   Duration parseDuration(String timeString) {
-  final parts = timeString.split(':').map(int.parse).toList();
+    final parts = timeString.split(':').map(int.parse).toList();
 
-  if (parts.length == 2) {
-    return Duration(minutes: parts[0], seconds: parts[1]);
-  } else if (parts.length == 3) {
-    return Duration(hours: parts[0], minutes: parts[1], seconds: parts[2]);
-  } else {
-    throw const FormatException("Invalid time format");
+    if (parts.length == 2) {
+      return Duration(minutes: parts[0], seconds: parts[1]);
+    } else if (parts.length == 3) {
+      return Duration(hours: parts[0], minutes: parts[1], seconds: parts[2]);
+    } else {
+      throw const FormatException("Invalid time format");
+    }
   }
-}
-
 
   String _formatDuration(Duration duration, {bool forceHours = false}) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
@@ -121,6 +116,7 @@ class _PlayerPageState extends State<PlayerPage> {
   }
 
   void nextEpisode() {
+    Tools.Toast(context, "Loading Next Episode");
     currentExtension?.getStreamData(episodeList[episodeNumber]["id"]).then((value) {
       // Parse the stream data response
 
@@ -153,14 +149,13 @@ class _PlayerPageState extends State<PlayerPage> {
       anilistData;
       episodeNumber++;
 
-      player.open(Media(preferedProvider["m3u8"])).then((value) {
-        firstTime = true;
-        _startHideTimer();
-      });
+      initPlayer(false, preferedProvider["m3u8"]);
+      
     });
   }
 
   void pastEpisode() {
+    Tools.Toast(context, "Loading Past Episode");
     currentExtension?.getStreamData(episodeList[episodeNumber - 2]["id"]).then((value) {
       // Parse the stream data response
 
@@ -185,10 +180,8 @@ class _PlayerPageState extends State<PlayerPage> {
       anilistData;
       episodeNumber--;
 
-      player.open(Media(preferedProvider["m3u8"])).then((value) {
-        firstTime = true;
-        _startHideTimer();
-      });
+      initPlayer(false, preferedProvider["m3u8"]);
+      
     });
   }
 
@@ -236,10 +229,9 @@ class _PlayerPageState extends State<PlayerPage> {
       player.stream.position.listen((position) async {
         prefs.setStringList('last_position_${anilistData["media"]["id"].toString()}_${(episodeNumber - 1).toString()}', [
           position.inMilliseconds.toString(),
-          parseDuration(totalTime).inMilliseconds.toString()
+          parseDuration(totalTime).inMilliseconds.toString(),
         ]);
       });
-      
     });
 
     player.stream.position.listen((position) async {
@@ -267,18 +259,18 @@ class _PlayerPageState extends State<PlayerPage> {
       }
     });
 
-    initPlayer();
+    initPlayer(true, "");
   }
 
-  Future<void> initPlayer() async {
+  Future<void> initPlayer(bool useDefaultLink, String m3u8) async {
     final prefs = await SharedPreferences.getInstance();
     List<String> prefss = prefs.getStringList("last_position_${anilistData["media"]["id"].toString()}_${(episodeNumber - 1).toString()}") ?? [];
 
-    final int lastPosPref = int.parse(prefss.isNotEmpty ? prefss[0] :"0");
+    final int lastPosPref = int.parse(prefss.isNotEmpty ? prefss[0] : "0");
     final lastPos = lastPosPref ?? 0;
 
     await player.open(
-      Media(extensionStreamData["m3u8"] ?? extensionStreamData["link"], httpHeaders: {"referer": extensionStreamData["referer"] ?? ""}),
+      Media(useDefaultLink ? extensionStreamData["m3u8"] : m3u8, httpHeaders: {"referer": extensionStreamData["referer"] ?? ""}),
       play: true,
     );
 
