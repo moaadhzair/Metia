@@ -631,7 +631,7 @@ class _AnimePageState extends State<AnimePage> with TickerProviderStateMixin {
                                         : const SizedBox(),
                                 onPressed: () async {
                                   await showSourcePicker(
-                                    context,
+                                    Navigator.of(context, rootNavigator: true).context,
                                     currentExtension,
                                     EpisodeList,
                                     widget.animeData["progress"] ?? 0,
@@ -789,9 +789,16 @@ class _buildAnimeEpisodeListState extends State<_buildAnimeEpisodeList> {
                 seen: (widget.widget.animeData["progress"] ?? 0) > episodeIndex,
                 index: episodeIndex,
                 onClicked: (details) async {
-                  await showSourcePicker(context, widget.currentExtension, widget.episodeList, episodeIndex, widget.widget.animeData, () {
-                    setState(() {});
-                  });
+                  await showSourcePicker(
+                    Navigator.of(context, rootNavigator: true).context,
+                    widget.currentExtension,
+                    widget.episodeList,
+                    episodeIndex,
+                    widget.widget.animeData,
+                    () {
+                      setState(() {});
+                    },
+                  );
                 },
                 episodeData: {"episode": widget.episodeList[episodeIndex]},
               ),
@@ -853,39 +860,55 @@ Future<void> showSourcePicker(
                                   },
                                   itemCount: snapshot.data!.length,
                                   itemBuilder: (context, index) {
-                                    return GestureDetector(
-                                      onTap: () async {
-                                        Navigator.of(contextt).pop("setState");
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (context) => PlayerPage(
-                                                  episodeList: episodeList,
-                                                  currentExtension: currentExtension,
-                                                  episodeCount: episodeList.length,
-                                                  extensionEpisodeData: episodeList[episodeIndex],
-                                                  episodeNumber: episodeIndex + 1,
-                                                  extensionStreamData: snapshot.data?[index],
-                                                  anilistData: animeData,
-                                                ),
-                                          ),
-                                        );
-                                        if (result == "setState") {
-                                          onDone();
-                                        }
-                                      },
-                                      child: Container(
-                                        decoration: BoxDecoration(color: MyColors.coolPurple2, borderRadius: BorderRadius.circular(12)),
-                                        width: double.infinity,
-                                        height: 60,
-                                        padding: const EdgeInsets.all(12),
-                                        child: Center(
-                                          child: Text(
+                                    return Container(
+                                      decoration: BoxDecoration(color: MyColors.coolPurple2, borderRadius: BorderRadius.circular(12)),
+                                      width: double.infinity,
+                                      height: 60,
+                                      padding: const EdgeInsets.all(12),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
                                             "${snapshot.data?[index]["provider"].toString().toUpperCase()} - ${snapshot.data?[index]["sub"] ? "Sub" : "Dub"}",
                                             style: const TextStyle(color: MyColors.appbarTextColor, fontWeight: FontWeight.w600, fontSize: 16.5),
                                           ),
-                                        ),
+                                          Row(
+                                            children: [
+                                              //download button
+                                              IconButton(
+                                                onPressed: () {
+                                                  Tools.Toast(contextt, "download started");
+                                                },
+                                                icon: const Icon(Icons.download, color: MyColors.appbarTextColor),
+                                              ),
+                                              //watch button
+                                              IconButton(
+                                                onPressed: () async {
+                                                  Navigator.of(contextt).pop("setState");
+                                                  final result = await Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (context) => PlayerPage(
+                                                            episodeList: episodeList,
+                                                            currentExtension: currentExtension,
+                                                            episodeCount: episodeList.length,
+                                                            extensionEpisodeData: episodeList[episodeIndex],
+                                                            episodeNumber: episodeIndex + 1,
+                                                            extensionStreamData: snapshot.data?[index],
+                                                            anilistData: animeData,
+                                                          ),
+                                                    ),
+                                                  );
+                                                  if (result == "setState") {
+                                                    onDone();
+                                                  }
+                                                },
+                                                icon: const Icon(Icons.play_arrow, color: MyColors.appbarTextColor),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
                                     );
                                   },
@@ -1019,9 +1042,7 @@ class _AnimeEpisodeState extends State<AnimeEpisode> {
         progress = int.parse(prefss[1]);
       }
 
-      
       episodeDuration = progress;
-      
 
       if (lastPos > 0 && episodeDuration > 0) {
         progress = ((lastPos / episodeDuration) * 100).clamp(0, 100).toInt();
@@ -1193,7 +1214,6 @@ class _AnimeCoverState extends State<AnimeCover> with AutomaticKeepAliveClientMi
 
   @override
   Widget build(BuildContext context) {
-    
     final imageUrl = widget.animeData["media"]["coverImage"]["extraLarge"];
     final description = processHtml(widget.animeData["media"]["description"]);
     final List<dynamic> genres = widget.animeData["media"]["genres"];
@@ -1269,16 +1289,16 @@ class _AnimeCoverState extends State<AnimeCover> with AutomaticKeepAliveClientMi
                       final int episode = nextAiring["episode"] ?? 0;
                       final Duration diff = DateTime.fromMillisecondsSinceEpoch(airingAt * 1000).difference(DateTime.now());
                       if (diff.isNegative) return const SizedBox();
-                              
+
                       final int days = diff.inDays;
                       final int hours = diff.inHours % 24;
                       final int minutes = diff.inMinutes % 60;
-                              
+
                       String timeString = '';
                       if (days > 0) timeString += '${days}d ';
                       if (hours > 0 || days > 0) timeString += '${hours}h ';
                       timeString += '${minutes}m';
-                              
+
                       return SafeArea(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ui';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -18,6 +19,7 @@ import 'package:metia/tools.dart';
 import 'package:metia/widgets/anime_card.dart';
 import 'package:app_links/app_links.dart';
 import 'package:metia/widgets/anime_card3.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
@@ -66,7 +68,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
   void initState() {
     super.initState();
     _tabController = TabController(length: 1, vsync: this); // Safe default
-    mainController = TabController(length: 2, vsync: this);
+    mainController = TabController(length: 3, vsync: this);
     _searchController = TextEditingController();
     _initDeepLinking();
     _fetchAnimeLibrary(false);
@@ -264,6 +266,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                       items: const [
                         BottomNavigationBarItem(icon: Icon(Icons.video_library), label: "Library"),
                         BottomNavigationBarItem(icon: Icon(Icons.search), label: "Search"),
+                        BottomNavigationBarItem(icon: Icon(Icons.save), label: "Downloads"),
                       ],
                     ),
                   ),
@@ -403,6 +406,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                             selectedIcon: Icon(Icons.search, color: MyColors.coolPurple),
                             label: Text("Search"),
                           ),
+                          NavigationRailDestination(
+                            icon: Icon(Icons.save, color: MyColors.unselectedColor),
+                            selectedIcon: Icon(Icons.save, color: MyColors.coolPurple),
+                            label: Text("Downloads"),
+                          ),
                         ],
                       ),
                     )
@@ -415,6 +423,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                       (tabs.isNotEmpty
                           ? Column(
                             children: [
+                              
                               TweenAnimationBuilder<Color?>(
                                 tween: ColorTween(begin: _previousTabColor, end: _getTabBorderColor(_tabController.index)),
                                 duration: kTabScrollDuration,
@@ -604,6 +613,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
                           )),
                       // search page
                       _buildExplorerPage(),
+                      _buildDownloadPage(),
                     ],
                   ),
                 ),
@@ -638,6 +648,85 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
         }
       }
     }
+  }
+
+  _buildDownloadPage() {
+    const List<Map<String, String>> data = [
+      {
+        "title": "episode1",
+        "link":
+            "https://rr5---sn-h5qzen7l.googlevideo.com/videoplayback?expire=1752270331&ei=mzFxaNyLKpDb1d8P7da10QU&ip=220.92.128.127&id=o-AHoIY5pBY7nqTcN95tVN8d-h1v9JoMm2EH3pQIj2cFYJ&itag=18&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&bui=AY1jyLNgOxZzB6xSJMZ0oxhMh5RQ4fzLO3N1VUcnk0XPPW7N3XZ9dPfJyKb89FxSlDQZVy-f_k2SsEY0&vprv=1&svpuc=1&mime=video%2Fmp4&ns=aywnzihE0oY8g6gzQ--J4KkQ&rqh=1&gir=yes&clen=5860714&ratebypass=yes&dur=234.103&lmt=1752244422993350&lmw=1&c=TVHTML5&sefc=1&txp=3309224&n=aptAcuhNzVDDVA&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cvprv%2Csvpuc%2Cmime%2Cns%2Crqh%2Cgir%2Cclen%2Cratebypass%2Cdur%2Clmt&sig=AJfQdSswRgIhAOrfrtAA-9UeoEYzoXtQ8kGlrr-1xPrOiLowACdVceJ7AiEA_H_oE2eW6OT-_uTExI9PuJOOGuLhDMiSvmE53iVdlDo%3D&title=Grok%204%20pushes%20humanity%20closer%20to%20AGI%E2%80%A6%20but%20there%E2%80%99s%20a%20problem&rm=sn-3u-20ny7k,sn-3u-bh2sd7d,sn-3pmzs76&rrc=79,79,104&fexp=24350590,24350737,24350827,24350961,24351316,24351318,24351528,24351907,24351914,24352220,24352297,24352299,24352322,24352334,24352336,24352394,24352396,24352398,24352400,24352452,24352454,24352457,24352460,24352466,24352467,24352517,24352519,24352535,24352537&req_id=ee2a731d64d1a3ee&cmsv=e&rms=nxu,au&redirect_counter=3&cms_redirect=yes&ipbypass=yes&met=1752264508,&mh=Gg&mip=105.69.126.116&mm=30&mn=sn-h5qzen7l&ms=nxu&mt=1752263292&mv=u&mvi=5&pl=22&lsparams=ipbypass,met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=APaTxxMwRQIgEyh5qmi5fW1CONMm2tVtVCi1ILjnFkWZSokN4n4jBB0CIQDNq9tgXC6uon1KUPNtSa8FzFjyy4Deqzk59oIjbWCYcQ%3D%3D",
+        "cover": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx156415-zwP9deA786S1.jpg",
+        "animeTitle": "lmao",
+        "audio": "Dub",
+      },
+      {
+        "title": "episode2",
+        "link": "https://vault-99.kwikie.ru/stream/99/01/8419664687a93915be35e4a53557134198592980e92b6e18b9de89095b7ebb7e/uwu.m3u8",
+        "cover": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx156415-zwP9deA786S1.jpg",
+        "animeTitle": "lmao",
+        "audio": "Dub",
+      },
+      {
+        "title": "episode3",
+        "link": "https://avtshare01.rz.tu-ilmenau.de/avt-vqdb-uhd-1/test_1/segments/bigbuck_bunny_8bit_2000kbps_720p_60.0fps_h264.mp4",
+        "cover": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx156415-zwP9deA786S1.jpg",
+        "animeTitle": "lmao",
+        "audio": "Dub",
+      },
+      {
+        "title": "episode4",
+        "link": "https://avtshare01.rz.tu-ilmenau.de/avt-vqdb-uhd-1/test_1/segments/bigbuck_bunny_8bit_2000kbps_720p_60.0fps_h264.mp4",
+        "cover": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx156415-zwP9deA786S1.jpg",
+        "animeTitle": "lmao",
+        "audio": "Sub",
+      },
+      {
+        "title": "episode5",
+        "link": "https://avtshare01.rz.tu-ilmenau.de/avt-vqdb-uhd-1/test_1/segments/bigbuck_bunny_8bit_2000kbps_720p_60.0fps_h264.mp4",
+        "cover": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx156415-zwP9deA786S1.jpg",
+        "animeTitle": "lmao",
+        "audio": "Sub",
+      },
+    ];
+
+    return const Padding(
+      padding: EdgeInsets.only(left: 16, right: 16, top: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: Text("Downloads", style: TextStyle(color: MyColors.unselectedColor, fontSize: 25, fontWeight: FontWeight.w600)),
+          ),
+          SizedBox(height: 28),
+          Expanded(
+            child: Center(
+              child: Text("Coming out soon!!", style: TextStyle(color: MyColors.appbarTextColor, fontSize: 25, fontWeight: FontWeight.w600)),
+            ),
+          ),
+          // Expanded(
+          //   child: ListView.separated(
+          //     separatorBuilder: (context, index) => const SizedBox(height: 12),
+          //     itemCount: 0,
+          //     itemBuilder: (context, index) {
+          //       return AnimeEpisode(
+          //         progress: 75,
+          //         downloaded: false,
+          //         onClicked: (details) {
+          //           print("lmao");
+          //         },
+          //         title: data[index]["title"]!,
+          //         audio: data[index]["audio"]!,
+          //         animeTitle: data[index]["animeTitle"]!,
+          //         link: data[index]["link"]!,
+          //       );
+          //     },
+          //   ),
+          // ),
+        ],
+      ),
+    );
   }
 
   _buildExplorerPage() {
@@ -870,81 +959,220 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Auto
     return listName;
   }
 
-  /*_buildGrid() {
-    return GridView.builder(
-      key: const PageStorageKey('searchResults'),
-      itemCount: isSearching ? searchAnimeData.length : popularAnimeData.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: Tools.getResponsiveCrossAxisVal(MediaQuery.of(context).size.width, itemWidth: 460 / 4),
-        mainAxisExtent: 245,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 0.7,
-      ),
-      itemBuilder: (context, index) {
-        String listName = "";
-        bool isCustom = false;
-        var mediaListEntry = isSearching ? searchAnimeData[index]["mediaListEntry"] : popularAnimeData[index]["mediaListEntry"];
-
-        if (mediaListEntry != null) {
-          // Check for customLists
-          final customLists = mediaListEntry["customLists"];
-          if (customLists != null && customLists is Map) {
-            // Get all custom list names where value is true
-            final trueLists = customLists.entries.where((entry) => entry.value == true).map((entry) => entry.key).toList();
-
-            if (trueLists.isNotEmpty) {
-              isCustom = true;
-              // If multiple, join with new line, else just the name
-              listName = trueLists.join(',\n');
-            } else {
-              // Fallback to status if no custom list is true
-              listName = mediaListEntry["status"] ?? "";
-            }
-          } else {
-            // Fallback to status if no customLists
-            listName = mediaListEntry["status"] ?? "";
-          }
-        }
-
-        switch (listName) {
-          case "CURRENT":
-            listName = "Watching";
-            break;
-          case "COMPLETED":
-            listName = "Completed";
-            break;
-          case "PLANNING":
-            listName = "Planning";
-            break;
-          case "DROPPED":
-            listName = "Dropped";
-            break;
-          case "PAUSED":
-            listName = "Paused";
-            break;
-        }
-
-        return SearchAnimeCard(
-          tabName: "Search",
-          listName: listName,
-          index: index,
-          data: isSearching ? {"media": searchAnimeData[index]} : {"media": popularAnimeData[index]},
-          onLibraryChanged: () {
-            setState(() {
-              print("a new anime is added or removed");
-              isSearching ? _fetchSearchAnime(_searchController.text) : _fetchPopularAnime();
-              _fetchAnimeLibrary(false);
-            });
-          },
-        );
-      },
-    );
-  }
-*/
   Future<void> _launchUrl(Uri url) async {
     if (!await launchUrl(url)) {
       throw Exception('Could not launch $url');
     }
+  }
+}
+
+class AnimeEpisode extends StatefulWidget {
+  const AnimeEpisode({
+    super.key,
+    required this.onClicked,
+    required this.title,
+    required this.downloaded,
+    required this.progress, // out of 100
+    required this.audio,
+    required this.animeTitle,
+    required this.link,
+  });
+
+  final void Function(TapUpDetails)? onClicked;
+  final String title;
+  final bool downloaded;
+  final int progress;
+  final String audio;
+  final String animeTitle;
+  final String link;
+
+  @override
+  State<AnimeEpisode> createState() => _AnimeEpisodeState();
+}
+
+class _AnimeEpisodeState extends State<AnimeEpisode> {
+  late Dio _dio;
+  CancelToken? _cancelToken;
+  int _currentProgress = 0;
+  bool _isDownloading = false;
+
+  @override
+  void initState() {
+    _dio = Dio();
+    _currentProgress = widget.progress;
+    super.initState();
+  }
+
+  Future<String> getPrivateSavePath(String fileName) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final savePath = "${dir.path}/metia/$fileName";
+    print(savePath);
+    return savePath;
+  }
+
+  Future<void> _startDownload() async {
+    final savePath = await getPrivateSavePath("${widget.title}.mp4");
+    _cancelToken = CancelToken();
+
+    try {
+      setState(() {
+        _isDownloading = true;
+      });
+
+      print("started!");
+
+      await _dio.download(
+        widget.link, // Replace with actual video link
+        savePath,
+        cancelToken: _cancelToken,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            print(received);
+            final percent = (received / total * 100).toInt();
+            setState(() {
+              _currentProgress = percent;
+            });
+          }
+        },
+      );
+      print("Download completed");
+    } catch (e) {
+      if (e is DioException && CancelToken.isCancel(e)) {
+        print("Download canceled");
+      } else {
+        print("Download error: $e");
+      }
+    } finally {
+      setState(() {
+        _isDownloading = false;
+      });
+    }
+  }
+
+  void _pauseDownload() {
+    _cancelToken?.cancel();
+  }
+
+  void _retryDownload() {
+    //_dio.close();
+    _startDownload();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapUp: widget.downloaded ? widget.onClicked : (details) {},
+      child: Container(
+        width: double.infinity,
+        height: 108,
+        decoration: BoxDecoration(color: MyColors.coolPurple2, borderRadius: BorderRadius.circular(8)),
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  height: 50,
+                  width: double.infinity,
+                  color: MyColors.coolPurple2, // background bar
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: FractionallySizedBox(
+                      widthFactor: widget.downloaded ? 100 : (_currentProgress / 100), // from 0.0 to 1.0
+                      child: Container(color: widget.downloaded ? MyColors.coolPurple : Colors.green),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            Container(height: 104, decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: MyColors.coolPurple2)),
+            Opacity(
+              opacity: widget.downloaded ? 1 : 0.2,
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: SizedBox(
+                  height: 100,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        height: 100,
+                        child: AspectRatio(
+                          aspectRatio: 16 / 9,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: CachedNetworkImage(
+                              errorWidget: (context, url, error) {
+                                return Container();
+                              },
+                              imageUrl: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx156415-zwP9deA786S1.jpg",
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 16),
+                          child: SizedBox(
+                            height: 100,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    widget.animeTitle,
+                                    style: const TextStyle(color: MyColors.unselectedColor, fontSize: 14, fontWeight: FontWeight.w600),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    widget.title,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                                  ),
+                                  Text(
+                                    widget.audio,
+                                    style: const TextStyle(color: MyColors.unselectedColor, fontSize: 14, fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            widget.downloaded
+                ? const SizedBox()
+                : SizedBox(
+                  height: 100,
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Container(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "$_currentProgress%",
+                            style: const TextStyle(color: MyColors.appbarTextColor, fontSize: 20, fontWeight: FontWeight.w700),
+                          ),
+                          IconButton(onPressed: _pauseDownload, icon: const Icon(Icons.pause, color: MyColors.appbarTextColor)),
+                          IconButton(onPressed: _retryDownload, icon: const Icon(Icons.replay, color: MyColors.appbarTextColor)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+          ],
+        ),
+      ),
+    );
   }
 }
